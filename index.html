@@ -6,364 +6,279 @@
 <title>Flip 7 – Score Tracker</title>
 <style>
 body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    background: #f8f9fa;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    margin: 0; padding: 0;
+    background: #f5f6fa;
+    color: #333;
 }
-
+.container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+}
 h1 {
     text-align: center;
     margin-bottom: 20px;
+    font-weight: 600;
 }
-
-.card-popup {
-    display: none;
-    position: fixed;
-    top: 10%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    z-index: 1000;
-    width: 90%;
-    max-width: 500px;
-}
-
-.card-section {
+input, button { font-size: 1em; }
+input[type=text], input[type=number] {
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    width: calc(100% - 20px);
     margin-bottom: 10px;
 }
-
-.card-section h4 {
-    margin: 5px 0;
-}
-
-.card-button {
-    margin: 3px;
-    padding: 6px 10px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
+button {
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
     cursor: pointer;
-    font-weight: bold;
 }
-
-.card-button.number { background: #e0f0ff; }
-.card-button.action { background: #f0e0ff; }
-.card-button.modifier { background: #fff0d0; }
-
+button.green { background: #4caf50; color: #fff; }
+button.red { background: #f44336; color: #fff; }
+.player-box {
+    background: #fff;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.progress-container {
+    background: #e0e0e0;
+    border-radius: 6px;
+    height: 12px;
+    margin: 6px 0;
+}
+.progress-bar {
+    height: 100%;
+    border-radius: 6px;
+}
+.cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 6px 0;
+}
+.card {
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+}
+.card.number { background: #e0f0ff; }
+.card.action { background: #f0e0ff; }
+.card.modifier { background: #fff0d0; }
+.card.bonus { color: green; font-weight: bold; }
 .overlay {
     display: none;
     position: fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
+    top:0; left:0;
+    width:100%; height:100%;
     background: rgba(0,0,0,0.4);
-    z-index: 500;
+    z-index: 1000;
 }
-
-.player-box {
+.card-popup {
+    display: none;
+    position: fixed;
+    top:10%; left:50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
     background: #fff;
-    border-radius: 10px;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-left: 8px solid #000;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    z-index: 1001;
 }
-
-.progress-container {
-    background: #eee;
-    height: 12px;
-    border-radius: 6px;
-    margin: 5px 0;
-}
-
-.progress-bar {
-    background: #4caf50;
-    height: 100%;
-    width: 0%;
-    border-radius: 6px;
-}
-
-button {
-    padding: 6px 12px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-button.green { background: #4caf50; color: #fff; }
-button.red { background: #f44336; color: #fff; }
-
-input[type=text], input[type=number] {
-    padding: 6px 8px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    width: calc(100% - 20px);
+.card-section { margin-bottom: 12px; }
+.card-section h4 { margin: 6px 0; }
+.card-section .cards { gap:4px; }
+#historyContainer div {
+    background: #fff;
+    margin: 6px 0;
+    padding: 8px;
+    border-radius: 8px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
 }
 </style>
 </head>
 <body>
-
+<div class="container">
 <h1>Flip 7 – Score Tracker</h1>
 
-<!-- Spieler hinzufügen -->
 <div>
     <input type="text" id="playerName" placeholder="Spielername eingeben...">
     <button onclick="addPlayer()" class="green">+</button>
 </div>
 
-<!-- Zielpunktzahl -->
 <div style="margin:10px 0;">
     <label>Spielziel: </label>
     <input type="number" id="targetPoints" value="200">
 </div>
 
-<!-- Spielerliste -->
 <div id="playersContainer"></div>
 
-<!-- Zwischenrunde beenden -->
 <div>
     <button onclick="endRound()" class="green" style="width:100%; padding:12px; margin-top:10px;">Zwischenrunde beenden</button>
 </div>
 
-<!-- Popup Karten -->
 <div class="overlay" id="overlay" onclick="closePopup()"></div>
 <div class="card-popup" id="cardPopup">
     <h3 id="popupPlayerName">Karte für Spieler</h3>
     
     <div class="card-section">
         <h4>Zahlenkarten (0–12)</h4>
-        <div id="numberCards"></div>
+        <div id="numberCards" class="cards"></div>
     </div>
 
     <div class="card-section">
         <h4>Aktionskarten</h4>
-        <div id="actionCards"></div>
+        <div id="actionCards" class="cards"></div>
     </div>
 
     <div class="card-section">
         <h4>Modifier</h4>
-        <div id="modifierCards"></div>
+        <div id="modifierCards" class="cards"></div>
     </div>
 
-    <button onclick="closePopup()" class="red">Fertig</button>
+    <button onclick="closePopup()" class="red" style="width:100%; margin-top:8px;">Fertig</button>
 </div>
 
-<!-- Historie -->
 <h3>Historie abgeschlossener Runden</h3>
-<div id="historyContainer">
-    Noch keine abgeschlossenen Runden
+<div id="historyContainer">Noch keine abgeschlossenen Runden</div>
 </div>
 
 <script>
-// --- Datenstrukturen ---
+// Daten
 let players = [];
 let selectedPlayerIndex = null;
 let history = [];
 let colorPalette = ["#4caf50","#2196f3","#9c27b0","#ff9800","#f44336"];
+let gameStarted = false;
 
+// Karten
 const numbers = Array.from({length:13},(_,i)=>i);
 const actions = ["Freeze","Flip Three","Second Chance"];
 const modifiers = ["+2","+4","+6","+8","+10","x2"];
 
-// --- UI Initialisierung ---
+// UI Init
 const numberContainer = document.getElementById("numberCards");
 const actionContainer = document.getElementById("actionCards");
 const modifierContainer = document.getElementById("modifierCards");
 
 numbers.forEach(n=>{
-    let btn = document.createElement("button");
-    btn.className="card-button number";
+    let btn = document.createElement("div");
+    btn.className="card number";
     btn.innerText = n;
     btn.onclick = ()=>addCardToPlayer(n);
     numberContainer.appendChild(btn);
 });
-
 actions.forEach(a=>{
-    let btn = document.createElement("button");
-    btn.className="card-button action";
+    let btn = document.createElement("div");
+    btn.className="card action";
     btn.innerText = a;
     btn.onclick = ()=>addCardToPlayer(a);
     actionContainer.appendChild(btn);
 });
-
 modifiers.forEach(m=>{
-    let btn = document.createElement("button");
-    btn.className="card-button modifier";
+    let btn = document.createElement("div");
+    btn.className="card modifier";
     btn.innerText = m;
     btn.onclick = ()=>addCardToPlayer(m);
     modifierContainer.appendChild(btn);
 });
 
-// --- Spieler hinzufügen ---
+// Spieler
 function addPlayer(){
     const name = document.getElementById("playerName").value.trim();
     if(!name) return;
-    players.push({name, cards:[], totalScore:0, secondChanceUsed:false});
+    players.push({name, cards:[], totalScore:0});
     document.getElementById("playerName").value="";
     renderPlayers();
 }
 
-// --- Spieler rendern ---
-function renderPlayers(){
-    const container = document.getElementById("playersContainer");
-    container.innerHTML="";
-    const target = parseInt(document.getElementById("targetPoints").value) || 200;
-
-    players.forEach((p,i)=>{
-        let div = document.createElement("div");
-        div.className="player-box";
-        div.style.borderLeftColor=colorPalette[i%colorPalette.length];
-
-        // Karten als klickbare Boxen rendern
-        let cardsHTML = p.cards.map((c, idx) => {
-            let color = "#ccc"; // Standardfarbe
-            if(typeof c === "number") color = "#e0f0ff";
-            else if(["Freeze","Flip Three","Second Chance"].includes(c)) color = "#f0e0ff";
-            else if(["+2","+4","+6","+8","+10"].includes(c)) color = "#fff0d0";
-
-            return `<span onclick="removeCard(${i}, ${idx})" style="
-                display:inline-block;
-                padding:3px 6px;
-                margin:2px;
-                border-radius:4px;
-                background:${color};
-                font-weight:bold;
-                font-size:0.9em;
-                cursor:pointer;
-            ">${c}</span>`;
-        }).join("");
-
-        // Score berechnen
-        let {score, bonus} = calculateScoreLive(p);
-
-        let scoreHTML = `Score: ${score} Punkte`;
-        if(bonus > 0){
-            scoreHTML += ` <span style="color:green; font-weight:bold;">(+${bonus} Bonus)</span>`;
-        }
-
-        div.innerHTML=`
-            <strong>${i+1}. ${p.name}</strong>
-            <div class="progress-container"><div class="progress-bar" style="width:${Math.min((p.totalScore+score)/target*100,100)}%"></div></div>
-            <div>${scoreHTML}</div>
-            <div>Karten: ${cardsHTML}</div>
-            <button onclick="openPopup(${i})" style="margin-top:5px;">Karte hinzufügen</button>
-        `;
-        container.appendChild(div);
-    });
-}
-
-// Karte entfernen
-function removeCard(playerIndex, cardIndex){
-    players[playerIndex].cards.splice(cardIndex,1);
-    renderPlayers();
-}
-
-// --- Live Score Berechnung ---
-function calculateScoreLive(player){
-    let numbersArr=[];
-    let modifiersSum=0;
-    let multiplier=1;
-    let bust=false;
-    let bonus=0;
-
-    for(let card of player.cards){
-        if(typeof card==="number"){
-            if(numbersArr.includes(card)){
-                bust=true;
-            } else {
-                numbersArr.push(card);
-            }
-        }
-        if(["Freeze","Flip Three","Second Chance"].includes(card)) continue;
-        if(["+2","+4","+6","+8","+10"].includes(card)) modifiersSum+=parseInt(card.replace("+",""));
-        if(card==="x2") multiplier=2;
-    }
-
-    if(bust) return {score:0, bonus:0};
-
-    // Basis: Summe der Zahlenkarten
-    let numbersSum = numbersArr.reduce((a,b)=>a+b,0);
-
-    // Multiplikator nur auf Zahlenkarten
-    numbersSum *= multiplier;
-
-    // Bonus für 7 verschiedene Zahlen
-    if(numbersArr.length===7){
-        bonus = 15;
-    }
-
-    // Gesamtscore = verdoppelte Zahlen + Modifier + Bonus
-    let totalScore = numbersSum + modifiersSum + bonus;
-
-    return {score: totalScore, bonus};
-}
-
-// --- Popup öffnen ---
+// Popup
 function openPopup(index){
     selectedPlayerIndex=index;
     document.getElementById("popupPlayerName").innerText=`Karte für ${players[index].name} auswählen`;
     document.getElementById("cardPopup").style.display="block";
     document.getElementById("overlay").style.display="block";
 }
-
-// --- Popup schließen ---
 function closePopup(){
     document.getElementById("cardPopup").style.display="none";
     document.getElementById("overlay").style.display="none";
     renderPlayers();
 }
 
-// --- Karte hinzufügen ---
+// Karte hinzufügen / entfernen
 function addCardToPlayer(card){
     if(selectedPlayerIndex===null) return;
     players[selectedPlayerIndex].cards.push(card);
     renderPlayers();
 }
-
-// --- Punkte Berechnung ---
-function calculateScore(player){
-    let numbersArr=[];
-    let modifiersSum=0;
-    let multiplier=1;
-    let bust=false;
-    let secondChanceUsed=false;
-
-    for(let card of player.cards){
-        if(typeof card==="number"){
-            if(numbersArr.includes(card)){
-                if(!secondChanceUsed && player.cards.includes("Second Chance")){
-                    secondChanceUsed=true;
-                } else {
-                    bust=true;
-                }
-            } else {
-                numbersArr.push(card);
-            }
-        }
-
-        if(["Freeze","Flip Three"].includes(card)) continue;
-        if(["+2","+4","+6","+8","+10"].includes(card)) modifiersSum+=parseInt(card.replace("+",""));
-        if(card==="x2") multiplier=2;
-    }
-
-    if(bust) return 0;
-
-    let base=numbersArr.reduce((a,b)=>a+b,0);
-
-    // Bonus 7 verschiedene Zahlen
-    if(numbersArr.length===7) base+=15;
-
-    return (base+modifiersSum)*multiplier;
+function removeCard(playerIndex, cardIndex){
+    players[playerIndex].cards.splice(cardIndex,1);
+    renderPlayers();
 }
 
-// --- Zwischenrunde beenden ---
+// Score live
+function calculateScoreLive(player){
+    let numbersArr=[], modifiersSum=0, multiplier=1, bonus=0;
+    for(let card of player.cards){
+        if(typeof card==="number"){
+            if(numbersArr.includes(card)) return {score:0, bonus:0};
+            numbersArr.push(card);
+        } else if(["+2","+4","+6","+8","+10"].includes(card)) modifiersSum+=parseInt(card.replace("+",""));
+        else if(card==="x2") multiplier=2;
+    }
+    let numbersSum = numbersArr.reduce((a,b)=>a+b,0)*multiplier;
+    if(numbersArr.length===7) bonus=15;
+    return {score: numbersSum + modifiersSum + bonus, bonus};
+}
+
+// Render
+function renderPlayers(){
+    const container = document.getElementById("playersContainer");
+    container.innerHTML="";
+    const target = parseInt(document.getElementById("targetPoints").value) || 200;
+
+    players.forEach((p,i)=>{
+        let {score, bonus} = calculateScoreLive(p);
+        let total = p.totalScore + score;
+        let cardsHTML = p.cards.map((c, idx)=>{
+            let cls = "number";
+            if(["Freeze","Flip Three","Second Chance"].includes(c)) cls="action";
+            else if(["+2","+4","+6","+8","+10","x2"].includes(c)) cls="modifier";
+            return `<div class="card ${cls}" onclick="removeCard(${i},${idx})">${c}</div>`;
+        }).join("");
+        let scoreHTML = `Score: ${score} Punkte`;
+        if(bonus>0) scoreHTML += ` <span class="bonus">(+${bonus} Bonus)</span>`;
+        let div = document.createElement("div");
+        div.className="player-box";
+        div.style.borderLeftColor=colorPalette[i%colorPalette.length];
+        div.innerHTML=`<strong>${i+1}. ${p.name}</strong>
+            <div>Gesamtpunkte: ${total}</div>
+            <div class="progress-container"><div class="progress-bar" style="width:${Math.min(total/target*100,100)}%; background:${colorPalette[i%colorPalette.length]}"></div></div>
+            <div>${scoreHTML}</div>
+            <div class="cards">${cardsHTML}</div>
+            <button onclick="openPopup(${i})" class="green" style="margin-top:4px;">Karte hinzufügen</button>
+        `;
+        container.appendChild(div);
+    });
+
+    // Ziel sperren sobald das Spiel gestartet ist
+    if(players.some(p=>p.cards.length>0 || p.totalScore>0)) document.getElementById("targetPoints").disabled=true;
+}
+
+// Runde beenden
 function endRound(){
+    gameStarted=true;
     const target = parseInt(document.getElementById("targetPoints").value) || 200;
     let roundScores=[];
     players.forEach(p=>{
-        const score=calculateScore(p);
+        const {score}=calculateScoreLive(p);
         p.totalScore+=score;
         roundScores.push({name:p.name, score});
         p.cards=[];
@@ -371,34 +286,22 @@ function endRound(){
     history.push(roundScores);
     renderHistory();
     renderPlayers();
-
-    // Gewinner prüfen
     players.forEach(p=>{
-        if(p.totalScore>=target){
-            alert(`🎉 ${p.name} hat das Spiel gewonnen!`);
-        }
+        if(p.totalScore>=target) alert(`🎉 ${p.name} hat das Spiel gewonnen!`);
     });
 }
 
-// --- Historie rendern ---
+// Historie
 function renderHistory(){
-    const container=document.getElementById("historyContainer");
+    const container = document.getElementById("historyContainer");
     if(history.length===0){ container.innerHTML="Noch keine abgeschlossenen Runden"; return; }
-
     container.innerHTML="";
     history.forEach((r,i)=>{
         let div=document.createElement("div");
-        div.style.background="#fff";
-        div.style.margin="5px 0";
-        div.style.padding="5px";
-        div.style.borderRadius="6px";
-        let text=`Runde ${i+1}: `;
-        text+=r.map(p=>`${p.name} ${p.score} Pkt`).join(", ");
-        div.innerText=text;
+        div.innerText=`Runde ${i+1}: ${r.map(p=>`${p.name} ${p.score} Pkt`).join(", ")}`;
         container.appendChild(div);
     });
 }
 </script>
-
 </body>
 </html>
