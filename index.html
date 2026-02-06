@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flip 7 – Score Tracker</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background: #f8f9fa;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.card-popup {
+    display: none;
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    z-index: 1000;
+    width: 90%;
+    max-width: 500px;
+}
+
+.card-section {
+    margin-bottom: 10px;
+}
+
+.card-section h4 {
+    margin: 5px 0;
+}
+
+.card-button {
+    margin: 3px;
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.card-button.number { background: #e0f0ff; }
+.card-button.action { background: #f0e0ff; }
+.card-button.modifier { background: #fff0d0; }
+
+.overlay {
+    display: none;
+    position: fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background: rgba(0,0,0,0.4);
+    z-index: 500;
+}
+
+.player-box {
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-left: 8px solid #000;
+}
+
+.progress-container {
+    background: #eee;
+    height: 12px;
+    border-radius: 6px;
+    margin: 5px 0;
+}
+
+.progress-bar {
+    background: #4caf50;
+    height: 100%;
+    width: 0%;
+    border-radius: 6px;
+}
+
+button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+button.green { background: #4caf50; color: #fff; }
+button.red { background: #f44336; color: #fff; }
+
+input[type=text], input[type=number] {
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    width: calc(100% - 20px);
+}
+</style>
+</head>
+<body>
+
+<h1>Flip 7 – Score Tracker</h1>
+
+<!-- Spieler hinzufügen -->
+<div>
+    <input type="text" id="playerName" placeholder="Spielername eingeben...">
+    <button onclick="addPlayer()" class="green">+</button>
+</div>
+
+<!-- Zielpunktzahl -->
+<div style="margin:10px 0;">
+    <label>Spielziel: </label>
+    <input type="number" id="targetPoints" value="200">
+</div>
+
+<!-- Spielerliste -->
+<div id="playersContainer"></div>
+
+<!-- Zwischenrunde beenden -->
+<div>
+    <button onclick="endRound()" class="green" style="width:100%; padding:12px; margin-top:10px;">Zwischenrunde beenden</button>
+</div>
+
+<!-- Popup Karten -->
+<div class="overlay" id="overlay" onclick="closePopup()"></div>
+<div class="card-popup" id="cardPopup">
+    <h3 id="popupPlayerName">Karte für Spieler</h3>
+    
+    <div class="card-section">
+        <h4>Zahlenkarten (0–12)</h4>
+        <div id="numberCards"></div>
+    </div>
+
+    <div class="card-section">
+        <h4>Aktionskarten</h4>
+        <div id="actionCards"></div>
+    </div>
+
+    <div class="card-section">
+        <h4>Modifier</h4>
+        <div id="modifierCards"></div>
+    </div>
+
+    <button onclick="closePopup()" class="red">Fertig</button>
+</div>
+
+<!-- Historie -->
+<h3>Historie abgeschlossener Runden</h3>
+<div id="historyContainer">
+    Noch keine abgeschlossenen Runden
+</div>
+
+<script>
+// --- Datenstrukturen ---
+let players = [];
+let selectedPlayerIndex = null;
+let history = [];
+let colorPalette = ["#4caf50","#2196f3","#9c27b0","#ff9800","#f44336"];
+
+const numbers = Array.from({length:13},(_,i)=>i);
+const actions = ["Freeze","Flip Three","Second Chance"];
+const modifiers = ["+2","+4","+6","+8","+10","x2"];
+
+// --- UI Initialisierung ---
+const numberContainer = document.getElementById("numberCards");
+const actionContainer = document.getElementById("actionCards");
+const modifierContainer = document.getElementById("modifierCards");
+
+numbers.forEach(n=>{
+    let btn = document.createElement("button");
+    btn.className="card-button number";
+    btn.innerText = n;
+    btn.onclick = ()=>addCardToPlayer(n);
+    numberContainer.appendChild(btn);
+});
+
+actions.forEach(a=>{
+    let btn = document.createElement("button");
+    btn.className="card-button action";
+    btn.innerText = a;
+    btn.onclick = ()=>addCardToPlayer(a);
+    actionContainer.appendChild(btn);
+});
+
+modifiers.forEach(m=>{
+    let btn = document.createElement("button");
+    btn.className="card-button modifier";
+    btn.innerText = m;
+    btn.onclick = ()=>addCardToPlayer(m);
+    modifierContainer.appendChild(btn);
+});
+
+// --- Spieler hinzufügen ---
+function addPlayer(){
+    const name = document.getElementById("playerName").value.trim();
+    if(!name) return;
+    players.push({name, cards:[], totalScore:0, secondChanceUsed:false});
+    document.getElementById("playerName").value="";
+    renderPlayers();
+}
+
+// --- Spieler rendern ---
+function renderPlayers(){
+    const container = document.getElementById("playersContainer");
+    container.innerHTML="";
+    const target = parseInt(document.getElementById("targetPoints").value) || 200;
+
+    players.forEach((p,i)=>{
+        let div = document.createElement("div");
+        div.className="player-box";
+        div.style.borderLeftColor=colorPalette[i%colorPalette.length];
+        div.innerHTML=`
+            <strong>${i+1}. ${p.name}</strong> - Gesamt: ${p.totalScore} Punkte
+            <div class="progress-container"><div class="progress-bar" style="width:${Math.min(p.totalScore/target*100,100)}%"></div></div>
+            <div>Karten: ${p.cards.length}</div>
+            <button onclick="openPopup(${i})" style="margin-top:5px;">Karte hinzufügen</button>
+        `;
+        container.appendChild(div);
+    });
+}
+
+// --- Popup öffnen ---
+function openPopup(index){
+    selectedPlayerIndex=index;
+    document.getElementById("popupPlayerName").innerText=`Karte für ${players[index].name} auswählen`;
+    document.getElementById("cardPopup").style.display="block";
+    document.getElementById("overlay").style.display="block";
+}
+
+// --- Popup schließen ---
+function closePopup(){
+    document.getElementById("cardPopup").style.display="none";
+    document.getElementById("overlay").style.display="none";
+    renderPlayers();
+}
+
+// --- Karte hinzufügen ---
+function addCardToPlayer(card){
+    if(selectedPlayerIndex===null) return;
+    players[selectedPlayerIndex].cards.push(card);
+    renderPlayers();
+}
+
+// --- Punkte Berechnung ---
+function calculateScore(player){
+    let numbersArr=[];
+    let modifiersSum=0;
+    let multiplier=1;
+    let bust=false;
+    let secondChanceUsed=false;
+
+    for(let card of player.cards){
+        if(typeof card==="number"){
+            if(numbersArr.includes(card)){
+                if(!secondChanceUsed && player.cards.includes("Second Chance")){
+                    secondChanceUsed=true;
+                } else {
+                    bust=true;
+                }
+            } else {
+                numbersArr.push(card);
+            }
+        }
+
+        if(["Freeze","Flip Three"].includes(card)) continue;
+        if(["+2","+4","+6","+8","+10"].includes(card)) modifiersSum+=parseInt(card.replace("+",""));
+        if(card==="x2") multiplier=2;
+    }
+
+    if(bust) return 0;
+
+    let base=numbersArr.reduce((a,b)=>a+b,0);
+
+    // Bonus 7 verschiedene Zahlen
+    if(numbersArr.length===7) base+=15;
+
+    return (base+modifiersSum)*multiplier;
+}
+
+// --- Zwischenrunde beenden ---
+function endRound(){
+    const target = parseInt(document.getElementById("targetPoints").value) || 200;
+    let roundScores=[];
+    players.forEach(p=>{
+        const score=calculateScore(p);
+        p.totalScore+=score;
+        roundScores.push({name:p.name, score});
+        p.cards=[];
+    });
+    history.push(roundScores);
+    renderHistory();
+    renderPlayers();
+
+    // Gewinner prüfen
+    players.forEach(p=>{
+        if(p.totalScore>=target){
+            alert(`🎉 ${p.name} hat das Spiel gewonnen!`);
+        }
+    });
+}
+
+// --- Historie rendern ---
+function renderHistory(){
+    const container=document.getElementById("historyContainer");
+    if(history.length===0){ container.innerHTML="Noch keine abgeschlossenen Runden"; return; }
+
+    container.innerHTML="";
+    history.forEach((r,i)=>{
+        let div=document.createElement("div");
+        div.style.background="#fff";
+        div.style.margin="5px 0";
+        div.style.padding="5px";
+        div.style.borderRadius="6px";
+        let text=`Runde ${i+1}: `;
+        text+=r.map(p=>`${p.name} ${p.score} Pkt`).join(", ");
+        div.innerText=text;
+        container.appendChild(div);
+    });
+}
+</script>
+
+</body>
+</html>
