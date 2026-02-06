@@ -215,14 +215,89 @@ function renderPlayers(){
         let div = document.createElement("div");
         div.className="player-box";
         div.style.borderLeftColor=colorPalette[i%colorPalette.length];
+
+        // Karten als klickbare Boxen rendern
+        let cardsHTML = p.cards.map((c, idx) => {
+            let color = "#ccc"; // Standardfarbe
+            if(typeof c === "number") color = "#e0f0ff";
+            else if(["Freeze","Flip Three","Second Chance"].includes(c)) color = "#f0e0ff";
+            else if(["+2","+4","+6","+8","+10"].includes(c)) color = "#fff0d0";
+
+            return `<span onclick="removeCard(${i}, ${idx})" style="
+                display:inline-block;
+                padding:3px 6px;
+                margin:2px;
+                border-radius:4px;
+                background:${color};
+                font-weight:bold;
+                font-size:0.9em;
+                cursor:pointer;
+            ">${c}</span>`;
+        }).join("");
+
+        // Score berechnen
+        let {score, bonus} = calculateScoreLive(p);
+
+        let scoreHTML = `Score: ${score} Punkte`;
+        if(bonus > 0){
+            scoreHTML += ` <span style="color:green; font-weight:bold;">(+${bonus} Bonus)</span>`;
+        }
+
         div.innerHTML=`
-            <strong>${i+1}. ${p.name}</strong> - Gesamt: ${p.totalScore} Punkte
-            <div class="progress-container"><div class="progress-bar" style="width:${Math.min(p.totalScore/target*100,100)}%"></div></div>
-            <div>Karten: ${p.cards.length}</div>
+            <strong>${i+1}. ${p.name}</strong>
+            <div class="progress-container"><div class="progress-bar" style="width:${Math.min((p.totalScore+score)/target*100,100)}%"></div></div>
+            <div>${scoreHTML}</div>
+            <div>Karten: ${cardsHTML}</div>
             <button onclick="openPopup(${i})" style="margin-top:5px;">Karte hinzufügen</button>
         `;
         container.appendChild(div);
     });
+}
+
+// Karte entfernen
+function removeCard(playerIndex, cardIndex){
+    players[playerIndex].cards.splice(cardIndex,1);
+    renderPlayers();
+}
+
+// --- Live Score Berechnung ---
+function calculateScoreLive(player){
+    let numbersArr=[];
+    let modifiersSum=0;
+    let multiplier=1;
+    let bust=false;
+    let bonus=0;
+
+    for(let card of player.cards){
+        if(typeof card==="number"){
+            if(numbersArr.includes(card)){
+                bust=true;
+            } else {
+                numbersArr.push(card);
+            }
+        }
+        if(["Freeze","Flip Three","Second Chance"].includes(card)) continue;
+        if(["+2","+4","+6","+8","+10"].includes(card)) modifiersSum+=parseInt(card.replace("+",""));
+        if(card==="x2") multiplier=2;
+    }
+
+    if(bust) return {score:0, bonus:0};
+
+    // Basis: Summe der Zahlenkarten
+    let numbersSum = numbersArr.reduce((a,b)=>a+b,0);
+
+    // Multiplikator nur auf Zahlenkarten
+    numbersSum *= multiplier;
+
+    // Bonus für 7 verschiedene Zahlen
+    if(numbersArr.length===7){
+        bonus = 15;
+    }
+
+    // Gesamtscore = verdoppelte Zahlen + Modifier + Bonus
+    let totalScore = numbersSum + modifiersSum + bonus;
+
+    return {score: totalScore, bonus};
 }
 
 // --- Popup öffnen ---
