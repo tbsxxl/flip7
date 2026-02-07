@@ -1,8 +1,8 @@
-<!DDOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Flip 7 – Score Tracker</title>
 
 <style>
@@ -13,6 +13,7 @@
   --sh2:0 12px 28px rgba(0,0,0,.10);
   --action:#937972;   /* Bonus +15 & x2 Badge-Farbe */
   --mod:#f8b22d;      /* +2/+4/+6/+8/+10 & x2 Button-Farbe im Popup */
+  --danger:#ef4444;
 }
 *{-webkit-tap-highlight-color:transparent}
 button,.chip,.cardchip,.cardBtn,.iconBtn{touch-action:manipulation}
@@ -22,24 +23,57 @@ body{
 }
 h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+
 #topbar{position:sticky;top:0;z-index:100;background:rgba(246,247,249,.92);backdrop-filter:blur(8px);padding:8px 0 10px 0}
 
 #leaderStrip{
   background:var(--card); border-radius:16px; box-shadow:var(--sh1),var(--sh2);
   padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative;
+  overflow:visible;
 }
+
+/* Spotlight */
+#leaderStrip.spotlight::after{
+  content:"";
+  position:absolute; inset:-40px;
+  background:radial-gradient(circle at 25% 35%, rgba(34,197,94,.18), transparent 55%);
+  animation:spotlight .6s ease forwards;
+  pointer-events:none;
+}
+@keyframes spotlight{
+  0%{opacity:0; transform:scale(.98)}
+  35%{opacity:1}
+  100%{opacity:0; transform:scale(1.02)}
+}
+
 #leaderLeft{display:flex;flex-direction:column;gap:6px;min-width:0}
 #leaderLine{display:flex;align-items:center;gap:10px;min-width:0}
 #leaderDot{width:12px;height:12px;border-radius:50%}
-#leaderText{font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:62vw;font-size:1.02rem}
+
+#leaderTextWrap{display:flex;align-items:center;gap:8px;min-width:0}
+#leaderCrown{display:inline-flex;transform-origin:center}
+#leaderCrown.pop{animation:crownPop .22s ease}
+@keyframes crownPop{0%{transform:scale(.95);opacity:.75}100%{transform:scale(1);opacity:1}}
+#leaderText{
+  font-weight:950; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  max-width:58vw; font-size:1.02rem;
+}
+#leaderText.crossfade{animation:crossfade .15s ease}
+@keyframes crossfade{0%{opacity:.2}100%{opacity:1}}
+
 #leaderHint{font-weight:900;color:var(--sub);font-size:.9rem;display:none}
 #subLine{display:flex;gap:8px;flex-wrap:wrap}
 .badge{background:var(--muted);border-radius:999px;padding:6px 10px;font-weight:900;font-size:.88rem;letter-spacing:.2px;white-space:nowrap}
+
 .iconBtn{
   background:var(--muted); border:none; border-radius:12px; padding:10px 12px; font-weight:950; cursor:pointer;
   min-width:44px; min-height:44px;
 }
 .iconBtn:active{transform:scale(.98)}
+.iconBtn[aria-expanded="true"]{box-shadow:inset 0 0 0 2px rgba(30,136,229,.25)}
 
 #rankingPanel{
   margin-top:10px; background:var(--card); border-radius:16px; box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06);
@@ -50,25 +84,34 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 .rankItem{
   border:1px solid rgba(15,23,42,.08); border-radius:14px; padding:10px 12px; display:flex; align-items:center; gap:10px;
   margin:8px 0; box-shadow:0 1px 2px rgba(0,0,0,.04);
+  position:relative; will-change:transform;
 }
 .rankNo{font-weight:950;width:26px;color:#334155}
 .rankDot{width:10px;height:10px;border-radius:50%}
 .rankName{font-weight:950;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rankScore{font-weight:950}
 
-#toolsMenuWrap{position:relative;z-index:9999}
+/* Tools menu (portaled to body, fixed positioning) */
 #toolsMenu{
-  position:absolute; top:52px; right:0; z-index:10000;
-  background:var(--card); border-radius:14px; box-shadow:var(--sh2); padding:8px;
-  display:none; min-width:220px;
+  position:fixed; z-index:100000;
+  background:var(--card);
+  border-radius:14px;
+  box-shadow:var(--sh2);
+  padding:8px;
+  display:none;
+  min-width:220px;
+  transform-origin:top right;
 }
-#toolsMenu.open{display:block}
+#toolsMenu.open{display:block; animation:menuIn .12s ease}
+@keyframes menuIn{0%{opacity:0;transform:scale(.98)}100%{opacity:1;transform:scale(1)}}
+
 .menuItem{
   width:100%; text-align:left; border:none; background:transparent; padding:12px 12px; border-radius:12px;
   font-weight:950; cursor:pointer;
 }
 .menuItem:hover{background:var(--muted)}
 .menuItem.danger{color:#b91c1c}
+.menuItem:disabled{opacity:.45;cursor:not-allowed}
 .menuSep{height:1px;background:rgba(15,23,42,.10);margin:6px 0}
 
 #targetRow{
@@ -100,19 +143,98 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 }
 .plusBtn:active{transform:scale(.98)}
 
-.progress-container{background:var(--muted2);height:10px;border-radius:6px;overflow:hidden;margin:8px 0 6px 0}
-.progress-bar{height:100%;transition:width .4s ease}
-.divider{height:1px;background:rgba(15,23,42,.12);margin:8px 0}
+.progress-container{
+  background:var(--muted2);height:10px;border-radius:6px;overflow:hidden;margin:8px 0 6px 0; position:relative;
+}
+.progress-container::before{
+  content:"";
+  position:absolute; inset:0;
+  background:
+    linear-gradient(to right,
+      transparent 24.8%, rgba(15,23,42,.14) 25%, transparent 25.2%,
+      transparent 49.8%, rgba(15,23,42,.14) 50%, transparent 50.2%,
+      transparent 74.8%, rgba(15,23,42,.14) 75%, transparent 75.2%
+    );
+  opacity:.35;
+  pointer-events:none;
+}
+.progress-container.tickPulse::before{ animation:tickPulse .45s ease; }
+@keyframes tickPulse{ 0%{opacity:.25} 50%{opacity:.85} 100%{opacity:.35} }
 
+.progress-container.bustRing{ box-shadow:0 0 0 3px rgba(239,68,68,.22); }
+.progress-container.bustFlash::after{
+  content:"";
+  position:absolute; inset:-2px;
+  border-radius:10px;
+  background:rgba(239,68,68,.16);
+  animation:bustFlash .45s ease forwards;
+  pointer-events:none;
+}
+@keyframes bustFlash{ 0%{opacity:0} 20%{opacity:1} 100%{opacity:0} }
+
+.progress-bar{height:100%;transition:width .4s ease; transform-origin:left center;}
+.progress-bar.resetBounce{ animation:resetBounce .22s ease; }
+@keyframes resetBounce{
+  0%{transform:scaleX(1)}
+  55%{transform:scaleX(.985)}
+  100%{transform:scaleX(1)}
+}
+
+.divider{height:1px;background:rgba(15,23,42,.12);margin:8px 0}
 .player-line{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:950}
 .sub{font-weight:950;color:#334155;font-size:.90rem}
 .dim{color:var(--sub);font-weight:900}
 
-.card-container{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.cardchip{
-  background:var(--muted); padding:7px 10px; border-radius:999px; font-weight:950; font-size:.9rem; cursor:pointer; user-select:none
+.deltaPill{
+  display:inline-flex; align-items:center;
+  margin-left:8px;
+  padding:4px 8px; border-radius:999px;
+  font-weight:1000; font-size:.82rem;
+  background:#e9edf3; color:#334155;
+  animation:deltaIn .2s ease;
 }
-.morechip{background:#e9edf3;color:#334155}
+.deltaPill.bust{background:#ffe3e3;color:#8a1f1f}
+@keyframes deltaIn{0%{opacity:0;transform:translateY(2px)}100%{opacity:1;transform:translateY(0)}}
+
+.player-box.bustAnim{ animation:bustShake .28s ease; }
+@keyframes bustShake{
+  0%{transform:translateX(0)}
+  25%{transform:translateX(-2px)}
+  50%{transform:translateX(2px)}
+  75%{transform:translateX(-1px)}
+  100%{transform:translateX(0)}
+}
+
+.bustToast{
+  position:absolute; top:10px; right:12px;
+  background:rgba(239,68,68,.12);
+  color:#8a1f1f;
+  border:1px solid rgba(239,68,68,.25);
+  padding:6px 10px;
+  border-radius:999px;
+  font-weight:1000; font-size:.85rem;
+  animation:toastInOut .5s ease forwards;
+  pointer-events:none;
+}
+@keyframes toastInOut{
+  0%{opacity:0; transform:translateY(-4px)}
+  20%{opacity:1; transform:translateY(0)}
+  80%{opacity:1}
+  100%{opacity:0; transform:translateY(-4px)}
+}
+
+/* Chips: one-line scroll */
+.card-container{
+  display:flex; gap:6px; margin-top:8px;
+  overflow-x:auto; -webkit-overflow-scrolling:touch;
+  padding-bottom:2px;
+}
+.card-container::-webkit-scrollbar{display:none}
+.cardchip{
+  background:var(--muted); padding:7px 10px; border-radius:999px; font-weight:950; font-size:.9rem; cursor:pointer; user-select:none;
+  flex:0 0 auto;
+}
+.cardchip:active{transform:scale(.98)}
 
 #bottomBar{
   position:sticky; bottom:0; z-index:90; background:rgba(246,247,249,.92); backdrop-filter:blur(8px);
@@ -121,8 +243,23 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 #endRoundBtn{
   width:100%; border:none; border-radius:16px; padding:16px 12px; font-weight:1000; cursor:pointer; min-height:52px;
   background:#22c55e; color:#fff; box-shadow:0 12px 28px rgba(34,197,94,.18);
+  position:relative;
 }
 #endRoundBtn:disabled{background:#cbd5e1;color:#475569;box-shadow:none;cursor:not-allowed}
+#endRoundBtn.press{transform:scale(.99)}
+#endRoundBtn.saved::after{
+  content:"✓";
+  position:absolute; right:16px; top:50%;
+  transform:translateY(-50%);
+  font-weight:1100;
+  opacity:0;
+  animation:savedTick .4s ease forwards;
+}
+@keyframes savedTick{
+  0%{opacity:0;transform:translateY(-50%) scale(.9)}
+  35%{opacity:1;transform:translateY(-50%) scale(1)}
+  100%{opacity:0;transform:translateY(-50%) scale(1)}
+}
 
 #statsWrap{margin:12px 0 14px 0;background:var(--card);border-radius:16px;box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06);padding:12px}
 #statsHead{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
@@ -138,7 +275,17 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
   z-index:1000; opacity:0; transition:opacity .18s ease,transform .18s ease;
 }
 .popup.open{opacity:1;transform:translateX(-50%) translateY(0)}
-.popupHeader{position:sticky;top:0;background:var(--card);padding:0 0 10px 0;z-index:5}
+.popupHeader{
+  position:sticky; top:0; background:var(--card); padding:0 0 10px 0; z-index:6;
+  border-bottom:1px solid rgba(15,23,42,.08);
+}
+.headerRow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.headerRight{display:flex;gap:8px;align-items:center}
+.undoMini{
+  min-width:44px; min-height:44px; border:none; border-radius:12px; background:var(--muted);
+  font-weight:1000; cursor:pointer;
+}
+.undoMini:active{transform:scale(.98)}
 .tabs{display:flex;gap:8px;margin:10px 0 0 0}
 .tab{flex:1;background:var(--muted);border:none;border-radius:12px;padding:10px 12px;font-weight:950;cursor:pointer;min-height:44px}
 .tab.active{background:#1e88e5;color:#fff}
@@ -146,6 +293,7 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 .selectedWrap{background:var(--bg);border-radius:14px;padding:10px;margin:10px 0}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{background:#fff;border:1px solid #e2e6ee;border-radius:999px;padding:8px 10px;font-weight:950;cursor:pointer;user-select:none}
+.chip:active{transform:scale(.98)}
 .hint{font-size:.92rem;font-weight:900;color:#444;margin-top:8px;padding:8px 10px;border-radius:12px;background:#fff;border:1px solid var(--muted)}
 .hint.bust{background:#ffe3e3;border-color:#ffc3c3;color:#8a1f1f}
 .hint.bonus{background:#e9ffe9;border-color:#c5f3c5;color:#145214}
@@ -158,15 +306,23 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 }
 .cardBtn:active{transform:scale(.98)}
 .cardBtn.modBtn{background:var(--mod)!important;color:#1a1a1a!important;box-shadow:inset 0 0 0 1px rgba(15,23,42,.10)}
-.cardBtn.x2{grid-column:1/-1}
+.cardBtn.x2{grid-column:auto}
+
 
 .directRow{display:flex;gap:8px;align-items:center}
 .directRow input{
   flex:1;padding:12px 12px;border-radius:14px;border:1px solid #d7dbe4;font-weight:1000;outline:none;font-size:1.05rem
 }
 .directRow button{border:none;border-radius:14px;padding:12px 14px;font-weight:1000;background:#22c55e;color:#fff;cursor:pointer;white-space:nowrap;min-height:44px}
+.lastDirectRow{margin-top:10px}
+.lastDirectChip{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:8px 10px; border-radius:999px; background:var(--muted);
+  font-weight:1000; cursor:pointer;
+}
+.lastDirectChip:active{transform:scale(.98)}
 
-.popupFooter{position:sticky;bottom:-16px;background:var(--card);padding:10px 0 0 0;margin-top:12px}
+.popupFooter{position:sticky;bottom:-16px;background:var(--card);padding:10px 0 0 0;margin-top:12px;border-top:1px solid rgba(15,23,42,.08)}
 .popupFooterRow{display:flex;gap:8px}
 .popupFooterRow button{flex:1;border:none;border-radius:14px;padding:14px 12px;font-weight:1000;cursor:pointer;min-height:48px}
 .footerGhost{background:var(--muted);color:#111}
@@ -174,7 +330,43 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 .footerBlue{background:#1e88e5;color:#fff}
 
 #winnerScreen{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);justify-content:center;align-items:center;z-index:2000}
-#winnerCard{background:var(--card);padding:34px 26px;border-radius:24px;text-align:center;box-shadow:var(--sh2)}
+#winnerCard{
+  background:var(--card); padding:34px 26px; border-radius:24px; text-align:center; box-shadow:var(--sh2);
+  position:relative; overflow:hidden;
+}
+.confetti{
+  position:absolute; width:6px; height:10px; border-radius:2px;
+  top:40%; left:50%;
+  opacity:0;
+  animation:confetti .7s ease forwards;
+}
+@keyframes confetti{
+  0%{opacity:0; transform:translate(0,0) rotate(0deg)}
+  20%{opacity:1}
+  100%{opacity:0; transform:translate(var(--dx), var(--dy)) rotate(var(--rot))}
+}
+
+/* Undo Runde Toast */
+#roundToast{
+  position:fixed; left:14px; right:14px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index:2500;
+  background:rgba(15,23,42,.92);
+  color:#fff;
+  border-radius:16px;
+  padding:12px 12px;
+  display:none;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  box-shadow:0 12px 28px rgba(0,0,0,.18);
+}
+#roundToast .tText{font-weight:950; color:#fff; font-size:.95rem}
+#roundToast .tBtn{
+  border:none; border-radius:12px; padding:10px 12px; font-weight:1000;
+  background:rgba(255,255,255,.14); color:#fff; cursor:pointer; min-width:84px;
+}
+#roundToast .tBtn:active{transform:scale(.98)}
 </style>
 </head>
 
@@ -187,7 +379,10 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
     <div id="leaderLeft">
       <div id="leaderLine">
         <div id="leaderDot"></div>
-        <div id="leaderText">Noch keine Spieler</div>
+        <div id="leaderTextWrap">
+          <span id="leaderCrown">👑</span>
+          <div id="leaderText">Noch keine Spieler</div>
+        </div>
       </div>
       <div id="leaderHint">Öffne ⋯ um Spieler hinzuzufügen.</div>
       <div id="subLine">
@@ -197,27 +392,8 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
     </div>
 
     <div style="display:flex;gap:8px;align-items:center;">
-      <button id="rankBtn" class="iconBtn" type="button" aria-label="Ranking">≡</button>
-
-      <div id="toolsMenuWrap">
-        <button id="toolsBtn" class="iconBtn" type="button" aria-label="Tools">⋯</button>
-        <div id="toolsMenu">
-          <button class="menuItem" id="addPlayerBtn" type="button">Spieler hinzufügen</button>
-
-          <div class="menuSep"></div>
-
-          <button class="menuItem" id="colorsBtn" type="button">Farben neu verteilen</button>
-
-          <div class="menuSep"></div>
-
-          <button class="menuItem" id="undoBtn" type="button">Undo</button>
-          <button class="menuItem" id="undoRoundBtn" type="button">Undo Runde</button>
-
-          <div class="menuSep"></div>
-
-          <button class="menuItem danger" id="newGameBtn" type="button">New Game</button>
-        </div>
-      </div>
+      <button id="rankBtn" class="iconBtn" type="button" aria-label="Ranking" aria-expanded="false">≡</button>
+      <button id="toolsBtn" class="iconBtn" type="button" aria-label="Tools" aria-expanded="false">⋯</button>
     </div>
   </div>
 
@@ -226,7 +402,7 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 
 <div id="targetRow">
   <strong>Ziel</strong>
-  <input type="number" id="targetPoints" value="200" inputmode="numeric" pattern="[0-9]*">
+  <input type="number" id="targetPoints" value="200" inputmode="numeric" pattern="[0-9]*" />
 </div>
 
 <div id="emptyState">Keine Spieler. Öffne ⋯ → <b>Spieler hinzufügen</b>.</div>
@@ -245,13 +421,33 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
   <button id="endRoundBtn" type="button">Zwischenrunde beenden</button>
 </div>
 
+<div id="roundToast">
+  <div class="tText">Runde gespeichert</div>
+  <button class="tBtn" id="toastUndoBtn" type="button">Undo</button>
+</div>
+
+<!-- Tools menu (portaled to body by JS) -->
+<div id="toolsMenu" role="menu" aria-label="Tools-Menü">
+  <button class="menuItem" id="addPlayerBtn" type="button" role="menuitem">Spieler hinzufügen</button>
+  <div class="menuSep"></div>
+  <button class="menuItem" id="colorsBtn" type="button" role="menuitem">Farben neu verteilen</button>
+  <div class="menuSep"></div>
+  <button class="menuItem" id="undoBtn" type="button" role="menuitem">Undo</button>
+  <button class="menuItem" id="undoRoundBtn" type="button" role="menuitem">Undo Runde</button>
+  <div class="menuSep"></div>
+  <button class="menuItem danger" id="newGameBtn" type="button" role="menuitem">New Game</button>
+</div>
+
 <!-- Popup -->
 <div class="overlay" id="overlay"></div>
 <div class="popup" id="popup">
   <div class="popupHeader">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+    <div class="headerRow">
       <h3 id="popupTitle" style="margin:0;">Karten</h3>
-      <span id="popupPlayerBadge" class="badge"></span>
+      <div class="headerRight">
+        <button id="popupUndoBtn" class="undoMini" type="button" aria-label="Undo letzte Auswahl">↩︎</button>
+        <span id="popupPlayerBadge" class="badge"></span>
+      </div>
     </div>
     <div class="tabs">
       <button id="tabCards" class="tab active" type="button">Karten</button>
@@ -277,8 +473,11 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
       <div class="hint">Direktpunkte überschreiben die Karten dieser Runde (kein Bust/Bonus).</div>
     </div>
     <div class="directRow">
-      <input id="freeScoreInput" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="Punkte eingeben (z.B. 37)">
+      <input id="freeScoreInput" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="Punkte eingeben (z.B. 37)" />
       <button id="applyFreeBtn" type="button">Übernehmen</button>
+    </div>
+    <div class="lastDirectRow">
+      <div id="lastDirectChip" class="lastDirectChip" style="display:none;">Letztes: <span id="lastDirectVal"></span></div>
     </div>
   </div>
 
@@ -300,12 +499,16 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 </div>
 
 <script>
-/* ----------------- UTIL ----------------- */
+/* ---------- DOM helpers ---------- */
 const $ = (id)=>document.getElementById(id);
 function vib(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
 function lockScroll(lock){ document.body.style.overflow = lock ? "hidden" : ""; }
+const reduceMotion = () => window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/* ----------------- COLORS (Zahlen) ----------------- */
+/* ---------- Haptik ---------- */
+const HAPT = { add:12, remove:10, finish:18, bust:28, win:40, tick:10, endPress:15 };
+
+/* ---------- Farben (Zahlen) ---------- */
 const numStyle = {
   0: { bg:"linear-gradient(135deg,#0cb5be 0%,#0cb5be 20%,#e70200 20%,#e70200 40%,#c2549b 40%,#c2549b 60%,#fd8803 60%,#fd8803 80%,#ffffff 80%,#ffffff 100%)", fg:"#0b1220" },
   1: { bg:"#cbb59e" },
@@ -322,7 +525,7 @@ const numStyle = {
   12:{ bg:"#937972", fg:"#fff" }
 };
 
-/* ----------------- STATE ----------------- */
+/* ---------- State ---------- */
 let players=[];
 let roundNumber=0;
 let gameLocked=false;
@@ -330,11 +533,14 @@ let gameLocked=false;
 let selectedPlayer=null;
 let popupCards=[];
 let popupOverride=null;
+let popupActionStack=[];
+let lastDirectScore=null;
 
-let lastActionSnap=null;
-let lastRoundSnap=null;
+let undoStack=[];
+let undoRoundStack=[];
 
 let statsOpen=false;
+let lastLeaderName=null;
 
 const palette=[
   "#2563eb","#16a34a","#ea580c","#9333ea",
@@ -343,46 +549,13 @@ const palette=[
 ];
 const numbers=[...Array(13).keys()];
 
-/* ----------------- MENU (ROBUST) ----------------- */
-const toolsMenuWrapEl = $("toolsMenuWrap");
-const toolsMenuEl     = $("toolsMenu");
-const toolsBtnEl      = $("toolsBtn");
-const rankBtnEl       = $("rankBtn");
-const rankingPanelEl  = $("rankingPanel");
-
-function closeToolsMenu(){ toolsMenuEl.classList.remove("open"); }
-function toggleToolsMenu(){
-  toolsMenuEl.classList.toggle("open");
-}
-
-toolsBtnEl.addEventListener("pointerdown",(e)=>{
-  e.preventDefault(); e.stopPropagation();
-  toggleToolsMenu();
-},{passive:false});
-
-toolsMenuWrapEl.addEventListener("pointerdown",(e)=>e.stopPropagation(),{passive:true});
-toolsMenuEl.addEventListener("pointerdown",(e)=>e.stopPropagation(),{passive:true});
-
-document.addEventListener("pointerdown",(e)=>{
-  if(!toolsMenuWrapEl.contains(e.target)) closeToolsMenu();
-},{passive:true});
-
-rankBtnEl.addEventListener("pointerdown",(e)=>{
-  e.preventDefault(); e.stopPropagation();
-  rankingPanelEl.classList.toggle("open");
-  closeToolsMenu();
-},{passive:false});
-
-/* ----------------- SNAPSHOT / SAVE ----------------- */
+/* ---------- LocalStorage ---------- */
 function snapshot(){
   return JSON.parse(JSON.stringify({
     players, roundNumber, gameLocked,
     target:Number($("targetPoints").value)||200,
-    statsOpen
+    statsOpen, lastLeaderName, lastDirectScore
   }));
-}
-function save(){
-  localStorage.setItem("flip7_simple_state", JSON.stringify(snapshot()));
 }
 function restore(s){
   players=s.players||[];
@@ -390,22 +563,32 @@ function restore(s){
   gameLocked=!!s.gameLocked;
   if(typeof s.target==="number") $("targetPoints").value=s.target;
   statsOpen=!!s.statsOpen;
-  renderAll();
-  save();
+  lastLeaderName = s.lastLeaderName ?? null;
+  lastDirectScore = (typeof s.lastDirectScore==="number") ? s.lastDirectScore : null;
+  renderAll(); save();
 }
+function pushUndo(){
+  undoStack.push(snapshot());
+  if(undoStack.length>50) undoStack.shift();
+}
+function pushUndoRound(){
+  undoRoundStack.push(snapshot());
+  if(undoRoundStack.length>20) undoRoundStack.shift();
+}
+function save(){ localStorage.setItem("flip7_state_v4", JSON.stringify(snapshot())); }
 function load(){
-  const raw=localStorage.getItem("flip7_simple_state");
+  const raw=localStorage.getItem("flip7_state_v4");
   if(!raw) return;
   try{ restore(JSON.parse(raw)); }catch(e){}
 }
 
-/* ----------------- RULES ----------------- */
+/* ---------- Regeln ---------- */
 function scoreFromCards(cards){
   const nums=cards.filter(c=>typeof c==="number");
   const mods=cards.filter(c=>typeof c==="string");
 
   const isBust = (nums.length===0) || (new Set(nums).size !== nums.length);
-  if(isBust) return {score:0,isBust:true,numbersCount:nums.length};
+  if(isBust) return {score:0,isBust:true,numbersCount:nums.length, reason:(nums.length===0?"Keine Zahl gewählt":"Doppelte Zahl")};
 
   const sumNums = nums.reduce((a,b)=>a+b,0);
 
@@ -416,17 +599,46 @@ function scoreFromCards(cards){
   for(const m of mods){ if(m.startsWith("+")) modSum += Number(m.slice(1)); }
 
   const bonus = (nums.length===7) ? 15 : 0;
-  return { score:(sumNums*multi)+modSum+bonus, isBust:false, numbersCount:nums.length };
+
+  return { score:(sumNums*multi)+modSum+bonus, isBust:false, numbersCount:nums.length, reason:"" };
 }
 
-/* ----------------- UI HELPERS ----------------- */
-function updateLocks(){
-  $("targetRow").style.display = gameLocked ? "none" : "flex";
-  $("emptyState").style.display = players.length? "none" : "block";
-  $("endRoundBtn").disabled = players.length===0;
-  $("addPlayerBtn").disabled = (gameLocked || roundNumber>0);
+/* ---------- Ranking ---------- */
+function getRanking(){
+  return [...players].map(p=>{
+    const live = (p.override!==null) ? p.override : scoreFromCards(p.cards).score;
+    return {name:p.name,color:p.color,score:p.total+live};
+  }).sort((a,b)=>b.score-a.score);
 }
 
+/* ---------- FLIP reorder ---------- */
+function flipReorder(container, newOrderKeys){
+  if(reduceMotion()) return;
+  const items=[...container.querySelectorAll("[data-key]")];
+  const first=new Map(items.map(el=>[el.dataset.key, el.getBoundingClientRect()]));
+
+  const map=new Map(items.map(el=>[el.dataset.key, el]));
+  newOrderKeys.forEach(k=>{
+    const el=map.get(k);
+    if(el) container.appendChild(el);
+  });
+
+  const last=[...container.querySelectorAll("[data-key]")];
+  last.forEach(el=>{
+    const f=first.get(el.dataset.key);
+    const l=el.getBoundingClientRect();
+    if(!f) return;
+    const dx=f.left-l.left, dy=f.top-l.top;
+    if(dx || dy){
+      el.animate(
+        [{ transform:`translate(${dx}px,${dy}px)` }, { transform:"translate(0,0)" }],
+        { duration:260, easing:"cubic-bezier(.2,.8,.2,1)" }
+      );
+    }
+  });
+}
+
+/* ---------- Top render ---------- */
 function renderTop(){
   const target=Number($("targetPoints").value)||200;
   $("roundBadge").textContent = "Runde: "+roundNumber;
@@ -442,76 +654,97 @@ function renderTop(){
   const list=getRanking();
   const leader=list[0];
   $("leaderDot").style.background=leader.color;
-  $("leaderText").textContent=`👑 ${leader.name} führt (${leader.score})`;
+
+  const changed = (lastLeaderName !== null && leader.name !== lastLeaderName);
+  lastLeaderName = leader.name;
+
+  $("leaderText").textContent = `${leader.name} führt (${leader.score})`;
+
+  if(changed){
+    const strip=$("leaderStrip");
+    strip.classList.add("spotlight");
+    setTimeout(()=>strip.classList.remove("spotlight"), 650);
+
+    const crown=$("leaderCrown");
+    crown.classList.add("pop");
+    setTimeout(()=>crown.classList.remove("pop"), 250);
+
+    const text=$("leaderText");
+    text.classList.add("crossfade");
+    setTimeout(()=>text.classList.remove("crossfade"), 170);
+  }
 }
 
-function getRanking(){
-  return [...players].map(p=>{
-    const live = (p.override!==null) ? p.override : scoreFromCards(p.cards).score;
-    return {name:p.name,color:p.color,score:p.total+live};
-  }).sort((a,b)=>b.score-a.score);
-}
-
+/* ---------- Ranking panel ---------- */
 function renderRanking(){
   const list=getRanking();
-  rankingPanelEl.innerHTML = list.length ? list.map((p,i)=>`
-    <div class="rankItem">
+  const panel=$("rankingPanel");
+
+  // rebuild always (simple + reliable)
+  panel.innerHTML = list.length ? list.map((p,i)=>`
+    <div class="rankItem" data-key="${p.name}">
       <div class="rankNo">${i+1}.</div>
       <div class="rankDot" style="background:${p.color}"></div>
       <div class="rankName">${p.name}</div>
       <div class="rankScore">${p.score}</div>
     </div>
   `).join("") : `<div style="font-weight:900;color:#555;">Noch keine Spieler</div>`;
+
+  // FLIP only if open (feels relevant)
+  if(panel.classList.contains("open")) flipReorder(panel, list.map(p=>p.name));
 }
 
+/* ---------- Players render ---------- */
 function renderPlayers(){
   const target=Number($("targetPoints").value)||200;
-  const leaderName = players.length ? getRanking()[0].name : null;
+  const rank=getRanking();
+  const leaderName = rank.length ? rank[0].name : null;
 
   const wrap=$("playersContainer");
   wrap.innerHTML="";
 
   players.forEach((p,i)=>{
-    const res = (p.override!==null) ? {score:p.override,isBust:(p.override===0),numbersCount:0} : scoreFromCards(p.cards);
+    const res = (p.override!==null)
+      ? {score:p.override,isBust:(p.override===0),numbersCount:0, reason:""}
+      : scoreFromCards(p.cards);
+
     const live=res.score;
     const total=p.total+live;
+
+    const bonusBadge = (p.cards.length && !res.isBust && res.numbersCount===7) ? `<span class="miniBadge action">+15</span>` : "";
+    const manualBadge = (p.override!==null) ? `<span class="miniBadge">manuell</span>` : "";
 
     const div=document.createElement("div");
     div.className="player-box"+(leaderName===p.name?" leader":"");
     div.style.borderLeftColor=p.color;
-
-    const chipsMax=6;
-    const shown=p.cards.slice(0,chipsMax);
-    const hidden=Math.max(p.cards.length-chipsMax,0);
-
-    const hint = (p.cards.length && !res.isBust && res.numbersCount===7) ? `<span class="miniBadge action">+15</span>` : "";
-    const manual = (p.override!==null) ? `<span class="miniBadge">manuell</span>` : "";
 
     div.innerHTML=`
       <div class="player-top">
         <div class="player-name">
           <span class="player-dot" style="background:${p.color}"></span>
           <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</span>
-          ${hint} ${manual}
+          ${bonusBadge} ${manualBadge}
         </div>
-        <button class="plusBtn" type="button" aria-label="Punkte/Karten" onclick="openPopup(${i}, false)">+</button>
+        <button class="plusBtn" type="button" data-i="${i}" aria-label="Punkte/Karten">+</button>
       </div>
 
-      <div class="progress-container">
-        <div class="progress-bar" style="width:${Math.min((total/target)*100,100)}%; background:${p.color}"></div>
+      <div class="progress-container" id="pc_${i}">
+        <div class="progress-bar" id="pb_${i}" style="width:${Math.min((total/target)*100,100)}%; background:${p.color}"></div>
       </div>
 
       <div class="divider"></div>
 
       <div class="player-line">
-        <span class="sub">Runde: <button class="sub" style="border:none;background:transparent;padding:0;text-decoration:underline;cursor:pointer" onclick="openPopup(${i}, true)">${live}</button></span>
-        <span><b>${total}</b>/<span>${target}</span> <span class="dim">(noch ${Math.max(target-total,0)})</span></span>
+        <span class="sub">
+          <button class="sub" data-direct="1" data-i="${i}" style="border:none;background:transparent;padding:0;text-decoration:underline;cursor:pointer">Runde: ${live}</button>
+          <span id="delta_${i}"></span>
+        </span>
+        <span><b id="total_${i}">${total}</b>/<span>${target}</span> <span class="dim">(noch <span id="left_${i}">${Math.max(target-total,0)}</span>)</span></span>
       </div>
 
       ${p.cards.length?`
         <div class="card-container">
-          ${shown.map((c,ci)=>`<span class="cardchip" onclick="removeCard(${i},${ci})">${c}</span>`).join("")}
-          ${hidden?`<span class="cardchip morechip" onclick="openPopup(${i},false)">+${hidden}…</span>`:""}
+          ${p.cards.map((c,ci)=>`<span class="cardchip" data-rem="${ci}" data-i="${i}">${c}</span>`).join("")}
         </div>
       `:""}
     `;
@@ -519,6 +752,7 @@ function renderPlayers(){
   });
 }
 
+/* ---------- Stats ---------- */
 function renderStats(){
   const box=$("stats");
   if(!players.length){ box.innerHTML=`<div style="font-weight:900;color:#555;">Noch keine Daten</div>`; return; }
@@ -529,125 +763,145 @@ function renderStats(){
   }).join("");
 }
 
-/* ----------------- ACTIONS ----------------- */
-function addPlayerSimple(){
-  if(gameLocked || roundNumber>0) return;
-  const name = prompt("Spielername:");
-  if(!name) return;
+/* ---------- Locks ---------- */
+function updateLocks(){
+  $("targetRow").style.display = gameLocked ? "none" : "flex";
+  $("emptyState").style.display = players.length? "none" : "block";
+  $("endRoundBtn").disabled = players.length===0;
 
-  lastActionSnap=snapshot();
+  $("addPlayerBtn").disabled = (gameLocked || roundNumber>0);
 
-  const used=new Set(players.map(x=>x.color));
-  const free=palette.find(c=>!used.has(c)) || palette[players.length % palette.length];
+  const colors = players.map(p=>p.color);
+  const hasDup = new Set(colors).size !== colors.length;
+  $("colorsBtn").disabled = !(players.length>palette.length || hasDup);
 
-  players.push({name:name.trim(), color:free, cards:[], total:0, rounds:[], busts:0, override:null});
-  renderAll(); save();
-}
-function redistributeColors(){
-  if(!players.length) return;
-  lastActionSnap=snapshot();
-  const pool=[...palette];
-  for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
-  players.forEach((p,i)=>p.color=pool[i%pool.length]);
-  renderAll(); save();
-}
-function removeCard(pi,ci){
-  lastActionSnap=snapshot();
-  players[pi].cards.splice(ci,1);
-  players[pi].override=null;
-  vib(10);
-  renderAll(); save();
-}
-function undoAction(){
-  if(!lastActionSnap) return;
-  restore(lastActionSnap); lastActionSnap=null;
-}
-function undoRound(){
-  if(!lastRoundSnap) return;
-  restore(lastRoundSnap); lastRoundSnap=null;
-}
-function newGame(){
-  const ok=confirm("Neues Spiel starten? (Alle Spieler werden entfernt)");
-  if(!ok) return;
-  lastActionSnap=snapshot(); lastRoundSnap=snapshot();
-  players=[]; roundNumber=0; gameLocked=false;
-  $("winnerScreen").style.display="none";
-  rankingPanelEl.classList.remove("open");
-  renderAll(); save();
+  $("undoBtn").disabled = undoStack.length===0;
+  $("undoRoundBtn").disabled = undoRoundStack.length===0;
 }
 
-/* ----------------- POPUP ----------------- */
+/* ---------- Render all ---------- */
+function renderAll(){
+  renderTop();
+  renderRanking();
+  renderPlayers();
+  renderStats();
+  $("stats").style.display = statsOpen ? "block" : "none";
+  $("statsChevron").textContent = statsOpen ? "▲" : "▼";
+  updateLocks();
+}
+
+/* ---------- Tools Menu (FIX) ---------- */
+const toolsBtnEl = $("toolsBtn");
+const toolsMenuEl = $("toolsMenu");
+document.body.appendChild(toolsMenuEl); // portal to body
+
+let toolsMenuOpen=false;
+
+function positionToolsMenu(){
+  const r = toolsBtnEl.getBoundingClientRect();
+  const w = toolsMenuEl.offsetWidth || 240;
+  const margin = 8;
+  let left = r.right - w;
+  let top  = r.bottom + margin;
+  left = Math.max(margin, Math.min(left, window.innerWidth - w - margin));
+  top  = Math.max(margin, Math.min(top, window.innerHeight - toolsMenuEl.offsetHeight - margin));
+  toolsMenuEl.style.left = left + "px";
+  toolsMenuEl.style.top  = top + "px";
+}
+function closeToolsMenu(){
+  toolsMenuOpen=false;
+  toolsMenuEl.classList.remove("open");
+  toolsBtnEl.setAttribute("aria-expanded","false");
+}
+function openToolsMenu(){
+  toolsMenuOpen=true;
+  toolsMenuEl.classList.add("open");
+  toolsBtnEl.setAttribute("aria-expanded","true");
+  positionToolsMenu();
+}
+function toggleToolsMenu(){ toolsMenuOpen ? closeToolsMenu() : openToolsMenu(); }
+
+toolsBtnEl.addEventListener("click",(e)=>{
+  e.preventDefault();
+  e.stopPropagation();
+  toggleToolsMenu();
+}, false);
+
+toolsMenuEl.addEventListener("click",(e)=>{ e.stopPropagation(); }, false);
+
+document.addEventListener("click",(e)=>{
+  if(!toolsMenuOpen) return;
+  if(e.target === toolsBtnEl) return;
+  if(toolsMenuEl.contains(e.target)) return;
+  closeToolsMenu();
+}, true);
+
+window.addEventListener("resize",()=>{ if(toolsMenuOpen) positionToolsMenu(); }, {passive:true});
+window.addEventListener("scroll",()=>{ if(toolsMenuOpen) positionToolsMenu(); }, {passive:true});
+
+/* ---------- Ranking toggle ---------- */
+$("rankBtn").addEventListener("click",(e)=>{
+  e.preventDefault(); e.stopPropagation();
+  const open = $("rankingPanel").classList.toggle("open");
+  $("rankBtn").setAttribute("aria-expanded", open ? "true" : "false");
+  closeToolsMenu();
+}, false);
+
+/* ---------- Popup ---------- */
 const overlayEl=$("overlay"), popupEl=$("popup");
 const tabCardsEl=$("tabCards"), tabDirectEl=$("tabDirect");
 const cardsView=$("popupCardsView"), directView=$("popupDirectView");
+let lastUndoTap=0;
 
-function setTab(t){
-  tabCardsEl.classList.toggle("active", t==="cards");
-  tabDirectEl.classList.toggle("active", t==="direct");
-  cardsView.style.display = (t==="cards")?"block":"none";
-  directView.style.display = (t==="direct")?"block":"none";
-  $("popupTitle").textContent = (t==="direct") ? "Direktpunkte" : "Karten";
-  if(t==="direct") setTimeout(()=>$("freeScoreInput").focus(), 60);
+function stackPopupState(){
+  popupActionStack.push(JSON.parse(JSON.stringify({cards:popupCards, override:popupOverride, free:$("freeScoreInput").value})));
+  if(popupActionStack.length>40) popupActionStack.shift();
 }
-
-function openPopup(i, direct){
-  selectedPlayer=i;
-  popupCards=[...players[i].cards];
-  popupOverride=players[i].override;
-
-  $("popupPlayerBadge").textContent=players[i].name;
-  $("freeScoreInput").value = popupOverride!==null ? popupOverride : "";
-
-  popupEl.style.display="block";
-  overlayEl.style.display="block";
-  requestAnimationFrame(()=>{ popupEl.classList.add("open"); overlayEl.classList.add("open"); });
-  lockScroll(true);
-
-  setTab(direct ? "direct" : "cards");
+function popupUndo(){
+  if(!popupActionStack.length) return;
+  const s=popupActionStack.pop();
+  popupCards=s.cards;
+  popupOverride=s.override;
+  $("freeScoreInput").value=s.free;
   renderPopupSelection();
 }
-
-function closePopup(cancel){
-  popupEl.classList.remove("open");
-  overlayEl.classList.remove("open");
-  setTimeout(()=>{ popupEl.style.display="none"; overlayEl.style.display="none"; }, 180);
-  lockScroll(false);
-
-  if(!cancel && selectedPlayer!==null){
-    lastActionSnap=snapshot();
-    players[selectedPlayer].cards=[...popupCards];
-    players[selectedPlayer].override=popupOverride;
-    save();
+function popupUndoTap(){
+  const now=Date.now();
+  if(now-lastUndoTap < 260){
+    clearPopup();
+    lastUndoTap=0;
+    return;
   }
-
-  selectedPlayer=null;
-  renderAll();
+  lastUndoTap=now;
+  popupUndo();
 }
-
-overlayEl.addEventListener("pointerdown",()=>closePopup(true),{passive:true});
-
+function clearPopup(){
+  stackPopupState();
+  popupCards=[]; popupOverride=null; $("freeScoreInput").value="";
+  renderPopupSelection();
+}
 function popupAdd(x){
+  stackPopupState();
   popupCards.push(x);
   popupOverride=null;
   $("freeScoreInput").value="";
-  vib(12);
+  vib(HAPT.add);
   renderPopupSelection();
 }
 function popupRemoveAt(idx){
+  stackPopupState();
   popupCards.splice(idx,1);
   popupOverride=null;
   $("freeScoreInput").value="";
-  vib(10);
-  renderPopupSelection();
-}
-function clearPopup(){
-  popupCards=[]; popupOverride=null; $("freeScoreInput").value="";
+  vib(HAPT.remove);
   renderPopupSelection();
 }
 function applyFree(){
   const v=Number($("freeScoreInput").value);
   if(!Number.isFinite(v) || v<0) return;
+  stackPopupState();
   popupOverride=Math.floor(v);
+  lastDirectScore = popupOverride;
   renderPopupSelection();
 }
 function renderPopupSelection(){
@@ -673,15 +927,66 @@ function renderPopupSelection(){
   const prev=scoreFromCards(popupCards);
   if(prev.isBust){
     info.className="hint bust";
-    info.textContent="Vorschau: BUST (0 Punkte)";
+    info.textContent=`Vorschau: BUST (0 Punkte) • ${prev.reason}`;
   }else{
     const isBonus=prev.numbersCount===7;
     info.className="hint"+(isBonus?" bonus":"");
     info.textContent=`Vorschau: ${prev.score} Punkte`+(isBonus?" • +15 Bonus":"");
   }
 }
+function setTab(t){
+  tabCardsEl.classList.toggle("active", t==="cards");
+  tabDirectEl.classList.toggle("active", t==="direct");
+  cardsView.style.display = (t==="cards")?"block":"none";
+  directView.style.display = (t==="direct")?"block":"none";
+  $("popupTitle").textContent = (t==="direct") ? "Direktpunkte" : "Karten";
 
-/* Popup grids */
+  if(t==="direct"){
+    if(typeof lastDirectScore==="number"){
+      $("lastDirectVal").textContent = lastDirectScore;
+      $("lastDirectChip").style.display="inline-flex";
+    }else{
+      $("lastDirectChip").style.display="none";
+    }
+    setTimeout(()=>$("freeScoreInput").focus(), 60);
+  }else{
+    $("lastDirectChip").style.display="none";
+  }
+}
+function openPopup(i, direct){
+  selectedPlayer=i;
+  popupCards=[...players[i].cards];
+  popupOverride=players[i].override;
+  popupActionStack=[];
+  $("popupPlayerBadge").textContent=players[i].name;
+  $("freeScoreInput").value = popupOverride!==null ? popupOverride : "";
+
+  popupEl.style.display="block";
+  overlayEl.style.display="block";
+  requestAnimationFrame(()=>{ popupEl.classList.add("open"); overlayEl.classList.add("open"); });
+  lockScroll(true);
+
+  setTab(direct ? "direct" : "cards");
+  renderPopupSelection();
+}
+function closePopup(cancel){
+  popupEl.classList.remove("open");
+  overlayEl.classList.remove("open");
+  setTimeout(()=>{ popupEl.style.display="none"; overlayEl.style.display="none"; }, 180);
+  lockScroll(false);
+
+  if(!cancel && selectedPlayer!==null){
+    pushUndo();
+    players[selectedPlayer].cards=[...popupCards];
+    players[selectedPlayer].override=popupOverride;
+    save();
+    vib(HAPT.finish);
+  }
+  selectedPlayer=null;
+  renderAll();
+}
+
+/* ---------- Popup grids ---------- */
 function buildPopupGrids(){
   const ng=$("numberGrid");
   ng.innerHTML="";
@@ -697,7 +1002,8 @@ function buildPopupGrids(){
 
   const mg=$("modGrid");
   mg.innerHTML="";
-  ["+2","+4","+6","+8","+10","x2"].forEach(m=>{
+["+2","+4","+6","+8","+10","x2"].forEach(m=>{
+
     const b=document.createElement("button");
     b.type="button"; b.className="cardBtn modBtn"+(m==="x2"?" x2":"");
     b.textContent=m;
@@ -706,85 +1012,344 @@ function buildPopupGrids(){
   });
 }
 
-/* ----------------- ROUND END ----------------- */
+/* ---------- Round toast ---------- */
+let toastTimer=null;
+function showRoundToast(){
+  const t=$("roundToast");
+  t.style.display="flex";
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>hideRoundToast(), 2600);
+}
+function hideRoundToast(){
+  clearTimeout(toastTimer);
+  $("roundToast").style.display="none";
+}
+
+/* ---------- Tick / Count-up ---------- */
+function getCrossedTicks(prevPct, nextPct){
+  const ticks=[25,50,75];
+  return ticks.some(t => prevPct < t && nextPct >= t);
+}
+function animateCountUp(el, from, to, ms){
+  if(reduceMotion() || from===to){ el.textContent=to; return; }
+  const start=performance.now();
+  function step(now){
+    const t=Math.min((now-start)/ms,1);
+    const eased = 1 - Math.pow(1-t,2);
+    el.textContent = Math.round(from+(to-from)*eased);
+    if(t<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+/* ---------- Winner confetti ---------- */
+function spawnConfetti(color){
+  if(reduceMotion()) return;
+  const card=$("winnerCard");
+  [...card.querySelectorAll(".confetti")].forEach(x=>x.remove());
+  const colors=[color, "#ffffff", "rgba(255,255,255,.65)", "rgba(15,23,42,.15)"];
+  for(let i=0;i<10;i++){
+    const s=document.createElement("div");
+    s.className="confetti";
+    s.style.background=colors[Math.floor(Math.random()*colors.length)];
+    s.style.left = (40 + Math.random()*20) + "%";
+    s.style.top  = (35 + Math.random()*10) + "%";
+    s.style.setProperty("--dx", (Math.random()*160-80).toFixed(0)+"px");
+    s.style.setProperty("--dy", (Math.random()*-220-80).toFixed(0)+"px");
+    s.style.setProperty("--rot",(Math.random()*260-130).toFixed(0)+"deg");
+    s.style.animationDelay = (Math.random()*80) + "ms";
+    card.appendChild(s);
+  }
+}
+
+/* ---------- End Round ---------- */
 function endRound(){
   if(!players.length) return;
 
-  lastRoundSnap=snapshot();
+  const btn=$("endRoundBtn");
+  btn.classList.add("press");
+  setTimeout(()=>btn.classList.remove("press"), 160);
+  vib(HAPT.endPress);
 
+  pushUndoRound();
   if(!gameLocked) gameLocked=true;
 
   const target=Number($("targetPoints").value)||200;
 
+  const prevTotals = players.map(p => p.total);
+  const prevPct = players.map((p,i)=> Math.min((prevTotals[i]/target)*100, 100));
+
+  const roundScores=[];
+
   players.forEach(p=>{
     const res = (p.override!==null) ? {score:p.override,isBust:(p.override===0)} : scoreFromCards(p.cards);
     const s=res.score;
+    roundScores.push(s);
+
     p.total+=s;
     p.rounds.push(s);
     if(res.isBust) p.busts+=1;
+
     p.cards=[];
     p.override=null;
   });
 
   roundNumber += 1;
 
-  renderAll(); save();
+  btn.classList.add("saved");
+  setTimeout(()=>btn.classList.remove("saved"), 420);
+
+  renderAll();
+  showRoundToast();
+
+  // animations + feedback
+  players.forEach((p,i)=>{
+    const nextTotal=p.total;
+    const nextP = Math.min((nextTotal/target)*100, 100);
+
+    if(getCrossedTicks(prevPct[i], nextP)){
+      const pc=$("pc_"+i);
+      if(pc){
+        pc.classList.add("tickPulse");
+        setTimeout(()=>pc.classList.remove("tickPulse"), 480);
+        vib(HAPT.tick);
+      }
+    }
+
+    const totalEl=$("total_"+i);
+    const leftEl=$("left_"+i);
+    if(totalEl && leftEl){
+      animateCountUp(totalEl, prevTotals[i], nextTotal, 380);
+      setTimeout(()=>{ leftEl.textContent = Math.max(target-nextTotal,0); }, 420);
+    }
+
+    const deltaHost=$("delta_"+i);
+    if(deltaHost){
+      const s=roundScores[i];
+      deltaHost.innerHTML = "";
+      const pill=document.createElement("span");
+      pill.className="deltaPill"+(s===0 ? " bust": "");
+      pill.textContent = (s===0) ? "0" : ("+"+s);
+      deltaHost.appendChild(pill);
+      setTimeout(()=>{ deltaHost.innerHTML=""; }, 800);
+    }
+
+    if(roundScores[i]===0){
+      const row = document.querySelectorAll(".player-box")[i];
+      const pc  = $("pc_"+i);
+      const pb  = $("pb_"+i);
+
+      if(row){
+        row.classList.add("bustAnim");
+        const toast=document.createElement("div");
+        toast.className="bustToast";
+        toast.textContent="BUST";
+        row.appendChild(toast);
+        setTimeout(()=>toast.remove(), 520);
+        setTimeout(()=>row.classList.remove("bustAnim"), 300);
+      }
+      if(pc){
+        pc.classList.add("bustRing","bustFlash");
+        setTimeout(()=>pc.classList.remove("bustRing","bustFlash"), 520);
+      }
+      if(pb){
+        pb.classList.add("resetBounce");
+        setTimeout(()=>pb.classList.remove("resetBounce"), 260);
+      }
+      vib(HAPT.bust);
+    }
+  });
+
+  save();
 
   const win = players.find(p=>p.total>=target);
   if(win){
     $("winnerText").textContent = win.name+" gewinnt!";
     $("winnerScreen").style.display="flex";
-    vib(35);
+    spawnConfetti(players.find(x=>x.name===win.name)?.color || "#22c55e");
+    vib(HAPT.win);
   }
 }
 
-/* ----------------- STATS TOGGLE ----------------- */
-$("statsHead").addEventListener("pointerdown",(e)=>{
-  e.preventDefault();
+/* ---------- Menu actions ---------- */
+function addPlayerSimple(){
+  if(gameLocked || roundNumber>0) return;
+  const name = prompt("Spielername:");
+  if(!name) return;
+
+  pushUndo();
+  const used=new Set(players.map(x=>x.color));
+  const free=palette.find(c=>!used.has(c)) || palette[players.length % palette.length];
+
+  players.push({name:name.trim(), color:free, cards:[], total:0, rounds:[], busts:0, override:null});
+  closeToolsMenu();
+  renderAll(); save();
+}
+function redistributeColors(){
+  if(!players.length) return;
+  pushUndo();
+  const pool=[...palette];
+  for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+  players.forEach((p,i)=>p.color=pool[i%pool.length]);
+  closeToolsMenu();
+  renderAll(); save();
+}
+function undoAction(){
+  if(!undoStack.length) return;
+  closeToolsMenu();
+  restore(undoStack.pop());
+}
+function undoRound(){
+  if(!undoRoundStack.length) return;
+  closeToolsMenu();
+  hideRoundToast();
+  restore(undoRoundStack.pop());
+}
+function newGame(){
+  closeToolsMenu();
+  const ok=confirm("Neues Spiel starten? (Alle Spieler werden entfernt)");
+  if(!ok) return;
+  players=[]; roundNumber=0; gameLocked=false;
+  $("winnerScreen").style.display="none";
+  $("rankingPanel").classList.remove("open");
+  $("rankBtn").setAttribute("aria-expanded","false");
+  save();
+  renderAll();
+}
+
+/* ---------- Event wiring ---------- */
+$("statsHead").addEventListener("click",()=>{
   statsOpen=!statsOpen;
   $("stats").style.display = statsOpen ? "block" : "none";
   $("statsChevron").textContent = statsOpen ? "▲" : "▼";
   save();
-},{passive:false});
+});
 
-/* ----------------- WIRE MENU BUTTONS ----------------- */
-$("addPlayerBtn").addEventListener("pointerdown",(e)=>{e.preventDefault();closeToolsMenu();addPlayerSimple();},{passive:false});
-$("colorsBtn").addEventListener("pointerdown",(e)=>{e.preventDefault();closeToolsMenu();redistributeColors();},{passive:false});
-$("undoBtn").addEventListener("pointerdown",(e)=>{e.preventDefault();closeToolsMenu();undoAction();},{passive:false});
-$("undoRoundBtn").addEventListener("pointerdown",(e)=>{e.preventDefault();closeToolsMenu();undoRound();},{passive:false});
-$("newGameBtn").addEventListener("pointerdown",(e)=>{e.preventDefault();closeToolsMenu();newGame();},{passive:false});
+$("addPlayerBtn").addEventListener("click",(e)=>{ e.preventDefault(); addPlayerSimple(); });
+$("colorsBtn").addEventListener("click",(e)=>{ e.preventDefault(); redistributeColors(); });
+$("undoBtn").addEventListener("click",(e)=>{ e.preventDefault(); undoAction(); });
+$("undoRoundBtn").addEventListener("click",(e)=>{ e.preventDefault(); undoRound(); });
+$("newGameBtn").addEventListener("click",(e)=>{ e.preventDefault(); newGame(); });
 
-/* Popup wires */
-$("tabCards").addEventListener("pointerdown",(e)=>{e.preventDefault();setTab("cards");},{passive:false});
-$("tabDirect").addEventListener("pointerdown",(e)=>{e.preventDefault();setTab("direct");},{passive:false});
-$("applyFreeBtn").addEventListener("pointerdown",(e)=>{e.preventDefault();applyFree();},{passive:false});
-$("clearBtn").addEventListener("pointerdown",(e)=>{e.preventDefault();clearPopup();},{passive:false});
-$("cancelBtn").addEventListener("pointerdown",(e)=>{e.preventDefault();closePopup(true);},{passive:false});
-$("finishBtn").addEventListener("pointerdown",(e)=>{e.preventDefault();vib(18);closePopup(false);},{passive:false});
+$("toastUndoBtn").addEventListener("click",(e)=>{ e.preventDefault(); undoRound(); });
+$("endRoundBtn").addEventListener("click",(e)=>{ e.preventDefault(); endRound(); });
 
-/* Winner */
-$("winnerNewGame").addEventListener("pointerdown",(e)=>{e.preventDefault();$("winnerScreen").style.display="none";newGame();},{passive:false});
-
-/* End round */
-$("endRoundBtn").addEventListener("pointerdown",(e)=>{e.preventDefault();endRound();},{passive:false});
-
-/* ----------------- RENDER ----------------- */
-function renderAll(){
-  renderTop();
-  renderRanking();
-  renderPlayers();
-  renderStats();
-  $("stats").style.display = statsOpen ? "block" : "none";
-  $("statsChevron").textContent = statsOpen ? "▲" : "▼";
-  updateLocks();
-}
-
-/* INIT */
 $("targetPoints").addEventListener("change",()=>{
   if(gameLocked) return;
   save(); renderAll();
 });
+
+$("tabCards").addEventListener("click",(e)=>{ e.preventDefault(); setTab("cards"); });
+$("tabDirect").addEventListener("click",(e)=>{ e.preventDefault(); setTab("direct"); });
+$("applyFreeBtn").addEventListener("click",(e)=>{ e.preventDefault(); applyFree(); });
+$("clearBtn").addEventListener("click",(e)=>{ e.preventDefault(); clearPopup(); });
+$("cancelBtn").addEventListener("click",(e)=>{ e.preventDefault(); closePopup(true); });
+$("finishBtn").addEventListener("click",(e)=>{ e.preventDefault(); closePopup(false); });
+$("popupUndoBtn").addEventListener("click",(e)=>{ e.preventDefault(); popupUndoTap(); });
+
+$("lastDirectChip").addEventListener("click",(e)=>{
+  e.preventDefault();
+  if(typeof lastDirectScore==="number"){
+    $("freeScoreInput").value = lastDirectScore;
+    applyFree();
+  }
+});
+
+$("winnerNewGame").addEventListener("click",(e)=>{
+  e.preventDefault();
+  $("winnerScreen").style.display="none";
+  newGame();
+});
+
+overlayEl.addEventListener("pointerdown",()=>closePopup(true),{passive:true});
+
+/* Delegation: chips remove + open popup (tap + / tap Runde) + long-press shortcut */
+let pressTimer=null;
+let longPressFired=false;
+
+$("playersContainer").addEventListener("pointerdown",(e)=>{
+  const rem = e.target.closest(".cardchip");
+  if(rem && rem.dataset.rem!=null){
+    pushUndo();
+    const i=Number(rem.dataset.i);
+    const ci=Number(rem.dataset.rem);
+    players[i].cards.splice(ci,1);
+    players[i].override=null;
+    vib(HAPT.remove);
+    renderAll(); save();
+    return;
+  }
+
+  const directBtn = e.target.closest('button[data-direct="1"]');
+  if(directBtn){
+    e.preventDefault();
+    const i=Number(directBtn.dataset.i);
+    openPopup(i, true);
+    return;
+  }
+
+  const plus=e.target.closest(".plusBtn");
+  if(plus){
+    e.preventDefault();
+    const i=Number(plus.dataset.i);
+    longPressFired=false;
+    clearTimeout(pressTimer);
+    pressTimer=setTimeout(()=>{
+      longPressFired=true;
+      openPopup(i, true);
+    }, 360);
+    plus.setPointerCapture?.(e.pointerId);
+  }
+},{passive:false});
+
+$("playersContainer").addEventListener("pointerup",(e)=>{
+  const plus=e.target.closest(".plusBtn");
+  if(!plus) return;
+  clearTimeout(pressTimer);
+  if(!longPressFired){
+    const i=Number(plus.dataset.i);
+    openPopup(i, false);
+  }
+},{passive:false});
+
+/* ---------- Popup open/close buttons ---------- */
+function openPopup(i, direct){
+  selectedPlayer=i;
+  popupCards=[...players[i].cards];
+  popupOverride=players[i].override;
+  popupActionStack=[];
+  $("popupPlayerBadge").textContent=players[i].name;
+  $("freeScoreInput").value = popupOverride!==null ? popupOverride : "";
+
+  popupEl.style.display="block";
+  overlayEl.style.display="block";
+  requestAnimationFrame(()=>{ popupEl.classList.add("open"); overlayEl.classList.add("open"); });
+  lockScroll(true);
+
+  setTab(direct ? "direct" : "cards");
+  renderPopupSelection();
+}
+function closePopup(cancel){
+  popupEl.classList.remove("open");
+  overlayEl.classList.remove("open");
+  setTimeout(()=>{ popupEl.style.display="none"; overlayEl.style.display="none"; }, 180);
+  lockScroll(false);
+
+  if(!cancel && selectedPlayer!==null){
+    pushUndo();
+    players[selectedPlayer].cards=[...popupCards];
+    players[selectedPlayer].override=popupOverride;
+    save();
+    vib(HAPT.finish);
+  }
+  selectedPlayer=null;
+  renderAll();
+}
+
+/* ---------- Build popup grids ---------- */
 buildPopupGrids();
+
+/* ---------- Init ---------- */
 load();
 renderAll();
 </script>
