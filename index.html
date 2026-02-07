@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DDOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
@@ -7,505 +7,174 @@
 
 <style>
 :root{
-  --bg:#f6f7f9;
-  --card:#ffffff;
-  --muted:#eef1f5;
-  --muted2:#e7e9ed;
-  --text:#1a1a1a;
-  --shadow:0 2px 6px rgba(0,0,0,.05);
-  --shadow2:0 10px 25px rgba(0,0,0,.12);
+  --bg:#f6f7f9; --card:#fff; --muted:#eef1f5; --muted2:#dfe4ea;
+  --text:#0f172a; --sub:#475569;
+  --sh1:0 1px 2px rgba(0,0,0,.06);
+  --sh2:0 12px 28px rgba(0,0,0,.10);
+  --action:#937972;   /* Bonus +15 & x2 Badge-Farbe */
+  --mod:#f8b22d;      /* +2/+4/+6/+8/+10 & x2 Button-Farbe im Popup */
 }
-
+*{-webkit-tap-highlight-color:transparent}
+button,.chip,.cardchip,.cardBtn,.iconBtn{touch-action:manipulation}
 body{
-  font-family:system-ui,Arial;
-  background:var(--bg);
-  margin:0;
-  padding:14px;
-  color:var(--text);
+  font-family:system-ui,Arial; margin:0; padding:14px; background:var(--bg); color:var(--text);
+  font-variant-numeric:tabular-nums;
 }
+h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 
-h1{ text-align:center; margin:8px 0 12px 0; font-size:1.35rem; }
-
-#topbar{
-  position:sticky;
-  top:0;
-  z-index:100;
-  background:rgba(246,247,249,.92);
-  backdrop-filter: blur(8px);
-  padding:8px 0 10px 0;
-}
+#topbar{position:sticky;top:0;z-index:100;background:rgba(246,247,249,.92);backdrop-filter:blur(8px);padding:8px 0 10px 0}
 
 #leaderStrip{
-  background:var(--card);
-  border-radius:16px;
-  box-shadow:0 3px 10px rgba(0,0,0,.06);
-  padding:10px 12px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
+  background:var(--card); border-radius:16px; box-shadow:var(--sh1),var(--sh2);
+  padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative;
 }
-
-#leaderLeft{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  min-width:0;
-}
-#leaderLine{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  min-width:0;
-}
-#leaderDot{ width:12px; height:12px; border-radius:50%; flex:0 0 auto; }
-#leaderText{
-  font-weight:900;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  max-width:62vw;
-}
-
-#subLine{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  flex-wrap:wrap;
-}
-
-.badge{
-  background:var(--muted);
-  border-radius:999px;
-  padding:6px 10px;
-  font-weight:900;
-  font-size:.88rem;
-  white-space:nowrap;
-}
-
+#leaderLeft{display:flex;flex-direction:column;gap:6px;min-width:0}
+#leaderLine{display:flex;align-items:center;gap:10px;min-width:0}
+#leaderDot{width:12px;height:12px;border-radius:50%}
+#leaderText{font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:62vw;font-size:1.02rem}
+#leaderHint{font-weight:900;color:var(--sub);font-size:.9rem;display:none}
+#subLine{display:flex;gap:8px;flex-wrap:wrap}
+.badge{background:var(--muted);border-radius:999px;padding:6px 10px;font-weight:900;font-size:.88rem;letter-spacing:.2px;white-space:nowrap}
 .iconBtn{
-  background:var(--muted);
-  border:none;
-  border-radius:12px;
-  padding:10px 12px;
-  font-weight:900;
-  cursor:pointer;
+  background:var(--muted); border:none; border-radius:12px; padding:10px 12px; font-weight:950; cursor:pointer;
+  min-width:44px; min-height:44px;
 }
+.iconBtn:active{transform:scale(.98)}
 
 #rankingPanel{
-  margin-top:10px;
-  background:var(--card);
-  border-radius:16px;
-  box-shadow:0 3px 10px rgba(0,0,0,.06);
-  padding:12px;
-  display:none;
+  margin-top:10px; background:var(--card); border-radius:16px; box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06);
+  padding:0 12px; overflow:hidden; max-height:0; opacity:0; transform:translateY(-4px);
+  transition:max-height .28s ease,opacity .22s ease,transform .22s ease,padding .22s ease;
 }
-.rank-row{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin:6px 0;
+#rankingPanel.open{padding:12px;max-height:560px;opacity:1;transform:translateY(0)}
+.rankItem{
+  border:1px solid rgba(15,23,42,.08); border-radius:14px; padding:10px 12px; display:flex; align-items:center; gap:10px;
+  margin:8px 0; box-shadow:0 1px 2px rgba(0,0,0,.04);
 }
-.rank-dot{ width:10px; height:10px; border-radius:50%; }
+.rankNo{font-weight:950;width:26px;color:#334155}
+.rankDot{width:10px;height:10px;border-radius:50%}
+.rankName{font-weight:950;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rankScore{font-weight:950}
 
-#addRow{
-  display:flex;
-  gap:8px;
-  align-items:center;
-  margin:10px 0 8px 0;
+#toolsMenuWrap{position:relative;z-index:9999}
+#toolsMenu{
+  position:absolute; top:52px; right:0; z-index:10000;
+  background:var(--card); border-radius:14px; box-shadow:var(--sh2); padding:8px;
+  display:none; min-width:220px;
 }
-#playerName{
-  flex:1;
-  padding:10px 12px;
-  border-radius:12px;
-  border:1px solid #d7dbe4;
-  font-weight:700;
-  outline:none;
+#toolsMenu.open{display:block}
+.menuItem{
+  width:100%; text-align:left; border:none; background:transparent; padding:12px 12px; border-radius:12px;
+  font-weight:950; cursor:pointer;
 }
-.btnGreen{
-  background:#22c55e;
-  color:white;
-  border:none;
-  border-radius:12px;
-  padding:10px 14px;
-  font-weight:900;
-  cursor:pointer;
-}
-.btnGhost{
-  background:var(--muted);
-  color:#111;
-  border:none;
-  border-radius:12px;
-  padding:10px 14px;
-  font-weight:900;
-  cursor:pointer;
-}
+.menuItem:hover{background:var(--muted)}
+.menuItem.danger{color:#b91c1c}
+.menuSep{height:1px;background:rgba(15,23,42,.10);margin:6px 0}
 
 #targetRow{
-  margin:10px 0 10px 0;
-  background:var(--card);
-  border-radius:16px;
-  box-shadow:var(--shadow);
-  padding:10px 12px;
-  display:flex;
-  align-items:center;
-  gap:10px;
+  margin:10px 0 10px 0; background:var(--card); border-radius:16px; box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06);
+  padding:10px 12px; display:flex; align-items:center; gap:10px;
 }
 #targetPoints{
-  flex:1;
-  padding:10px 12px;
-  border-radius:12px;
-  border:1px solid #d7dbe4;
-  font-weight:900;
-  outline:none;
+  flex:1; padding:10px 12px; border-radius:12px; border:1px solid #d7dbe4; font-weight:950; outline:none;
 }
-
-#playersContainer{ margin-top:10px; }
+#emptyState{
+  display:none; background:var(--card); border-radius:16px; box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06);
+  padding:14px; margin-top:10px; font-weight:900; color:#334155;
+}
+#playersContainer{margin-top:10px}
 
 .player-box{
-  background:var(--card);
-  border-radius:16px;
-  padding:12px;
-  margin-bottom:10px;
-  border-left:6px solid #ccc;
-  box-shadow:var(--shadow);
-  transition:.25s;
-  position:relative;
+  background:var(--card); border-radius:16px; padding:12px; margin-bottom:10px; border-left:6px solid #ccc;
+  box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06); position:relative;
 }
-.player-box.leader{ box-shadow:var(--shadow2); transform:scale(1.01); }
-.player-box.pulse{ animation: leaderPulse 1.1s ease; }
-@keyframes leaderPulse{
-  0%{ box-shadow:var(--shadow); }
-  50%{ box-shadow:0 0 0 6px rgba(34,197,94,.18), 0 18px 35px rgba(0,0,0,.14); }
-  100%{ box-shadow:var(--shadow2); }
-}
-.player-box.bustFlash{ animation:bustFlash .7s ease; }
-@keyframes bustFlash{ 0%{ background:#ffe3e3;} 100%{ background:var(--card);} }
-
-.player-top{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-}
-.player-name{
-  font-weight:900;
-  font-size:1.02rem;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  min-width:0;
-}
-.player-dot{ width:10px;height:10px;border-radius:50%;flex:0 0 auto; }
-.miniBadge{
-  background:var(--muted);
-  border-radius:999px;
-  padding:5px 8px;
-  font-weight:900;
-  font-size:.82rem;
-}
-
-.progress-container{
-  background:var(--muted2);
-  height:10px;
-  border-radius:6px;
-  overflow:hidden;
-  margin:8px 0 6px 0;
-}
-.progress-bar{
-  height:100%;
-  transition:width .4s ease;
-}
-
-.player-line{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  font-weight:900;
-}
-.player-line .tapScore{
-  background:transparent;
-  border:none;
-  padding:0;
-  margin:0;
-  font:inherit;
-  cursor:pointer;
-  text-decoration:underline;
-  text-underline-offset:3px;
-}
-.sub{
-  font-weight:900;
-  color:#444;
-  font-size:.92rem;
-}
-
-.card-container{
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-  margin-top:8px;
-}
-.cardchip{
-  background:var(--muted);
-  padding:7px 10px;
-  border-radius:999px;
-  font-weight:900;
-  font-size:.9rem;
-  cursor:pointer;
-  user-select:none;
-}
+.player-box.leader{box-shadow:var(--sh1),var(--sh2);transform:scale(1.01)}
+.player-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.player-name{font-weight:980;font-size:1.10rem;display:flex;align-items:center;gap:8px;min-width:0}
+.player-dot{width:10px;height:10px;border-radius:50%}
+.miniBadge{background:var(--muted);border-radius:999px;padding:5px 8px;font-weight:950;font-size:.82rem;letter-spacing:.2px}
+.miniBadge.action{background:var(--action);color:#fff}
 
 .plusBtn{
-  width:44px;
-  height:44px;
-  border-radius:14px;
-  border:none;
-  background:#1e88e5;
-  color:white;
-  font-weight:1000;
-  font-size:22px;
-  cursor:pointer;
+  width:44px;height:44px;border-radius:14px;border:none;background:#1e88e5;color:#fff;font-weight:1000;font-size:22px;cursor:pointer
 }
+.plusBtn:active{transform:scale(.98)}
 
-.floatScore{
-  position:absolute;
-  right:14px;
-  top:10px;
-  font-weight:1000;
-  font-size:1.02rem;
-  opacity:0;
-  animation:floatUp .9s ease forwards;
+.progress-container{background:var(--muted2);height:10px;border-radius:6px;overflow:hidden;margin:8px 0 6px 0}
+.progress-bar{height:100%;transition:width .4s ease}
+.divider{height:1px;background:rgba(15,23,42,.12);margin:8px 0}
+
+.player-line{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:950}
+.sub{font-weight:950;color:#334155;font-size:.90rem}
+.dim{color:var(--sub);font-weight:900}
+
+.card-container{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.cardchip{
+  background:var(--muted); padding:7px 10px; border-radius:999px; font-weight:950; font-size:.9rem; cursor:pointer; user-select:none
 }
-@keyframes floatUp{
-  0%{opacity:0;transform:translateY(10px);}
-  40%{opacity:1;}
-  100%{opacity:0;transform:translateY(-26px);}
-}
+.morechip{background:#e9edf3;color:#334155}
 
 #bottomBar{
-  position:sticky;
-  bottom:0;
-  z-index:90;
-  background:rgba(246,247,249,.92);
-  backdrop-filter: blur(8px);
-  padding:10px 0 0 0;
+  position:sticky; bottom:0; z-index:90; background:rgba(246,247,249,.92); backdrop-filter:blur(8px);
+  padding:10px 0 calc(10px + env(safe-area-inset-bottom)) 0;
 }
-#bottomRow{
-  display:flex;
-  gap:8px;
+#endRoundBtn{
+  width:100%; border:none; border-radius:16px; padding:16px 12px; font-weight:1000; cursor:pointer; min-height:52px;
+  background:#22c55e; color:#fff; box-shadow:0 12px 28px rgba(34,197,94,.18);
 }
-#bottomRow button{
-  flex:1;
-  border:none;
-  border-radius:14px;
-  padding:14px 12px;
-  font-weight:900;
-  cursor:pointer;
-}
-#endRoundBtn{ background:#22c55e; color:white; }
-#undoActionBtn{ background:var(--muted); color:#111; }
-#undoRoundBtn{ background:var(--muted); color:#111; }
-#newGameBtn{ background:var(--muted); color:#111; }
+#endRoundBtn:disabled{background:#cbd5e1;color:#475569;box-shadow:none;cursor:not-allowed}
 
-#statsWrap{
-  margin:12px 0 70px 0;
-  background:var(--card);
-  border-radius:16px;
-  box-shadow:var(--shadow);
-  padding:12px;
-}
-#statsHead{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  cursor:pointer;
-  user-select:none;
-}
-#statsHead strong{ font-size:1.05rem; }
-#stats{ display:none; margin-top:10px; color:#222; font-weight:900; line-height:1.55; }
+#statsWrap{margin:12px 0 14px 0;background:var(--card);border-radius:16px;box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06);padding:12px}
+#statsHead{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+#stats{display:none;margin-top:10px;font-weight:900;line-height:1.55}
 
-/* Popup */
 .overlay{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.35);
-  z-index:500;
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:500; opacity:0; transition:opacity .18s ease;
 }
+.overlay.open{opacity:1}
 .popup{
-  display:none;
-  position:fixed;
-  top:6%;
-  left:50%;
-  transform:translateX(-50%);
-  width:92%;
-  max-width:560px;
-  background:var(--card);
-  padding:16px;
-  border-radius:18px;
-  max-height:88%;
-  overflow:auto;
-  z-index:1000;
+  display:none; position:fixed; top:6%; left:50%; transform:translateX(-50%) translateY(12px);
+  width:92%; max-width:560px; background:var(--card); padding:16px; border-radius:18px; max-height:88%; overflow:auto;
+  z-index:1000; opacity:0; transition:opacity .18s ease,transform .18s ease;
 }
-.popupTitleRow{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-}
-.tabs{
-  display:flex;
-  gap:8px;
-  margin:10px 0 8px 0;
-}
-.tab{
-  flex:1;
-  background:var(--muted);
-  border:none;
-  border-radius:12px;
-  padding:10px 12px;
-  font-weight:900;
-  cursor:pointer;
-}
-.tab.active{
-  background:#1e88e5;
-  color:white;
-}
+.popup.open{opacity:1;transform:translateX(-50%) translateY(0)}
+.popupHeader{position:sticky;top:0;background:var(--card);padding:0 0 10px 0;z-index:5}
+.tabs{display:flex;gap:8px;margin:10px 0 0 0}
+.tab{flex:1;background:var(--muted);border:none;border-radius:12px;padding:10px 12px;font-weight:950;cursor:pointer;min-height:44px}
+.tab.active{background:#1e88e5;color:#fff}
 
-.selectedWrap{
-  background:var(--bg);
-  border-radius:14px;
-  padding:10px;
-  margin:10px 0 10px 0;
-}
-.chips{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-}
-.chip{
-  background:white;
-  border:1px solid #e2e6ee;
-  border-radius:999px;
-  padding:8px 10px;
-  font-weight:900;
-  cursor:pointer;
-  user-select:none;
-}
-.hint{
-  font-size:.92rem;
-  font-weight:900;
-  color:#444;
-  margin-top:8px;
-  padding:8px 10px;
-  border-radius:12px;
-  background:white;
-  border:1px solid #eef1f5;
-}
-.hint.bust{
-  background:#ffe3e3;
-  border-color:#ffc3c3;
-  color:#8a1f1f;
-}
-.hint.bonus{
-  background:#e9ffe9;
-  border-color:#c5f3c5;
-  color:#145214;
-}
+.selectedWrap{background:var(--bg);border-radius:14px;padding:10px;margin:10px 0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#fff;border:1px solid #e2e6ee;border-radius:999px;padding:8px 10px;font-weight:950;cursor:pointer;user-select:none}
+.hint{font-size:.92rem;font-weight:900;color:#444;margin-top:8px;padding:8px 10px;border-radius:12px;background:#fff;border:1px solid var(--muted)}
+.hint.bust{background:#ffe3e3;border-color:#ffc3c3;color:#8a1f1f}
+.hint.bonus{background:#e9ffe9;border-color:#c5f3c5;color:#145214}
 
-.sectionTitle{
-  margin:12px 0 8px 0;
-  font-weight:1000;
-}
-.gridNumbers{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:8px;
-}
-.gridMods{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:8px;
-}
+.gridNumbers{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.gridMods{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .cardBtn{
-  background:var(--muted);
-  border:none;
-  border-radius:14px;
-  padding:16px 0;
-  font-weight:1000;
-  font-size:1.05rem;
-  cursor:pointer;
+  border:none;border-radius:14px;padding:16px 0;font-weight:1000;font-size:1.05rem;cursor:pointer;min-height:44px;
+  box-shadow:inset 0 0 0 1px rgba(15,23,42,.08);
 }
-.cardBtn.x2{
-  grid-column:1/-1;
-  background:#dff1ff;
-}
-.directRow{
-  display:flex;
-  gap:8px;
-  align-items:center;
-}
+.cardBtn:active{transform:scale(.98)}
+.cardBtn.modBtn{background:var(--mod)!important;color:#1a1a1a!important;box-shadow:inset 0 0 0 1px rgba(15,23,42,.10)}
+.cardBtn.x2{grid-column:1/-1}
+
+.directRow{display:flex;gap:8px;align-items:center}
 .directRow input{
-  flex:1;
-  padding:12px 12px;
-  border-radius:14px;
-  border:1px solid #d7dbe4;
-  font-weight:1000;
-  outline:none;
-  font-size:1.05rem;
+  flex:1;padding:12px 12px;border-radius:14px;border:1px solid #d7dbe4;font-weight:1000;outline:none;font-size:1.05rem
 }
-.directRow button{
-  border:none;
-  border-radius:14px;
-  padding:12px 14px;
-  font-weight:1000;
-  background:#22c55e;
-  color:white;
-  cursor:pointer;
-  white-space:nowrap;
-}
+.directRow button{border:none;border-radius:14px;padding:12px 14px;font-weight:1000;background:#22c55e;color:#fff;cursor:pointer;white-space:nowrap;min-height:44px}
 
-.popupFooter{
-  position:sticky;
-  bottom:-16px;
-  background:var(--card);
-  padding:10px 0 0 0;
-  margin-top:12px;
-}
-.popupFooterRow{
-  display:flex;
-  gap:8px;
-}
-.popupFooterRow button{
-  flex:1;
-  border:none;
-  border-radius:14px;
-  padding:14px 12px;
-  font-weight:1000;
-  cursor:pointer;
-}
-.footerGhost{ background:var(--muted); color:#111; }
-.footerRed{ background:#ef4444; color:white; }
-.footerBlue{ background:#1e88e5; color:white; }
+.popupFooter{position:sticky;bottom:-16px;background:var(--card);padding:10px 0 0 0;margin-top:12px}
+.popupFooterRow{display:flex;gap:8px}
+.popupFooterRow button{flex:1;border:none;border-radius:14px;padding:14px 12px;font-weight:1000;cursor:pointer;min-height:48px}
+.footerGhost{background:var(--muted);color:#111}
+.footerRed{background:#ef4444;color:#fff}
+.footerBlue{background:#1e88e5;color:#fff}
 
-/* Winner */
-#winnerScreen{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.6);
-  justify-content:center;
-  align-items:center;
-  z-index:2000;
-}
-#winnerCard{
-  background:var(--card);
-  padding:34px 26px;
-  border-radius:24px;
-  text-align:center;
-  box-shadow:0 25px 60px rgba(0,0,0,.25);
-}
+#winnerScreen{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);justify-content:center;align-items:center;z-index:2000}
+#winnerCard{background:var(--card);padding:34px 26px;border-radius:24px;text-align:center;box-shadow:var(--sh2)}
 </style>
 </head>
 
@@ -520,23 +189,39 @@ h1{ text-align:center; margin:8px 0 12px 0; font-size:1.35rem; }
         <div id="leaderDot"></div>
         <div id="leaderText">Noch keine Spieler</div>
       </div>
+      <div id="leaderHint">Öffne ⋯ um Spieler hinzuzufügen.</div>
       <div id="subLine">
         <span id="roundBadge" class="badge">Runde: 0</span>
         <span id="goalBadge" class="badge">Ziel: 200</span>
       </div>
     </div>
 
-    <div style="display:flex; gap:8px; align-items:center;">
-      <button class="iconBtn" onclick="toggleRanking()" aria-label="Ranking anzeigen">≡</button>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button id="rankBtn" class="iconBtn" type="button" aria-label="Ranking">≡</button>
+
+      <div id="toolsMenuWrap">
+        <button id="toolsBtn" class="iconBtn" type="button" aria-label="Tools">⋯</button>
+        <div id="toolsMenu">
+          <button class="menuItem" id="addPlayerBtn" type="button">Spieler hinzufügen</button>
+
+          <div class="menuSep"></div>
+
+          <button class="menuItem" id="colorsBtn" type="button">Farben neu verteilen</button>
+
+          <div class="menuSep"></div>
+
+          <button class="menuItem" id="undoBtn" type="button">Undo</button>
+          <button class="menuItem" id="undoRoundBtn" type="button">Undo Runde</button>
+
+          <div class="menuSep"></div>
+
+          <button class="menuItem danger" id="newGameBtn" type="button">New Game</button>
+        </div>
+      </div>
     </div>
   </div>
 
   <div id="rankingPanel"></div>
-</div>
-
-<div id="addRow">
-  <input id="playerName" placeholder="Spielername" autocomplete="off">
-  <button class="btnGreen" onclick="addPlayer()">+</button>
 </div>
 
 <div id="targetRow">
@@ -544,53 +229,47 @@ h1{ text-align:center; margin:8px 0 12px 0; font-size:1.35rem; }
   <input type="number" id="targetPoints" value="200" inputmode="numeric" pattern="[0-9]*">
 </div>
 
+<div id="emptyState">Keine Spieler. Öffne ⋯ → <b>Spieler hinzufügen</b>.</div>
+
 <div id="playersContainer"></div>
 
-<div id="bottomBar">
-  <div id="bottomRow">
-    <button id="endRoundBtn" onclick="endRound()">Zwischenrunde beenden</button>
-    <button id="undoActionBtn" onclick="undoAction()">Undo</button>
-    <button id="undoRoundBtn" onclick="undoRound()">Undo Runde</button>
-    <button id="newGameBtn" onclick="newGame()">New Game</button>
-  </div>
-</div>
-
 <div id="statsWrap">
-  <div id="statsHead" onclick="toggleStats()">
+  <div id="statsHead">
     <strong>Statistik</strong>
     <span id="statsChevron">▼</span>
   </div>
   <div id="stats"></div>
 </div>
 
-<div class="overlay" id="overlay" onclick="closePopup(true)"></div>
+<div id="bottomBar">
+  <button id="endRoundBtn" type="button">Zwischenrunde beenden</button>
+</div>
 
+<!-- Popup -->
+<div class="overlay" id="overlay"></div>
 <div class="popup" id="popup">
-  <div class="popupTitleRow">
-    <h3 id="popupTitle" style="margin:0;">Karten</h3>
-    <span id="popupPlayerBadge" class="badge"></span>
-  </div>
-
-  <div class="tabs">
-    <button id="tabCards" class="tab active" onclick="setTab('cards')">Karten</button>
-    <button id="tabDirect" class="tab" onclick="setTab('direct')">Direktpunkte</button>
+  <div class="popupHeader">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <h3 id="popupTitle" style="margin:0;">Karten</h3>
+      <span id="popupPlayerBadge" class="badge"></span>
+    </div>
+    <div class="tabs">
+      <button id="tabCards" class="tab active" type="button">Karten</button>
+      <button id="tabDirect" class="tab" type="button">Direktpunkte</button>
+    </div>
   </div>
 
   <div id="popupCardsView">
     <div class="selectedWrap">
-      <div class="chips" id="selectedChips"></div>
-      <div id="popupLiveInfo" class="hint"></div>
+      <div id="selectedChips" class="chips"></div>
+      <div id="popupLiveInfo" class="hint">Vorschau: –</div>
     </div>
 
-    <div class="sectionTitle">Zahlen</div>
+    <div style="font-weight:1000;margin:12px 0 8px 0;">Zahlen</div>
     <div id="numberGrid" class="gridNumbers"></div>
 
-    <div class="sectionTitle">Modifier</div>
+    <div style="font-weight:1000;margin:12px 0 8px 0;">Modifier</div>
     <div id="modGrid" class="gridMods"></div>
-
-    <div style="margin-top:10px; display:flex; justify-content:flex-end;">
-      <button class="btnGhost" onclick="undoPopupPick()">Undo letzte Auswahl</button>
-    </div>
   </div>
 
   <div id="popupDirectView" style="display:none;">
@@ -599,566 +278,515 @@ h1{ text-align:center; margin:8px 0 12px 0; font-size:1.35rem; }
     </div>
     <div class="directRow">
       <input id="freeScoreInput" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="Punkte eingeben (z.B. 37)">
-      <button onclick="applyFreeScore()">Übernehmen</button>
+      <button id="applyFreeBtn" type="button">Übernehmen</button>
     </div>
   </div>
 
   <div class="popupFooter">
     <div class="popupFooterRow">
-      <button class="footerGhost" onclick="clearPopupSelection()">Leeren</button>
-      <button class="footerRed" onclick="closePopup(true)">Abbrechen</button>
-      <button class="footerBlue" onclick="closePopup(false)">Fertig</button>
+      <button class="footerGhost" id="clearBtn" type="button">Leeren</button>
+      <button class="footerRed" id="cancelBtn" type="button">Abbrechen</button>
+      <button class="footerBlue" id="finishBtn" type="button">Fertig</button>
     </div>
   </div>
 </div>
 
+<!-- Winner -->
 <div id="winnerScreen">
   <div id="winnerCard">
     <h2 id="winnerText" style="margin:0 0 16px 0;"></h2>
-    <button class="btnGreen" onclick="newGame(true)">Neues Spiel</button>
+    <button class="iconBtn" id="winnerNewGame" type="button" style="background:#22c55e;color:#fff;width:100%;">Neues Spiel</button>
   </div>
 </div>
 
 <script>
-/* ----------------- State ----------------- */
-let players=[];
-let selectedPlayer=null;
-
-let gameLocked=false;
-let prevLeaderIndex=null;
-let roundNumber=0;
-
-const palette=["#2563eb","#16a34a","#ea580c","#9333ea","#0ea5e9","#dc2626","#14b8a6","#eab308"];
-const numbers=[...Array(13).keys()];
-const modifiers=["+2","+4","+6","+8","+10","x2"];
-
-let popupCards=[];
-let popupManualOverride=null;
-let popupHistory=[];
-
-let lastActionSnapshot=null; // FIX: Undo (letzte Aktion)
-let lastRoundSnapshot=null;  // FIX: Undo Runde
-
-/* ----------------- Utils ----------------- */
+/* ----------------- UTIL ----------------- */
+const $ = (id)=>document.getElementById(id);
 function vib(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
 function lockScroll(lock){ document.body.style.overflow = lock ? "hidden" : ""; }
 
-function snapshotGame(){
+/* ----------------- COLORS (Zahlen) ----------------- */
+const numStyle = {
+  0: { bg:"linear-gradient(135deg,#0cb5be 0%,#0cb5be 20%,#e70200 20%,#e70200 40%,#c2549b 40%,#c2549b 60%,#fd8803 60%,#fd8803 80%,#ffffff 80%,#ffffff 100%)", fg:"#0b1220" },
+  1: { bg:"#cbb59e" },
+  2: { bg:"#dce100" },
+  3: { bg:"#f14355", fg:"#fff" },
+  4: { bg:"#0cb5be", fg:"#fff" },
+  5: { bg:"#329a4c", fg:"#fff" },
+  6: { bg:"#c2549b", fg:"#fff" },
+  7: { bg:"#d87665", fg:"#fff" },
+  8: { bg:"#b6e076" },
+  9: { bg:"#fd8803", fg:"#fff" },
+  10:{ bg:"#e70200", fg:"#fff" },
+  11:{ bg:"#8eabda" },
+  12:{ bg:"#937972", fg:"#fff" }
+};
+
+/* ----------------- STATE ----------------- */
+let players=[];
+let roundNumber=0;
+let gameLocked=false;
+
+let selectedPlayer=null;
+let popupCards=[];
+let popupOverride=null;
+
+let lastActionSnap=null;
+let lastRoundSnap=null;
+
+let statsOpen=false;
+
+const palette=[
+  "#2563eb","#16a34a","#ea580c","#9333ea",
+  "#0ea5e9","#dc2626","#14b8a6","#eab308",
+  "#111827","#f97316","#22c55e","#3b82f6"
+];
+const numbers=[...Array(13).keys()];
+
+/* ----------------- MENU (ROBUST) ----------------- */
+const toolsMenuWrapEl = $("toolsMenuWrap");
+const toolsMenuEl     = $("toolsMenu");
+const toolsBtnEl      = $("toolsBtn");
+const rankBtnEl       = $("rankBtn");
+const rankingPanelEl  = $("rankingPanel");
+
+function closeToolsMenu(){ toolsMenuEl.classList.remove("open"); }
+function toggleToolsMenu(){
+  toolsMenuEl.classList.toggle("open");
+}
+
+toolsBtnEl.addEventListener("pointerdown",(e)=>{
+  e.preventDefault(); e.stopPropagation();
+  toggleToolsMenu();
+},{passive:false});
+
+toolsMenuWrapEl.addEventListener("pointerdown",(e)=>e.stopPropagation(),{passive:true});
+toolsMenuEl.addEventListener("pointerdown",(e)=>e.stopPropagation(),{passive:true});
+
+document.addEventListener("pointerdown",(e)=>{
+  if(!toolsMenuWrapEl.contains(e.target)) closeToolsMenu();
+},{passive:true});
+
+rankBtnEl.addEventListener("pointerdown",(e)=>{
+  e.preventDefault(); e.stopPropagation();
+  rankingPanelEl.classList.toggle("open");
+  closeToolsMenu();
+},{passive:false});
+
+/* ----------------- SNAPSHOT / SAVE ----------------- */
+function snapshot(){
   return JSON.parse(JSON.stringify({
-    players,
-    roundNumber,
-    gameLocked,
-    target: Number(targetPoints.value)||200,
-    prevLeaderIndex
+    players, roundNumber, gameLocked,
+    target:Number($("targetPoints").value)||200,
+    statsOpen
   }));
 }
-
-function restoreGame(snap){
-  players = snap.players || [];
-  roundNumber = typeof snap.roundNumber==="number" ? snap.roundNumber : 0;
-  gameLocked = !!snap.gameLocked;
-  prevLeaderIndex = (typeof snap.prevLeaderIndex==="number") ? snap.prevLeaderIndex : null;
-  if(typeof snap.target==="number") targetPoints.value = snap.target;
-
-  // Ziel-Feld sichtbar/unsichtbar korrekt setzen
-  targetRow.style.display = gameLocked ? "none" : "flex";
-
+function save(){
+  localStorage.setItem("flip7_simple_state", JSON.stringify(snapshot()));
+}
+function restore(s){
+  players=s.players||[];
+  roundNumber=typeof s.roundNumber==="number"?s.roundNumber:0;
+  gameLocked=!!s.gameLocked;
+  if(typeof s.target==="number") $("targetPoints").value=s.target;
+  statsOpen=!!s.statsOpen;
   renderAll();
-  saveState();
+  save();
 }
-
-function saveState(){
-  const state = snapshotGame();
-  localStorage.setItem("flip7_tracker_state", JSON.stringify(state));
-}
-
-function loadState(){
-  const raw = localStorage.getItem("flip7_tracker_state");
+function load(){
+  const raw=localStorage.getItem("flip7_simple_state");
   if(!raw) return;
-  try{ restoreGame(JSON.parse(raw)); }catch(e){}
+  try{ restore(JSON.parse(raw)); }catch(e){}
 }
 
-/* ----------------- Rules ----------------- */
+/* ----------------- RULES ----------------- */
 function scoreFromCards(cards){
-  const nums = cards.filter(c=>typeof c==="number");
-  const mods = cards.filter(c=>typeof c==="string");
+  const nums=cards.filter(c=>typeof c==="number");
+  const mods=cards.filter(c=>typeof c==="string");
 
   const isBust = (nums.length===0) || (new Set(nums).size !== nums.length);
-  if(isBust) return { score:0, isBust:true, numbersCount: nums.length };
+  if(isBust) return {score:0,isBust:true,numbersCount:nums.length};
 
   const sumNums = nums.reduce((a,b)=>a+b,0);
 
-  let multi = 1;
-  for(const m of mods){ if(m==="x2") multi *= 2; }
+  let multi=1;
+  for(const m of mods){ if(m==="x2") multi*=2; }
 
-  let modSum = 0;
+  let modSum=0;
   for(const m of mods){ if(m.startsWith("+")) modSum += Number(m.slice(1)); }
 
   const bonus = (nums.length===7) ? 15 : 0;
-
-  const score = (sumNums * multi) + modSum + bonus;
-  return { score, isBust:false, numbersCount: nums.length };
+  return { score:(sumNums*multi)+modSum+bonus, isBust:false, numbersCount:nums.length };
 }
 
-/* ----------------- Build popup grids ----------------- */
-function buildPopupGrids(){
-  numberGrid.innerHTML = "";
-  numbers.forEach(n=>{
-    const b=document.createElement("button");
-    b.className="cardBtn";
-    b.textContent=String(n);
-    b.onclick=()=>popupAdd(n);
-    numberGrid.appendChild(b);
-  });
-
-  modGrid.innerHTML = "";
-  ["+2","+4","+6","+8","+10","x2"].forEach(m=>{
-    const b=document.createElement("button");
-    b.className="cardBtn" + (m==="x2" ? " x2" : "");
-    b.textContent=m;
-    b.onclick=()=>popupAdd(m);
-    modGrid.appendChild(b);
-  });
+/* ----------------- UI HELPERS ----------------- */
+function updateLocks(){
+  $("targetRow").style.display = gameLocked ? "none" : "flex";
+  $("emptyState").style.display = players.length? "none" : "block";
+  $("endRoundBtn").disabled = players.length===0;
+  $("addPlayerBtn").disabled = (gameLocked || roundNumber>0);
 }
 
-/* ----------------- Ranking ----------------- */
-function toggleRanking(){
-  rankingPanel.style.display = (rankingPanel.style.display==="block") ? "none" : "block";
+function renderTop(){
+  const target=Number($("targetPoints").value)||200;
+  $("roundBadge").textContent = "Runde: "+roundNumber;
+  $("goalBadge").textContent  = "Ziel: "+target;
+
+  if(!players.length){
+    $("leaderHint").style.display="block";
+    $("leaderDot").style.background="#cbd5e1";
+    $("leaderText").textContent="Noch keine Spieler";
+    return;
+  }
+  $("leaderHint").style.display="none";
+  const list=getRanking();
+  const leader=list[0];
+  $("leaderDot").style.background=leader.color;
+  $("leaderText").textContent=`👑 ${leader.name} führt (${leader.score})`;
 }
 
-function getSortedRanking(){
+function getRanking(){
   return [...players].map(p=>{
-    const live = (p.overrideScore !== null) ? p.overrideScore : scoreFromCards(p.cards).score;
-    return { name:p.name, color:p.color, score:p.total + live };
+    const live = (p.override!==null) ? p.override : scoreFromCards(p.cards).score;
+    return {name:p.name,color:p.color,score:p.total+live};
   }).sort((a,b)=>b.score-a.score);
 }
 
-function renderRankingPanel(){
-  const list = getSortedRanking();
-
-  rankingPanel.innerHTML = list.length ? list.map((p,i)=>`
-    <div class="rank-row">
-      ${i+1}.
-      <span class="rank-dot" style="background:${p.color}"></span>
-      <span style="font-weight:900;">${p.name}</span>
-      <span style="margin-left:auto;font-weight:900;">${p.score}</span>
+function renderRanking(){
+  const list=getRanking();
+  rankingPanelEl.innerHTML = list.length ? list.map((p,i)=>`
+    <div class="rankItem">
+      <div class="rankNo">${i+1}.</div>
+      <div class="rankDot" style="background:${p.color}"></div>
+      <div class="rankName">${p.name}</div>
+      <div class="rankScore">${p.score}</div>
     </div>
   `).join("") : `<div style="font-weight:900;color:#555;">Noch keine Spieler</div>`;
-
-  if(list.length){
-    leaderDot.style.background = list[0].color;
-    leaderText.textContent = `${list[0].name} führt (${list[0].score})`;
-  }else{
-    leaderDot.style.background = "#cbd5e1";
-    leaderText.textContent = "Noch keine Spieler";
-  }
 }
 
-/* ----------------- Players ----------------- */
-function addPlayer(){
-  const name = playerName.value.trim();
+function renderPlayers(){
+  const target=Number($("targetPoints").value)||200;
+  const leaderName = players.length ? getRanking()[0].name : null;
+
+  const wrap=$("playersContainer");
+  wrap.innerHTML="";
+
+  players.forEach((p,i)=>{
+    const res = (p.override!==null) ? {score:p.override,isBust:(p.override===0),numbersCount:0} : scoreFromCards(p.cards);
+    const live=res.score;
+    const total=p.total+live;
+
+    const div=document.createElement("div");
+    div.className="player-box"+(leaderName===p.name?" leader":"");
+    div.style.borderLeftColor=p.color;
+
+    const chipsMax=6;
+    const shown=p.cards.slice(0,chipsMax);
+    const hidden=Math.max(p.cards.length-chipsMax,0);
+
+    const hint = (p.cards.length && !res.isBust && res.numbersCount===7) ? `<span class="miniBadge action">+15</span>` : "";
+    const manual = (p.override!==null) ? `<span class="miniBadge">manuell</span>` : "";
+
+    div.innerHTML=`
+      <div class="player-top">
+        <div class="player-name">
+          <span class="player-dot" style="background:${p.color}"></span>
+          <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</span>
+          ${hint} ${manual}
+        </div>
+        <button class="plusBtn" type="button" aria-label="Punkte/Karten" onclick="openPopup(${i}, false)">+</button>
+      </div>
+
+      <div class="progress-container">
+        <div class="progress-bar" style="width:${Math.min((total/target)*100,100)}%; background:${p.color}"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="player-line">
+        <span class="sub">Runde: <button class="sub" style="border:none;background:transparent;padding:0;text-decoration:underline;cursor:pointer" onclick="openPopup(${i}, true)">${live}</button></span>
+        <span><b>${total}</b>/<span>${target}</span> <span class="dim">(noch ${Math.max(target-total,0)})</span></span>
+      </div>
+
+      ${p.cards.length?`
+        <div class="card-container">
+          ${shown.map((c,ci)=>`<span class="cardchip" onclick="removeCard(${i},${ci})">${c}</span>`).join("")}
+          ${hidden?`<span class="cardchip morechip" onclick="openPopup(${i},false)">+${hidden}…</span>`:""}
+        </div>
+      `:""}
+    `;
+    wrap.appendChild(div);
+  });
+}
+
+function renderStats(){
+  const box=$("stats");
+  if(!players.length){ box.innerHTML=`<div style="font-weight:900;color:#555;">Noch keine Daten</div>`; return; }
+  box.innerHTML = players.map(p=>{
+    const avg=(p.rounds.reduce((a,b)=>a+b,0)/(p.rounds.length||1)).toFixed(1);
+    const bustQ=p.rounds.length?Math.round((p.busts/p.rounds.length)*100):0;
+    return `<div style="margin:6px 0;"><b>${p.name}</b>: Ø ${avg} • Bust ${bustQ}% (${p.busts}/${p.rounds.length})</div>`;
+  }).join("");
+}
+
+/* ----------------- ACTIONS ----------------- */
+function addPlayerSimple(){
+  if(gameLocked || roundNumber>0) return;
+  const name = prompt("Spielername:");
   if(!name) return;
 
-  lastActionSnapshot = snapshotGame(); // FIX: Undo Action
+  lastActionSnap=snapshot();
 
-  players.push({
-    name,
-    color: palette[players.length % palette.length],
-    cards:[],
-    total:0,
-    rounds:[],
-    busts:0,
-    lastScore:null,
-    lastBust:false,
-    overrideScore:null
-  });
+  const used=new Set(players.map(x=>x.color));
+  const free=palette.find(c=>!used.has(c)) || palette[players.length % palette.length];
 
-  playerName.value="";
-  renderAll();
-  saveState();
+  players.push({name:name.trim(), color:free, cards:[], total:0, rounds:[], busts:0, override:null});
+  renderAll(); save();
+}
+function redistributeColors(){
+  if(!players.length) return;
+  lastActionSnap=snapshot();
+  const pool=[...palette];
+  for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+  players.forEach((p,i)=>p.color=pool[i%pool.length]);
+  renderAll(); save();
+}
+function removeCard(pi,ci){
+  lastActionSnap=snapshot();
+  players[pi].cards.splice(ci,1);
+  players[pi].override=null;
+  vib(10);
+  renderAll(); save();
+}
+function undoAction(){
+  if(!lastActionSnap) return;
+  restore(lastActionSnap); lastActionSnap=null;
+}
+function undoRound(){
+  if(!lastRoundSnap) return;
+  restore(lastRoundSnap); lastRoundSnap=null;
+}
+function newGame(){
+  const ok=confirm("Neues Spiel starten? (Alle Spieler werden entfernt)");
+  if(!ok) return;
+  lastActionSnap=snapshot(); lastRoundSnap=snapshot();
+  players=[]; roundNumber=0; gameLocked=false;
+  $("winnerScreen").style.display="none";
+  rankingPanelEl.classList.remove("open");
+  renderAll(); save();
 }
 
-function removeCard(playerIndex, cardIndex){
-  lastActionSnapshot = snapshotGame(); // FIX
-
-  const p = players[playerIndex];
-  p.cards.splice(cardIndex,1);
-  p.overrideScore = null;
-
-  renderAll();
-  saveState();
-}
-
-/* ----------------- Popup ----------------- */
-let popupTab="cards";
+/* ----------------- POPUP ----------------- */
+const overlayEl=$("overlay"), popupEl=$("popup");
+const tabCardsEl=$("tabCards"), tabDirectEl=$("tabDirect");
+const cardsView=$("popupCardsView"), directView=$("popupDirectView");
 
 function setTab(t){
-  popupTab=t;
-  tabCards.classList.toggle("active", t==="cards");
-  tabDirect.classList.toggle("active", t==="direct");
-  popupCardsView.style.display = (t==="cards") ? "block" : "none";
-  popupDirectView.style.display = (t==="direct") ? "block" : "none";
-  popupTitle.textContent = (t==="direct") ? "Direktpunkte" : "Karten";
-  if(t==="direct") setTimeout(()=>freeScoreInput.focus(), 60);
+  tabCardsEl.classList.toggle("active", t==="cards");
+  tabDirectEl.classList.toggle("active", t==="direct");
+  cardsView.style.display = (t==="cards")?"block":"none";
+  directView.style.display = (t==="direct")?"block":"none";
+  $("popupTitle").textContent = (t==="direct") ? "Direktpunkte" : "Karten";
+  if(t==="direct") setTimeout(()=>$("freeScoreInput").focus(), 60);
 }
 
-function openPopup(i, startDirect=false){
+function openPopup(i, direct){
   selectedPlayer=i;
-  popupCards = [...players[i].cards];
-  popupManualOverride = players[i].overrideScore;
-  popupHistory = [];
+  popupCards=[...players[i].cards];
+  popupOverride=players[i].override;
 
-  popup.style.display="block";
-  overlay.style.display="block";
+  $("popupPlayerBadge").textContent=players[i].name;
+  $("freeScoreInput").value = popupOverride!==null ? popupOverride : "";
+
+  popupEl.style.display="block";
+  overlayEl.style.display="block";
+  requestAnimationFrame(()=>{ popupEl.classList.add("open"); overlayEl.classList.add("open"); });
   lockScroll(true);
 
-  popupPlayerBadge.textContent = players[i].name;
-  freeScoreInput.value = popupManualOverride !== null ? popupManualOverride : "";
+  setTab(direct ? "direct" : "cards");
   renderPopupSelection();
-
-  setTab(startDirect ? "direct" : "cards");
 }
 
 function closePopup(cancel){
-  popup.style.display="none";
-  overlay.style.display="none";
+  popupEl.classList.remove("open");
+  overlayEl.classList.remove("open");
+  setTimeout(()=>{ popupEl.style.display="none"; overlayEl.style.display="none"; }, 180);
   lockScroll(false);
 
   if(!cancel && selectedPlayer!==null){
-    lastActionSnapshot = snapshotGame(); // FIX: Undo Action über Popup-Apply
-
-    const p = players[selectedPlayer];
-    p.cards = [...popupCards];
-    p.overrideScore = popupManualOverride;
-
-    vib(20); // "Fertig"
-    saveState();
+    lastActionSnap=snapshot();
+    players[selectedPlayer].cards=[...popupCards];
+    players[selectedPlayer].override=popupOverride;
+    save();
   }
 
   selectedPlayer=null;
   renderAll();
 }
 
-function popupAdd(card){
-  popupHistory.push({ kind:"add", card });
-  popupCards.push(card);
-  popupManualOverride=null;
-  freeScoreInput.value="";
-  renderPopupSelection();
+overlayEl.addEventListener("pointerdown",()=>closePopup(true),{passive:true});
+
+function popupAdd(x){
+  popupCards.push(x);
+  popupOverride=null;
+  $("freeScoreInput").value="";
   vib(12);
-}
-
-function popupRemoveAt(index){
-  const removed = popupCards.splice(index,1)[0];
-  popupHistory.push({ kind:"remove", card:removed, index });
-  popupManualOverride=null;
-  freeScoreInput.value="";
   renderPopupSelection();
+}
+function popupRemoveAt(idx){
+  popupCards.splice(idx,1);
+  popupOverride=null;
+  $("freeScoreInput").value="";
   vib(10);
-}
-
-function undoPopupPick(){
-  const last = popupHistory.pop();
-  if(!last) return;
-  if(last.kind==="add") popupCards.pop();
-  if(last.kind==="remove") popupCards.splice(last.index,0,last.card);
-  popupManualOverride=null;
-  freeScoreInput.value="";
   renderPopupSelection();
 }
-
-function clearPopupSelection(){
-  popupHistory.push({ kind:"clear", prevCards:[...popupCards] });
-  popupCards=[];
-  popupManualOverride=null;
-  freeScoreInput.value="";
+function clearPopup(){
+  popupCards=[]; popupOverride=null; $("freeScoreInput").value="";
   renderPopupSelection();
 }
-
-function applyFreeScore(){
-  const val = Number(freeScoreInput.value);
-  if(!Number.isFinite(val) || val < 0) return;
-  popupManualOverride = Math.floor(val);
+function applyFree(){
+  const v=Number($("freeScoreInput").value);
+  if(!Number.isFinite(v) || v<0) return;
+  popupOverride=Math.floor(v);
   renderPopupSelection();
 }
-
 function renderPopupSelection(){
-  selectedChips.innerHTML = "";
+  const chips=$("selectedChips");
+  chips.innerHTML="";
+  if(!popupCards.length) chips.innerHTML=`<span style="font-weight:900;color:#555;">Keine Karten ausgewählt.</span>`;
+  else popupCards.forEach((c,idx)=>{
+    const d=document.createElement("div");
+    d.className="chip"; d.textContent=String(c);
+    d.addEventListener("pointerdown",()=>popupRemoveAt(idx),{passive:true});
+    chips.appendChild(d);
+  });
 
-  if(popupCards.length===0){
-    selectedChips.innerHTML = `<span style="font-weight:900;color:#555;">Keine Karten ausgewählt.</span>`;
-  }else{
-    popupCards.forEach((c, idx)=>{
-      const chip=document.createElement("div");
-      chip.className="chip";
-      chip.textContent=String(c);
-      chip.onclick=()=>popupRemoveAt(idx);
-      selectedChips.appendChild(chip);
-    });
-  }
-
-  if(popupManualOverride !== null){
-    popupLiveInfo.className="hint";
-    popupLiveInfo.textContent = `Vorschau: ${popupManualOverride} Punkte (manuell)`;
+  const info=$("popupLiveInfo");
+  if(popupOverride!==null){
+    info.className="hint";
+    info.textContent=`Vorschau: ${popupOverride} Punkte (manuell)`;
     return;
   }
-
-  if(popupCards.length===0){
-    popupLiveInfo.className="hint";
-    popupLiveInfo.textContent="Vorschau: –";
-    return;
+  if(!popupCards.length){
+    info.className="hint"; info.textContent="Vorschau: –"; return;
   }
-
-  const preview = scoreFromCards(popupCards);
-  if(preview.isBust){
-    popupLiveInfo.className="hint bust";
-    popupLiveInfo.textContent="Vorschau: BUST (0 Punkte)";
+  const prev=scoreFromCards(popupCards);
+  if(prev.isBust){
+    info.className="hint bust";
+    info.textContent="Vorschau: BUST (0 Punkte)";
   }else{
-    const isBonus = preview.numbersCount===7;
-    popupLiveInfo.className = "hint" + (isBonus ? " bonus" : "");
-    popupLiveInfo.textContent = `Vorschau: ${preview.score} Punkte` + (isBonus ? " • +15 Bonus" : "");
+    const isBonus=prev.numbersCount===7;
+    info.className="hint"+(isBonus?" bonus":"");
+    info.textContent=`Vorschau: ${prev.score} Punkte`+(isBonus?" • +15 Bonus":"");
   }
 }
 
-/* ----------------- Players Render ----------------- */
-function getLeaderIndex(){
-  let best=-1,score=-Infinity;
-  players.forEach((p,i)=>{
-    const live = (p.overrideScore !== null) ? p.overrideScore : scoreFromCards(p.cards).score;
-    const s = p.total + live;
-    if(s>score){score=s;best=i;}
+/* Popup grids */
+function buildPopupGrids(){
+  const ng=$("numberGrid");
+  ng.innerHTML="";
+  numbers.forEach(n=>{
+    const b=document.createElement("button");
+    b.type="button"; b.className="cardBtn";
+    const st=numStyle[n]||{bg:"#eef1f5",fg:"#0b1220"};
+    b.style.background=st.bg; b.style.color=st.fg||"#0b1220";
+    b.textContent=String(n);
+    b.addEventListener("pointerdown",(e)=>{e.preventDefault(); popupAdd(n);},{passive:false});
+    ng.appendChild(b);
   });
-  return best;
-}
 
-function renderPlayers(){
-  playersContainer.innerHTML="";
-  const target = Number(targetPoints.value)||200;
-
-  const leader = getLeaderIndex();
-  const leaderChanged = (prevLeaderIndex !== null && leader !== prevLeaderIndex);
-  prevLeaderIndex = leader;
-
-  players.forEach((p,i)=>{
-    const res = (p.overrideScore !== null)
-      ? { score:p.overrideScore, isBust:(p.overrideScore===0), numbersCount:0 }
-      : scoreFromCards(p.cards);
-
-    const live = res.score;
-    const total = p.total + live;
-
-    const div=document.createElement("div");
-    div.className="player-box";
-    if(i===leader) div.classList.add("leader");
-    div.style.borderLeftColor = p.color;
-
-    if(i===leader && leaderChanged){
-      div.classList.add("pulse");
-      setTimeout(()=>div.classList.remove("pulse"), 1200);
-    }
-
-    if(p.lastScore !== null && p.lastBust){
-      div.classList.add("bustFlash");
-      setTimeout(()=>div.classList.remove("bustFlash"), 750);
-    }
-
-    const floatText = (p.lastScore===null)
-      ? ""
-      : `<div class="floatScore">${p.lastBust ? "BUST" : "+"+p.lastScore}</div>`;
-
-    let hint="";
-    if(p.cards.length > 0){
-      hint = res.isBust
-        ? `<span class="miniBadge" style="background:#ffe3e3;color:#8a1f1f;">BUST</span>`
-        : (res.numbersCount===7 ? `<span class="miniBadge" style="background:#e9ffe9;color:#145214;">+15</span>` : "");
-    }
-    const overrideHint = (p.overrideScore !== null) ? `<span class="miniBadge">manuell</span>` : "";
-
-    const cardsHTML = p.cards.map((c, idx)=>`
-      <span class="cardchip" onclick="removeCard(${i},${idx})">${c}</span>
-    `).join("");
-
-    div.innerHTML = `
-      <div class="player-top">
-        <div class="player-name">
-          <span class="player-dot" style="background:${p.color}"></span>
-          <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</span>
-          ${hint} ${overrideHint}
-        </div>
-        <button class="plusBtn" onclick="openPopup(${i}, false)" aria-label="Karte hinzufügen">+</button>
-      </div>
-
-      ${floatText}
-
-      <div class="progress-container">
-        <div class="progress-bar" style="width:${Math.min((target ? (total/target*100) : 0), 100)}%; background:${p.color}"></div>
-      </div>
-
-<div class="player-line">
-  <span class="sub">Runde: <button class="tapScore" onclick="openPopup(${i}, true)">${live}</button></span>
-  <span>${total}/${target} <span style="font-weight:900;color:#444;">(noch ${Math.max(target-total,0)})</span></span>
-</div>
-
-
-      ${p.cards.length ? `<div class="card-container">${cardsHTML}</div>` : ``}
-    `;
-
-    playersContainer.appendChild(div);
+  const mg=$("modGrid");
+  mg.innerHTML="";
+  ["+2","+4","+6","+8","+10","x2"].forEach(m=>{
+    const b=document.createElement("button");
+    b.type="button"; b.className="cardBtn modBtn"+(m==="x2"?" x2":"");
+    b.textContent=m;
+    b.addEventListener("pointerdown",(e)=>{e.preventDefault(); popupAdd(m);},{passive:false});
+    mg.appendChild(b);
   });
 }
 
-/* ----------------- Round badge + goal ----------------- */
-function renderTopBadges(){
-  const target = Number(targetPoints.value)||200;
-  roundBadge.textContent = `Runde: ${roundNumber}`;
-  goalBadge.textContent = `Ziel: ${target}`;
-}
-
-/* ----------------- Stats ----------------- */
-let statsOpen=false;
-function toggleStats(){
-  statsOpen = !statsOpen;
-  stats.style.display = statsOpen ? "block" : "none";
-  statsChevron.textContent = statsOpen ? "▲" : "▼";
-}
-function renderStats(){
-  let html="";
-  players.forEach(p=>{
-    const avg = (p.rounds.reduce((a,b)=>a+b,0) / (p.rounds.length||1)).toFixed(1);
-    const bustQuote = p.rounds.length ? Math.round((p.busts/p.rounds.length)*100) : 0;
-    html += `<div style="margin:6px 0;">
-      <span style="font-weight:1000;">${p.name}</span>:
-      Ø ${avg} • Bust ${bustQuote}% (${p.busts}/${p.rounds.length})
-    </div>`;
-  });
-  stats.innerHTML = html || `<div style="font-weight:900;color:#555;">Noch keine Daten</div>`;
-}
-
-/* ----------------- Undo (FIX) ----------------- */
-function undoAction(){
-  if(!lastActionSnapshot) return;
-  restoreGame(lastActionSnapshot);
-  lastActionSnapshot = null;
-}
-function undoRound(){
-  if(!lastRoundSnapshot) return;
-  restoreGame(lastRoundSnapshot);
-  lastRoundSnapshot = null;
-}
-
-/* ----------------- Round End ----------------- */
+/* ----------------- ROUND END ----------------- */
 function endRound(){
-  const target = Number(targetPoints.value)||200;
+  if(!players.length) return;
 
-  // Snapshot for Undo Runde (FIX)
-  lastRoundSnapshot = snapshotGame();
+  lastRoundSnap=snapshot();
 
-  if(!gameLocked){
-    gameLocked=true;
-    targetRow.style.display="none";
-  }
+  if(!gameLocked) gameLocked=true;
+
+  const target=Number($("targetPoints").value)||200;
 
   players.forEach(p=>{
-    let res;
-    if(p.overrideScore !== null){
-      res = { score:p.overrideScore, isBust:(p.overrideScore===0) };
-    }else{
-      res = scoreFromCards(p.cards);
-    }
-
+    const res = (p.override!==null) ? {score:p.override,isBust:(p.override===0)} : scoreFromCards(p.cards);
     const s=res.score;
-    p.total += s;
+    p.total+=s;
     p.rounds.push(s);
-    p.lastScore = s;
-    p.lastBust = res.isBust;
-    if(res.isBust) p.busts += 1;
-
-    p.cards = [];
-    p.overrideScore = null;
+    if(res.isBust) p.busts+=1;
+    p.cards=[];
+    p.override=null;
   });
 
   roundNumber += 1;
 
-  const win = players.find(p=>p.total >= target);
+  renderAll(); save();
 
-  renderAll();
-  saveState();
-
-  if(players.some(p=>p.lastBust)) vib(25);
-
-  setTimeout(()=>{
-    players.forEach(p=>{ p.lastScore=null; p.lastBust=false; });
-    renderPlayers();
-  }, 1000);
-
-  if(win) showWinner(win.name);
-}
-
-/* ----------------- Winner / New Game ----------------- */
-function showWinner(name){
-  winnerText.textContent = name+" gewinnt!";
-  winnerScreen.style.display="flex";
-}
-
-function newGame(fromWinner=false){
-  if(!fromWinner){
-    const ok = confirm("Neues Spiel starten? (Alle Spieler werden entfernt)");
-    if(!ok) return;
+  const win = players.find(p=>p.total>=target);
+  if(win){
+    $("winnerText").textContent = win.name+" gewinnt!";
+    $("winnerScreen").style.display="flex";
+    vib(35);
   }
-  winnerScreen.style.display="none";
-
-  // NEU: alles komplett leeren (inkl. Spieler)
-  players = [];
-  roundNumber = 0;
-  gameLocked = false;
-  targetRow.style.display = "flex";
-
-  lastActionSnapshot = null;
-  lastRoundSnapshot = null;
-
-  // optional: Ranking einklappen
-  rankingPanel.style.display = "none";
-
-  renderAll();
-  saveState();
 }
 
+/* ----------------- STATS TOGGLE ----------------- */
+$("statsHead").addEventListener("pointerdown",(e)=>{
+  e.preventDefault();
+  statsOpen=!statsOpen;
+  $("stats").style.display = statsOpen ? "block" : "none";
+  $("statsChevron").textContent = statsOpen ? "▲" : "▼";
+  save();
+},{passive:false});
 
-/* ----------------- Render ----------------- */
+/* ----------------- WIRE MENU BUTTONS ----------------- */
+$("addPlayerBtn").addEventListener("pointerdown",(e)=>{e.preventDefault();closeToolsMenu();addPlayerSimple();},{passive:false});
+$("colorsBtn").addEventListener("pointerdown",(e)=>{e.preventDefault();closeToolsMenu();redistributeColors();},{passive:false});
+$("undoBtn").addEventListener("pointerdown",(e)=>{e.preventDefault();closeToolsMenu();undoAction();},{passive:false});
+$("undoRoundBtn").addEventListener("pointerdown",(e)=>{e.preventDefault();closeToolsMenu();undoRound();},{passive:false});
+$("newGameBtn").addEventListener("pointerdown",(e)=>{e.preventDefault();closeToolsMenu();newGame();},{passive:false});
+
+/* Popup wires */
+$("tabCards").addEventListener("pointerdown",(e)=>{e.preventDefault();setTab("cards");},{passive:false});
+$("tabDirect").addEventListener("pointerdown",(e)=>{e.preventDefault();setTab("direct");},{passive:false});
+$("applyFreeBtn").addEventListener("pointerdown",(e)=>{e.preventDefault();applyFree();},{passive:false});
+$("clearBtn").addEventListener("pointerdown",(e)=>{e.preventDefault();clearPopup();},{passive:false});
+$("cancelBtn").addEventListener("pointerdown",(e)=>{e.preventDefault();closePopup(true);},{passive:false});
+$("finishBtn").addEventListener("pointerdown",(e)=>{e.preventDefault();vib(18);closePopup(false);},{passive:false});
+
+/* Winner */
+$("winnerNewGame").addEventListener("pointerdown",(e)=>{e.preventDefault();$("winnerScreen").style.display="none";newGame();},{passive:false});
+
+/* End round */
+$("endRoundBtn").addEventListener("pointerdown",(e)=>{e.preventDefault();endRound();},{passive:false});
+
+/* ----------------- RENDER ----------------- */
 function renderAll(){
-  // Ziel-Feld korrekt anzeigen/ausblenden
-  targetRow.style.display = gameLocked ? "none" : "flex";
-
-  renderTopBadges();
-  renderRankingPanel();
+  renderTop();
+  renderRanking();
   renderPlayers();
   renderStats();
-
-  // Leader strip headline
-  const list = getSortedRanking();
-  if(list.length){
-    leaderDot.style.background = list[0].color;
-    leaderText.textContent = `${list[0].name} führt (${list[0].score})`;
-  }else{
-    leaderDot.style.background = "#cbd5e1";
-    leaderText.textContent = "Noch keine Spieler";
-  }
+  $("stats").style.display = statsOpen ? "block" : "none";
+  $("statsChevron").textContent = statsOpen ? "▲" : "▼";
+  updateLocks();
 }
 
-/* ----------------- Init ----------------- */
-function init(){
-  buildPopupGrids();
-  loadState();
-
-  targetPoints.addEventListener("change", ()=>{
-    if(gameLocked) return;
-    saveState();
-    renderAll();
-  });
-
-  renderAll();
-}
-init();
+/* INIT */
+$("targetPoints").addEventListener("change",()=>{
+  if(gameLocked) return;
+  save(); renderAll();
+});
+buildPopupGrids();
+load();
+renderAll();
 </script>
 </body>
 </html>
