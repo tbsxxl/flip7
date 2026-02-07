@@ -4,408 +4,418 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Flip 7 – Score Tracker</title>
+
 <style>
-/* --- Grundlayout --- */
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 10px;
-    background: #f4f6f8;
-    color: #333;
-    font-size: 1rem;
+body{
+ font-family:system-ui,Arial;
+ background:#f6f7f9;
+ margin:0;
+ padding:16px;
+ color:#1a1a1a;
 }
 
-h1 {
-    text-align: center;
-    margin: 10px 0 20px 0;
-    font-size: 1.5rem;
+h1{text-align:center;margin-bottom:20px;}
+
+#ranking{
+ background:white;
+ border-radius:14px;
+ padding:14px;
+ margin-bottom:18px;
+ box-shadow:0 3px 10px rgba(0,0,0,.06);
 }
 
-/* --- Spielerbox --- */
-.player-box {
-    background: #fff;
-    border-radius: 10px;
-    padding: 12px;
-    margin-bottom: 12px;
-    border-left: 8px solid #000;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+/* Ranking Farbe */
+.rank-row{
+ display:flex;
+ align-items:center;
+ gap:8px;
+}
+.rank-dot{
+ width:12px;
+ height:12px;
+ border-radius:50%;
 }
 
-.progress-container {
-    background: #e0e0e0;
-    height: 14px;
-    border-radius: 7px;
-    margin: 6px 0;
-    overflow: hidden;
+/* Spieler */
+.player-box{
+ background:white;
+ border-radius:14px;
+ padding:14px;
+ margin-bottom:14px;
+ border-left:6px solid #ccc;
+ box-shadow:0 2px 6px rgba(0,0,0,.05);
+ transition:.35s;
+ position:relative;
 }
 
-.progress-bar {
-    background: #4caf50;
-    height: 100%;
-    width: 0%;
-    border-radius: 7px;
-    transition: width 0.5s ease-in-out;
+.player-box.leader{
+ transform:scale(1.02);
+ box-shadow:0 10px 25px rgba(0,0,0,.12);
 }
 
-/* --- Karten --- */
-.card-container {
-    display: flex;
-    flex-wrap: wrap;
-    margin-top: 5px;
+/* Floating Score */
+.floatScore{
+ position:absolute;
+ right:20px;
+ top:10px;
+ font-weight:700;
+ font-size:1.2rem;
+ opacity:0;
+ transform:translateY(0);
+ animation:floatUp .9s ease forwards;
+}
+@keyframes floatUp{
+ 0%{opacity:0;transform:translateY(10px);}
+ 40%{opacity:1;}
+ 100%{opacity:0;transform:translateY(-30px);}
 }
 
-.card {
-    display: inline-block;
-    padding: 6px 10px;
-    margin: 2px;
-    border-radius: 6px;
-    font-weight: bold;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: transform 0.2s;
+/* Progress */
+.progress-container{
+ background:#e7e9ed;
+ height:12px;
+ border-radius:6px;
+ overflow:hidden;
+ margin:8px 0;
+}
+.progress-bar{
+ height:100%;
+ transition:width .5s ease;
 }
 
-.card:hover {
-    transform: scale(1.1);
+/* Cards */
+.card-container{
+ display:flex;
+ flex-wrap:wrap;
+ gap:8px;
+ margin-top:6px;
+}
+.card{
+ background:#eef1f5;
+ padding:12px 16px;
+ border-radius:10px;
+ font-weight:700;
+ cursor:pointer;
+ min-width:44px;
+ text-align:center;
 }
 
-.number { background: #cce5ff; }
-.action { background: #e5ccff; }
-.modifier { background: #fff4cc; }
-.x2-card { border: 2px solid #4caf50; font-weight: bold; }
+/* Buttons */
+button{
+ padding:10px 16px;
+ border-radius:10px;
+ border:none;
+ cursor:pointer;
+ font-weight:600;
+}
+.green{background:#22c55e;color:white;}
+.red{background:#ef4444;color:white;}
 
-/* --- Buttons --- */
-button {
-    padding: 8px 12px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1rem;
-    margin: 2px;
+/* Popup */
+.overlay{
+ display:none;
+ position:fixed;
+ inset:0;
+ background:rgba(0,0,0,.35);
+}
+.popup{
+ display:none;
+ position:fixed;
+ top:10%;
+ left:50%;
+ transform:translateX(-50%);
+ width:92%;
+ max-width:520px;
+ background:white;
+ padding:22px;
+ border-radius:18px;
+ max-height:80%;
+ overflow:auto;
 }
 
-button.green { background: #4caf50; color: #fff; }
-button.red { background: #f44336; color: #fff; }
-button.disabled { background: #ccc; cursor: not-allowed; }
-
-/* --- Inputs --- */
-input[type=text], input[type=number] {
-    padding: 8px 10px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    width: calc(100% - 22px);
-    margin-bottom: 6px;
+/* Winner */
+#winnerScreen{
+ display:none;
+ position:fixed;
+ inset:0;
+ background:rgba(0,0,0,.6);
+ justify-content:center;
+ align-items:center;
+}
+#winnerCard{
+ background:white;
+ padding:40px;
+ border-radius:24px;
+ text-align:center;
+ box-shadow:0 25px 60px rgba(0,0,0,.25);
 }
 
-/* --- Popup --- */
-.overlay {
-    display: none;
-    position: fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    background: rgba(0,0,0,0.4);
-    z-index: 500;
-}
-
-.card-popup {
-    display: none;
-    position: fixed;
-    top: 10%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    max-width: 500px;
-    width: 90%;
-    max-height: 80%;
-    overflow-y: auto;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    z-index: 1000;
-    transition: opacity 0.3s ease-in-out;
-}
-
-/* --- Historie --- */
-#historyContainer {
-    margin-top: 20px;
-}
-
-.history-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 5px;
-}
-
-.history-table th, .history-table td {
-    border: 1px solid #ccc;
-    padding: 6px;
-    text-align: center;
-    font-size: 0.9rem;
-}
-
-.top-score {
-    font-weight: bold;
-    color: #4caf50;
-}
-
-/* --- Mobile Schriftgrößen --- */
-@media (max-width: 500px){
-    body { font-size: 0.95rem; }
-    h1 { font-size: 1.3rem; }
-    .card { font-size: 0.85rem; padding: 6px 8px; }
-    button { font-size: 0.95rem; padding: 6px 10px; }
+@media(max-width:600px){
+ #numberCards,#modifierCards{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+ }
+ .card{
+  padding:16px 0;
+  font-size:1.1rem;
+ }
 }
 </style>
 </head>
+
 <body>
 
 <h1>Flip 7 – Score Tracker</h1>
 
-<!-- Spieler hinzufügen -->
+<div id="ranking"></div>
+
 <div>
-    <input type="text" id="playerName" placeholder="Spielername eingeben...">
-    <button id="addPlayerBtn" class="green">+</button>
+<input id="playerName" placeholder="Spielername">
+<button class="green" onclick="addPlayer()">+</button>
 </div>
 
-<!-- Zielpunktzahl -->
-<div style="margin:10px 0;">
-    <label>Spielziel: </label>
-    <input type="number" id="targetPoints" value="200">
+<div style="margin:12px 0;">
+Spielziel:
+<input type="number" id="targetPoints" value="200">
 </div>
 
-<!-- Spielerliste -->
 <div id="playersContainer"></div>
 
-<!-- Zwischenrunde beenden -->
-<div>
-    <button id="endRoundBtn" class="green" style="width:100%; padding:12px; margin-top:10px;">Zwischenrunde beenden</button>
-</div>
+<button class="green" style="width:100%" onclick="endRound()">Zwischenrunde beenden</button>
 
-<!-- Popup Karten -->
+<h3>Statistik</h3>
+<div id="stats"></div>
+
 <div class="overlay" id="overlay" onclick="closePopup()"></div>
-<div class="card-popup" id="cardPopup">
-    <h3 id="popupPlayerName">Karte für Spieler</h3>
-    
-    <div class="card-section">
-        <h4>Zahlenkarten (0–12)</h4>
-        <div id="numberCards" class="card-container"></div>
-    </div>
 
-    <div class="card-section">
-        <h4>Aktionskarten</h4>
-        <div id="actionCards" class="card-container"></div>
-    </div>
+<div class="popup" id="popup">
+<h3 id="popupTitle"></h3>
+<input id="manualNumber" type="number" placeholder="Zahl eingeben">
 
-    <div class="card-section">
-        <h4>Modifier</h4>
-        <div id="modifierCards" class="card-container"></div>
-    </div>
+<h4>Zahlen</h4>
+<div id="numberCards" class="card-container"></div>
 
-    <button onclick="closePopup()" class="red" style="width:100%; margin-top:10px;">Fertig</button>
+<h4>Modifier</h4>
+<div id="modifierCards" class="card-container"></div>
+
+<button class="red" style="width:100%" onclick="closePopup()">Fertig</button>
 </div>
 
-<!-- Historie -->
-<h3>Historie abgeschlossener Runden</h3>
-<div id="historyContainer">
-    Noch keine abgeschlossenen Runden
+<div id="winnerScreen">
+ <div id="winnerCard">
+  <h2 id="winnerText"></h2>
+  <button class="green" onclick="resetGame()">Neues Spiel</button>
+ </div>
 </div>
 
 <script>
-// --- Datenstrukturen ---
-let players = [];
-let selectedPlayerIndex = null;
-let history = [];
-let gameStarted = false;
-let colorPalette = ["#4caf50","#2196f3","#9c27b0","#ff9800","#f44336"];
+let players=[];
+let selectedPlayer=null;
 
-const numbers = Array.from({length:13},(_,i)=>i);
-const actions = ["Freeze","Flip Three","Second Chance"];
-const modifiers = ["+2","+4","+6","+8","+10","x2"];
+const palette=[
+ "#2563eb","#16a34a","#ea580c","#9333ea",
+ "#0ea5e9","#dc2626","#14b8a6","#eab308"
+];
 
-// --- UI Initialisierung ---
-const numberContainer = document.getElementById("numberCards");
-const actionContainer = document.getElementById("actionCards");
-const modifierContainer = document.getElementById("modifierCards");
+const numbers=[...Array(13).keys()];
+const modifiers=["+2","+4","+6","+8","+10","x2"];
 
-// Zahlenkarten
+/* Karten */
 numbers.forEach(n=>{
-    let btn = document.createElement("div");
-    btn.className="card number";
-    btn.innerText = n;
-    btn.onclick = ()=>addCardToPlayer(n);
-    numberContainer.appendChild(btn);
+ let d=document.createElement("div");
+ d.className="card";
+ d.innerText=n;
+ d.onclick=()=>addCard(n);
+ numberCards.appendChild(d);
 });
-
-// Aktionskarten
-actions.forEach(a=>{
-    let btn = document.createElement("div");
-    btn.className="card action";
-    btn.innerText = a;
-    btn.onclick = ()=>addCardToPlayer(a);
-    actionContainer.appendChild(btn);
-});
-
-// Modifierkarten
 modifiers.forEach(m=>{
-    let btn = document.createElement("div");
-    btn.className="card modifier";
-    btn.innerText = m;
-    btn.onclick = ()=>addCardToPlayer(m);
-    modifierContainer.appendChild(btn);
+ let d=document.createElement("div");
+ d.className="card";
+ d.innerText=m;
+ d.onclick=()=>addCard(m);
+ modifierCards.appendChild(d);
 });
 
-// --- Spieler hinzufügen ---
-document.getElementById("addPlayerBtn").onclick = ()=>{
-    const name = document.getElementById("playerName").value.trim();
-    if(!name) return;
-    players.push({name, cards:[], totalScore:0});
-    document.getElementById("playerName").value="";
-    renderPlayers();
+/* Spieler */
+function addPlayer(){
+ let name=playerName.value.trim();
+ if(!name) return;
+
+ players.push({
+  name,
+  color: palette[players.length % palette.length],
+  cards:[],
+  total:0,
+  rounds:[],
+  lastScore:null
+ });
+
+ playerName.value="";
+ renderAll();
 }
 
-// --- Spieler rendern ---
+/* Bust Check */
+function hasDuplicateNumbers(cards){
+ let nums=cards.filter(c=>typeof c==="number");
+ return new Set(nums).size !== nums.length;
+}
+
+/* Score */
+function calc(p){
+ if(hasDuplicateNumbers(p.cards)) return 0;
+
+ let nums=[], mod=0, multi=1;
+
+ p.cards.forEach(c=>{
+  if(typeof c==="number") nums.push(c);
+  else if(c==="x2") multi=2;
+  else if(c.startsWith("+")) mod+=+c.slice(1);
+ });
+
+ let sum=nums.reduce((a,b)=>a+b,0)*multi;
+ if(nums.length===7) sum+=15;
+ return sum+mod;
+}
+
+/* Ranking */
+function renderRanking(){
+ let list=[...players].map(p=>({
+  name:p.name,
+  color:p.color,
+  score:p.total+calc(p)
+ })).sort((a,b)=>b.score-a.score);
+
+ ranking.innerHTML="<strong>Führung</strong><br>"+
+ list.map((p,i)=>`
+ <div class="rank-row">
+  ${i+1}.
+  <div class="rank-dot" style="background:${p.color}"></div>
+  ${p.name} – ${p.score}
+ </div>
+ `).join("");
+}
+
+function getLeader(){
+ let best=-1,score=-1;
+ players.forEach((p,i)=>{
+  let s=p.total+calc(p);
+  if(s>score){score=s;best=i;}
+ });
+ return best;
+}
+
+/* Spieler Render */
 function renderPlayers(){
-    const container = document.getElementById("playersContainer");
-    container.innerHTML="";
-    const target = parseInt(document.getElementById("targetPoints").value) || 200;
+ playersContainer.innerHTML="";
+ let leader=getLeader();
 
-    players.forEach((p,i)=>{
-        let div = document.createElement("div");
-        div.className="player-box";
-        let color = colorPalette[i%colorPalette.length];
-        div.style.borderLeftColor = color;
+ players.forEach((p,i)=>{
+  let live=calc(p);
+  let total=p.total+live;
 
-        // Karten rendern
-        let cardsHTML = p.cards.map((c, idx)=>{
-            let cls="card";
-            let bg="#ccc";
-            if(typeof c==="number") bg="#cce5ff";
-            else if(actions.includes(c)) bg="#e5ccff";
-            else if(["+2","+4","+6","+8","+10"].includes(c)) bg="#fff4cc";
-            else if(c==="x2") bg="#d1ffd6";
+  let div=document.createElement("div");
+  div.className="player-box";
+  if(i===leader) div.classList.add("leader");
+  div.style.borderLeftColor=p.color;
 
-            if(c==="x2") cls+=" x2-card";
-
-            return `<div class="${cls}" onclick="removeCard(${i},${idx})" style="background:${bg};">${c}</div>`;
-        }).join("");
-
-        // Score live
-        let {score, bonus} = calculateScoreLive(p);
-
-        let diff = target - (p.totalScore + score);
-        let scoreHTML = `Score: ${score} Punkte`;
-        if(bonus>0) scoreHTML += ` <span style="color:green; font-weight:bold;">(+${bonus} Bonus)</span>`;
-        scoreHTML += `<br>Gesamt: ${p.totalScore + score} / ${target} Punkte (${diff>0?diff+" bis Ziel": "Ziel erreicht!"})`;
-
-        div.innerHTML=`
-            <strong>${i+1}. ${p.name}</strong>
-            <div class="progress-container"><div class="progress-bar" style="width:${Math.min((p.totalScore+score)/target*100,100)}%; background:${color};"></div></div>
-            <div>${scoreHTML}</div>
-            <div class="card-container">${cardsHTML}</div>
-            <button onclick="openPopup(${i})" class="green" style="width:100%;">Karte hinzufügen</button>
-        `;
-        container.appendChild(div);
-    });
-
-    // Zielpunktzahl sperren, sobald ein Spieler Karten hat
-    if(players.some(p=>p.cards.length>0)){
-        document.getElementById("targetPoints").disabled=true;
-    }
+  div.innerHTML=`
+  <strong>${p.name}</strong>
+  ${p.lastScore!=null?`<div class="floatScore">+${p.lastScore}</div>`:""}
+  <div class="progress-container">
+   <div class="progress-bar" style="width:${total/targetPoints.value*100}%; background:${p.color}"></div>
+  </div>
+  Runde: ${live} | Gesamt: ${total}
+  <div class="card-container">
+   ${p.cards.map((c,ci)=>`<div class="card" onclick="removeCard(${i},${ci})">${c}</div>`).join("")}
+  </div>
+  <button class="green" style="width:100%" onclick="openPopup(${i})">Karte hinzufügen</button>
+  `;
+  playersContainer.appendChild(div);
+ });
 }
 
-// Karte entfernen
-function removeCard(playerIndex, cardIndex){
-    players[playerIndex].cards.splice(cardIndex,1);
-    renderPlayers();
+/* Statistik */
+function renderStats(){
+ let html="";
+ players.forEach(p=>{
+  let avg=(p.rounds.reduce((a,b)=>a+b,0)/p.rounds.length||0).toFixed(1);
+  html+=`${p.name}: Ø ${avg}<br>`;
+ });
+ stats.innerHTML=html || "Noch keine Daten";
 }
 
-// Live Score
-function calculateScoreLive(player){
-    let numbersArr=[];
-    let modifiersSum=0;
-    let multiplier=1;
-    let bonus=0;
-
-    for(let card of player.cards){
-        if(typeof card==="number"){
-            numbersArr.push(card);
-        } else if(["+2","+4","+6","+8","+10"].includes(card)) modifiersSum+=parseInt(card.replace("+",""));
-        else if(card==="x2") multiplier=2;
-    }
-
-    let numbersSum = numbersArr.reduce((a,b)=>a+b,0);
-    numbersSum *= multiplier;
-    if(numbersArr.length===7) bonus=15;
-
-    return {score: numbersSum+modifiersSum+bonus, bonus};
-}
-
-// --- Popup ---
-function openPopup(index){
-    selectedPlayerIndex=index;
-    document.getElementById("popupPlayerName").innerText=`Karte für ${players[index].name} auswählen`;
-    document.getElementById("cardPopup").style.display="block";
-    document.getElementById("overlay").style.display="block";
+/* Popup */
+function openPopup(i){
+ selectedPlayer=i;
+ popup.style.display="block";
+ overlay.style.display="block";
+ popupTitle.innerText="Karte für "+players[i].name;
+ setTimeout(()=>manualNumber.focus(),50);
 }
 function closePopup(){
-    document.getElementById("cardPopup").style.display="none";
-    document.getElementById("overlay").style.display="none";
-    renderPlayers();
+ popup.style.display="none";
+ overlay.style.display="none";
+ renderAll();
 }
 
-// Karte hinzufügen
-function addCardToPlayer(card){
-    if(selectedPlayerIndex===null) return;
-    players[selectedPlayerIndex].cards.push(card);
-    // Kurze Animation
-    renderPlayers();
+/* Karten */
+function addCard(c){
+ if(selectedPlayer==null) return;
+ players[selectedPlayer].cards.push(c);
+ renderAll();
+}
+function removeCard(p,c){
+ players[p].cards.splice(c,1);
+ renderAll();
 }
 
-// --- Runde beenden ---
-document.getElementById("endRoundBtn").onclick = ()=>{
-    const target = parseInt(document.getElementById("targetPoints").value) || 200;
-    let roundScores=[];
-    players.forEach(p=>{
-        let {score} = calculateScoreLive(p);
-        p.totalScore += score;
-        roundScores.push({name:p.name, score});
-        p.cards=[];
-    });
-    history.push({round: roundScores, timestamp: new Date()});
-    renderHistory();
-    renderPlayers();
-
-    // Gewinner prüfen
-    players.forEach(p=>{
-        if(p.totalScore>=target){
-            alert(`🎉 ${p.name} hat das Spiel gewonnen!`);
-        }
-    });
+/* Winner */
+function showWinner(name){
+ winnerText.innerText=name+" gewinnt!";
+ winnerScreen.style.display="flex";
+}
+function resetGame(){
+ winnerScreen.style.display="none";
+ players.forEach(p=>{
+  p.total=0;
+  p.cards=[];
+  p.rounds=[];
+  p.lastScore=null;
+ });
+ renderAll();
 }
 
-// Historie
-function renderHistory(){
-    const container=document.getElementById("historyContainer");
-    if(history.length===0){ container.innerHTML="Noch keine abgeschlossenen Runden"; return; }
+/* Runde Ende */
+function endRound(){
+ let target=+targetPoints.value||200;
 
-    let html = '<table class="history-table"><tr><th>Runde</th><th>Zeit</th>';
-    players.forEach(p=> html += `<th>${p.name}</th>`);
-    html += '</tr>';
+ players.forEach(p=>{
+  let s=calc(p);
+  p.total+=s;
+  p.rounds.push(s);
+  p.lastScore=s;
+  p.cards=[];
+ });
 
-    history.forEach((h,i)=>{
-        html += `<tr><td>${i+1}</td><td>${h.timestamp.toLocaleTimeString()}</td>`;
-        players.forEach(p=>{
-            let ps = h.round.find(r=>r.name===p.name);
-            html += `<td>${ps?ps.score:0}</td>`;
-        });
-        html += '</tr>';
-    });
+ let win=players.find(p=>p.total>=target);
+ if(win) showWinner(win.name);
 
-    html += '</table>';
-    container.innerHTML = html;
+ renderAll();
+
+ setTimeout(()=>{
+  players.forEach(p=>p.lastScore=null);
+  renderPlayers();
+ },1000);
+}
+
+/* Render */
+function renderAll(){
+ renderRanking();
+ renderPlayers();
+ renderStats();
 }
 </script>
+
 </body>
 </html>
