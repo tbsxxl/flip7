@@ -1,3 +1,4 @@
+/* styles.css */
 :root{
   --bg:#f6f7f9; --card:#fff; --muted:#eef1f5; --muted2:#dfe4ea;
   --text:#0f172a; --sub:#475569; --sub2:#64748b;
@@ -27,7 +28,7 @@
   --vh: 1vh;
 }
 
-/* High Contrast (Sonne) */
+/* High Contrast */
 body.highContrast{
   --text:#0b1220;
   --sub:#334155;
@@ -145,15 +146,9 @@ body.highContrast #leaderStrip{ box-shadow:none; border:1px solid var(--hcBorder
 
 #leaderTextWrap{display:flex;align-items:center;gap:8px;min-width:0}
 #leaderCrown{display:inline-flex;transform-origin:center}
-
-/* Crown pop (existing) */
 #leaderCrown.pop{animation:crownPop .22s ease}
 @keyframes crownPop{0%{transform:scale(.95);opacity:.75}100%{transform:scale(1);opacity:1}}
-
-/* Crown shimmer (NEW) */
-#leaderCrown.shimmer{
-  animation:crownShimmer .34s ease forwards;
-}
+#leaderCrown.shimmer{ animation:crownShimmer .34s ease forwards; }
 @keyframes crownShimmer{
   0%{filter: drop-shadow(0 0 0 rgba(255,215,0,0)); transform: translateY(0) scale(1);}
   35%{filter: drop-shadow(0 0 10px rgba(255,215,0,.55)); transform: translateY(-1px) scale(1.02);}
@@ -233,7 +228,7 @@ body.highContrast .rankItem{ box-shadow:none; }
 .rankName{font-weight: var(--wBody);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rankScore{font-weight: var(--wTitle); font-size: 16px;}
 
-/* Tools menu (popover) */
+/* Tools menu */
 #toolsMenu{
   position:fixed; z-index:100000;
   background:var(--card);
@@ -400,17 +395,16 @@ body.highContrast .progress-container::before{ opacity:.22; }
 }
 @keyframes tick50{0%{opacity:.22}50%{opacity:.65}100%{opacity:.22}}
 
-/* Base + Live bar layers */
+/* Base + Live bar layers (FIXED: live is an extra segment, not total width) */
 .pbBase, .pbLive{
-  position:absolute; left:0; top:0; bottom:0;
+  position:absolute; top:0; bottom:0;
   width:0%;
   transform-origin:left center;
 }
-.pbBase{
-  transition:width .35s ease;
-}
+.pbBase{ left:0; transition:width .35s ease; }
 .pbLive{
-  opacity:.55;
+  left:0; /* overridden inline */
+  opacity:.55;               /* lighter, distinguishes "this round" */
   transition:width .35s ease;
 }
 

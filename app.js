@@ -1,25 +1,18 @@
+/* app.js */
 /* ---------- Helpers ---------- */
 const $ = (id)=>document.getElementById(id);
 function vib(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
 function lockScroll(lock){ document.body.style.overflow = lock ? "hidden" : ""; }
 const reduceMotion = () => window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-function escapeHtml(str){
-  return String(str)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-
-const { HAPT, numStyle, palette, numbers } = window.Flip7Config;
-
 /* iOS keyboard vh fix */
 function setVh(){
   const vh = window.innerHeight * 0.01;
   document.documentElement.style.setProperty("--vh", vh + "px");
 }
+setVh();
+window.addEventListener("resize", setVh, {passive:true});
+window.addEventListener("orientationchange", setVh, {passive:true});
 
 /* Top/bottom bar alpha changes with scroll */
 function updateBarAlpha(){
@@ -27,8 +20,37 @@ function updateBarAlpha(){
   const a = Math.max(0.86, 0.94 - (y/120)*0.08);
   document.documentElement.style.setProperty("--barAlpha", a.toFixed(3));
 }
+updateBarAlpha();
+window.addEventListener("scroll", updateBarAlpha, {passive:true});
 
-/* ---------- State ---------- */
+/* Haptik */
+const HAPT = {
+  finish:18,
+  bust:28,
+  win:40,
+  sheetOpen:12,
+  sheetSnap:10,
+  delete:18,
+  fx:12
+};
+
+/* Number colors */
+const numStyle = {
+  0: { bg:"linear-gradient(135deg,#0cb5be 0%,#0cb5be 20%,#e70200 20%,#e70200 40%,#c2549b 40%,#c2549b 60%,#fd8803 60%,#fd8803 80%,#ffffff 80%,#ffffff 100%)", fg:"#0b1220" },
+  1: { bg:"#cbb59e" },
+  2: { bg:"#dce100" },
+  3: { bg:"#f14355", fg:"#fff" },
+  4: { bg:"#0cb5be", fg:"#fff" },
+  5: { bg:"#329a4c", fg:"#fff" },
+  6: { bg:"#c2549b", fg:"#fff" },
+  7: { bg:"#d87665", fg:"#fff" },
+  8: { bg:"#b6e076" },
+  9: { bg:"#fd8803", fg:"#fff" },
+  10:{ bg:"#e70200", fg:"#fff" },
+  11:{ bg:"#8eabda" },
+  12:{ bg:"#937972", fg:"#fff" }
+};
+
 let players=[];
 let roundNumber=0;
 let gameLocked=false;
@@ -48,6 +70,13 @@ let lastLeaderScore=0;
 
 let popupStatePushed=false;
 let sheetStatePushed=false;
+
+const palette=[
+  "#2563eb","#16a34a","#ea580c","#9333ea",
+  "#0ea5e9","#dc2626","#14b8a6","#eab308",
+  "#111827","#f97316","#22c55e","#3b82f6"
+];
+const numbers=[...Array(13).keys()];
 
 /* ---------- Persistenz ---------- */
 function snapshot(){
@@ -80,13 +109,14 @@ function pushUndo(){
   undoStack.push(snapshot());
   if(undoStack.length>60) undoStack.shift();
 }
+/* FIX: removed broken variable name that could crash */
 function pushUndoRound(){
   undoRoundStack.push(snapshot());
   if(undoRoundStack.length>30) undoRoundStack.shift();
 }
-function save(){ localStorage.setItem("flip7_state_v9", JSON.stringify(snapshot())); }
+function save(){ localStorage.setItem("flip7_state_v10", JSON.stringify(snapshot())); }
 function load(){
-  const raw=localStorage.getItem("flip7_state_v9");
+  const raw=localStorage.getItem("flip7_state_v10");
   if(!raw) return;
   try{ restore(JSON.parse(raw)); }catch(e){}
 }
@@ -164,7 +194,7 @@ function renderTop(){
     setTimeout(()=>$("leaderStrip").classList.remove("spotlight"), 650);
 
     $("leaderCrown").classList.add("pop","shimmer");
-    setTimeout(()=>$("leaderCrown").classList.remove("pop","shimmer"), 380);
+    setTimeout(()=> $("leaderCrown").classList.remove("pop","shimmer"), 380);
 
     $("leaderDot").classList.add("halo");
     setTimeout(()=>$("leaderDot").classList.remove("halo"), 320);
@@ -191,7 +221,7 @@ function renderRanking(){
   const panel=$("rankingPanel");
 
   panel.innerHTML = list.length ? list.map((p,i)=>`
-    <div class="rankItem" data-key="${escapeHtml(p.name)}">
+    <div class="rankItem">
       <div class="rankNo">${i+1}.</div>
       <div class="rankDot" style="background:${p.color}"></div>
       <div class="rankName">${escapeHtml(p.name)}</div>
@@ -202,7 +232,7 @@ function renderRanking(){
 
 /* Track bar % */
 const prevBarPct = new Map();
-/* Track live % for sweep */
+/* Track live segment % for sweep */
 const prevLivePct = new Map();
 
 /* ---------- Chips fade helpers ---------- */
@@ -249,9 +279,10 @@ function renderPlayers(){
     div.className="player-box"+(leaderName===p.name?" leader":"");
     div.style.borderLeftColor=p.color;
 
-    const pctTotal = target ? Math.min((total/target)*100,100) : 0;
+    /* FIX: base + live segment (instead of live being total width) */
     const pctBase  = target ? Math.min((p.total/target)*100,100) : 0;
     const pctLive  = target ? Math.min((live/target)*100, Math.max(0, 100 - pctBase)) : 0;
+    const pctTotal = Math.min(pctBase + pctLive, 100);
 
     const prev = prevBarPct.get(p.name);
     const barGlow = (prev!=null && Math.abs(prev-pctTotal) > 0.01);
@@ -263,12 +294,10 @@ function renderPlayers(){
 
     const left = Math.max(target-total,0);
 
-    // IMPORTANT CHANGE requested earlier:
-    // Clicking the round score now opens the popup in CARDS tab (not Direktpunkte).
     const leftLabel = compact
-      ? `<button class="sub" data-open="cards" data-i="${i}" style="border:none;background:transparent;padding:0;text-decoration:underline;cursor:pointer">${live}</button>
+      ? `<button class="sub" data-direct="1" data-i="${i}" style="border:none;background:transparent;padding:0;text-decoration:underline;cursor:pointer">${live}</button>
          <span id="delta_${i}"></span>`
-      : `<button class="sub" data-open="cards" data-i="${i}" style="border:none;background:transparent;padding:0;text-decoration:underline;cursor:pointer">Runde: ${live}</button>
+      : `<button class="sub" data-direct="1" data-i="${i}" style="border:none;background:transparent;padding:0;text-decoration:underline;cursor:pointer">Runde: ${live}</button>
          <span id="delta_${i}"></span>`;
 
     const rightLabel = compact
@@ -287,7 +316,8 @@ function renderPlayers(){
 
       <div class="progress-container ${barGlow ? "barGlow":""}" id="pc_${i}">
         <div class="pbBase" id="pbBase_${i}" style="width:${pctBase}%; background:${p.color}"></div>
-        <div class="pbLive ${liveChanged ? "sweep":""}" id="pbLive_${i}" style="width:${pctTotal}%; background:${p.color}"></div>
+        <div class="pbLive ${liveChanged ? "sweep":""}" id="pbLive_${i}"
+             style="left:${pctBase}%; width:${pctLive}%; background:${p.color}"></div>
       </div>
 
       <div class="divider"></div>
@@ -479,8 +509,6 @@ function closeSheet(){
 }
 sheetOverlay.addEventListener("pointerdown",()=>{ if(sheetOpen) closeSheet(); }, {passive:true});
 
-let popupEl=null; // assigned later
-
 window.addEventListener("popstate",()=>{
   if(sheetOpen){
     sheetOpen=false;
@@ -560,7 +588,6 @@ $("sheetGrabHit").addEventListener("pointerdown",(e)=>{
 
 sheet.addEventListener("pointermove",(e)=>{ if(sheetDrag) moveSheetDrag(e.clientY); },{passive:true});
 sheet.addEventListener("pointerup",()=>{ if(sheetDrag) endSheetDrag(); },{passive:true});
-
 window.addEventListener("resize",()=>{ if(sheetOpen) snapSheet(sheetSnap, "program"); }, {passive:true});
 
 /* ---------- Sheet players ---------- */
@@ -686,15 +713,40 @@ function toggleClassSwitch(which){
   save();
 }
 
-/* ---------- Popup ---------- */
-const overlayEl=$("overlay");
-popupEl=$("popup");
+$("manageBtn").addEventListener("pointerup",(e)=>{ e.preventDefault(); openSheet(); }, {passive:false});
+$("sheetCloseBtn").addEventListener("pointerup",(e)=>{ e.preventDefault(); closeSheet(); }, {passive:false});
 
+$("sheetAddBtn").addEventListener("pointerup",(e)=>{ e.preventDefault(); addPlayerFromSheet(); }, {passive:false});
+$("sheetAddName").addEventListener("keydown",(e)=>{ if(e.key==="Enter") addPlayerFromSheet(); });
+
+$("sheetPlayersList").addEventListener("click",(e)=>{
+  const ren = e.target.closest("[data-ren]");
+  const del = e.target.closest("[data-del]");
+  const done = e.target.closest("[data-ren-done]");
+  if(done) commitRename(Number(done.dataset.renDone));
+  if(ren) startRename(Number(ren.dataset.ren));
+  if(del) deletePlayer(Number(del.dataset.del));
+});
+
+$("sheetPlayersList").addEventListener("keydown",(e)=>{
+  const inp = e.target.closest("[data-ren-inp]");
+  if(!inp) return;
+  const idx = Number(inp.dataset.renInp);
+  if(e.key === "Enter") commitRename(idx);
+  if(e.key === "Escape"){ editingIdx=null; renderSheetPlayers(); }
+});
+
+$("toggleCompact").addEventListener("pointerup",()=>toggleClassSwitch("compact"));
+$("toggleContrast").addEventListener("pointerup",()=>toggleClassSwitch("contrast"));
+$("toggleCompact").addEventListener("keydown",(e)=>{ if(e.key==="Enter"||e.key===" ") toggleClassSwitch("compact"); });
+$("toggleContrast").addEventListener("keydown",(e)=>{ if(e.key==="Enter"||e.key===" ") toggleClassSwitch("contrast"); });
+
+/* ---------- Popup ---------- */
+const overlayEl=$("overlay"), popupEl=$("popup");
 const tabCardsEl=$("tabCards"), tabDirectEl=$("tabDirect");
 const cardsView=$("popupCardsView"), directView=$("popupDirectView");
 let lastUndoTap=0;
 
-// FX flags
 let popupFxPrev = { bonus:false, x2:false };
 
 function stackPopupState(){
@@ -798,14 +850,13 @@ function renderPopupSelection(){
   }
 
   const prev=scoreFromCards(popupCards);
+
   const hasX2 = !prev.isBust && popupCards.some(x=>x==="x2");
   const hasBonus = !prev.isBust && prev.numbersCount===7;
 
   const enteredBonus = hasBonus && !popupFxPrev.bonus;
   const enteredX2    = hasX2 && !popupFxPrev.x2;
-  if(enteredBonus || enteredX2){
-    triggerPreviewGlow();
-  }
+  if(enteredBonus || enteredX2) triggerPreviewGlow();
   popupFxPrev = { bonus:hasBonus, x2:hasX2 };
 
   if(prev.isBust){
@@ -895,7 +946,7 @@ function closePopup(cancel){
   internalClosePopup(cancel);
 }
 
-/* swipe-to-close */
+/* swipe-to-close (grabHit) */
 let dragActive=false, dragStartY=0, dragLastY=0, dragStartT=0;
 function setPopupDragTranslate(y){ popupEl.style.transform = `translateX(-50%) translateY(${y}px)`; }
 function endPopupDrag(shouldClose){
@@ -1143,148 +1194,118 @@ function newGame(){
 }
 
 /* ---------- Wiring ---------- */
-function wireEvents(){
-  $("manageBtn").addEventListener("pointerup",(e)=>{ e.preventDefault(); openSheet(); }, {passive:false});
-  $("sheetCloseBtn").addEventListener("pointerup",(e)=>{ e.preventDefault(); closeSheet(); }, {passive:false});
+$("statsHead").addEventListener("click",()=>{
+  statsOpen=!statsOpen;
+  $("stats").style.display = statsOpen ? "block" : "none";
+  $("statsChevron").textContent = statsOpen ? "▲" : "▼";
+  save();
+});
 
-  $("sheetAddBtn").addEventListener("pointerup",(e)=>{ e.preventDefault(); addPlayerFromSheet(); }, {passive:false});
-  $("sheetAddName").addEventListener("keydown",(e)=>{ if(e.key==="Enter") addPlayerFromSheet(); });
+$("colorsBtn").addEventListener("click",(e)=>{ e.preventDefault(); redistributeColors(); });
+$("undoBtn").addEventListener("click",(e)=>{ e.preventDefault(); undoAction(); });
+$("undoRoundBtn").addEventListener("click",(e)=>{ e.preventDefault(); undoRound(); });
+$("newGameBtn").addEventListener("click",(e)=>{ e.preventDefault(); newGame(); });
+$("sheetNewGameBtn").addEventListener("click",(e)=>{ e.preventDefault(); newGame(); });
 
-  $("sheetPlayersList").addEventListener("click",(e)=>{
-    const ren = e.target.closest("[data-ren]");
-    const del = e.target.closest("[data-del]");
-    const done = e.target.closest("[data-ren-done]");
-    if(done) commitRename(Number(done.dataset.renDone));
-    if(ren) startRename(Number(ren.dataset.ren));
-    if(del) deletePlayer(Number(del.dataset.del));
-  });
+$("toastUndoBtn").addEventListener("click",(e)=>{ e.preventDefault(); undoRound(); });
+$("endRoundBtn").addEventListener("click",(e)=>{ e.preventDefault(); endRound(); });
 
-  $("sheetPlayersList").addEventListener("keydown",(e)=>{
-    const inp = e.target.closest("[data-ren-inp]");
-    if(!inp) return;
-    const idx = Number(inp.dataset.renInp);
-    if(e.key === "Enter") commitRename(idx);
-    if(e.key === "Escape"){ editingIdx=null; renderSheetPlayers(); }
-  });
+$("targetPoints").addEventListener("change",()=>{
+  if(gameLocked) return;
+  save(); renderAll();
+});
 
-  $("toggleCompact").addEventListener("pointerup",()=>toggleClassSwitch("compact"));
-  $("toggleContrast").addEventListener("pointerup",()=>toggleClassSwitch("contrast"));
-  $("toggleCompact").addEventListener("keydown",(e)=>{ if(e.key==="Enter"||e.key===" ") toggleClassSwitch("compact"); });
-  $("toggleContrast").addEventListener("keydown",(e)=>{ if(e.key==="Enter"||e.key===" ") toggleClassSwitch("contrast"); });
+$("tabCards").addEventListener("click",(e)=>{ e.preventDefault(); setTab("cards"); });
+$("tabDirect").addEventListener("click",(e)=>{ e.preventDefault(); setTab("direct"); });
+$("applyFreeBtn").addEventListener("click",(e)=>{ e.preventDefault(); applyFree(); });
+$("clearBtn").addEventListener("click",(e)=>{ e.preventDefault(); clearPopup(); });
+$("cancelBtn").addEventListener("click",(e)=>{ e.preventDefault(); closePopup(true); });
+$("finishBtn").addEventListener("click",(e)=>{ e.preventDefault(); closePopup(false); });
+$("popupUndoBtn").addEventListener("click",(e)=>{ e.preventDefault(); popupUndoTap(); });
 
-  $("statsHead").addEventListener("click",()=>{
-    statsOpen=!statsOpen;
-    $("stats").style.display = statsOpen ? "block" : "none";
-    $("statsChevron").textContent = statsOpen ? "▲" : "▼";
-    save();
-  });
+$("freeScoreInput").addEventListener("keydown",(e)=>{ if(e.key==="Enter") applyFree(); });
 
-  $("colorsBtn").addEventListener("click",(e)=>{ e.preventDefault(); redistributeColors(); });
-  $("undoBtn").addEventListener("click",(e)=>{ e.preventDefault(); undoAction(); });
-  $("undoRoundBtn").addEventListener("click",(e)=>{ e.preventDefault(); undoRound(); });
-  $("newGameBtn").addEventListener("click",(e)=>{ e.preventDefault(); newGame(); });
-  $("sheetNewGameBtn").addEventListener("click",(e)=>{ e.preventDefault(); newGame(); });
+$("lastDirectChip").addEventListener("click",(e)=>{
+  e.preventDefault();
+  if(typeof lastDirectScore==="number"){
+    $("freeScoreInput").value = lastDirectScore;
+    applyFree();
+  }
+});
 
-  $("toastUndoBtn").addEventListener("click",(e)=>{ e.preventDefault(); undoRound(); });
-  $("endRoundBtn").addEventListener("click",(e)=>{ e.preventDefault(); endRound(); });
+$("winnerNewGame").addEventListener("click",(e)=>{
+  e.preventDefault();
+  $("winnerScreen").style.display="none";
+  newGame();
+});
 
-  $("targetPoints").addEventListener("change",()=>{
-    if(gameLocked) return;
-    save(); renderAll();
-  });
+overlayEl.addEventListener("pointerdown",()=>closePopup(true),{passive:true});
 
-  $("tabCards").addEventListener("click",(e)=>{ e.preventDefault(); setTab("cards"); });
-  $("tabDirect").addEventListener("click",(e)=>{ e.preventDefault(); setTab("direct"); });
-  $("applyFreeBtn").addEventListener("click",(e)=>{ e.preventDefault(); applyFree(); });
-  $("clearBtn").addEventListener("click",(e)=>{ e.preventDefault(); clearPopup(); });
-  $("cancelBtn").addEventListener("click",(e)=>{ e.preventDefault(); closePopup(true); });
-  $("finishBtn").addEventListener("click",(e)=>{ e.preventDefault(); closePopup(false); });
-  $("popupUndoBtn").addEventListener("click",(e)=>{ e.preventDefault(); popupUndoTap(); });
+/* Delegation: chip remove, open popup (+), tap Runde for Direktpunkte */
+let pressTimer=null;
+let longPressFired=false;
 
-  $("freeScoreInput").addEventListener("keydown",(e)=>{ if(e.key==="Enter") applyFree(); });
+$("playersContainer").addEventListener("pointerdown",(e)=>{
+  const rem = e.target.closest(".cardchip");
+  if(rem && rem.dataset.rem!=null){
+    const i=Number(rem.dataset.i);
+    const ci=Number(rem.dataset.rem);
 
-  $("lastDirectChip").addEventListener("click",(e)=>{
+    rem.style.animation = "chipOut .12s ease forwards";
+    setTimeout(()=>{
+      pushUndo();
+      players[i].cards.splice(ci,1);
+      players[i].override=null;
+      renderAll(); save();
+    }, 120);
+    return;
+  }
+
+  const directBtn = e.target.closest('button[data-direct="1"]');
+  if(directBtn){
     e.preventDefault();
-    if(typeof lastDirectScore==="number"){
-      $("freeScoreInput").value = lastDirectScore;
-      applyFree();
-    }
-  });
+    const i=Number(directBtn.dataset.i);
+    openPopup(i, true);
+    return;
+  }
 
-  $("winnerNewGame").addEventListener("click",(e)=>{
+  const plus=e.target.closest(".plusBtn");
+  if(plus){
     e.preventDefault();
-    $("winnerScreen").style.display="none";
-    newGame();
-  });
-
-  overlayEl.addEventListener("pointerdown",()=>closePopup(true),{passive:true});
-
-  /* Delegation: chip remove, open popup (+), tap Runde */
-  let pressTimer=null;
-  let longPressFired=false;
-
-  $("playersContainer").addEventListener("pointerdown",(e)=>{
-    const rem = e.target.closest(".cardchip");
-    if(rem && rem.dataset.rem!=null){
-      const i=Number(rem.dataset.i);
-      const ci=Number(rem.dataset.rem);
-
-      rem.style.animation = "chipOut .12s ease forwards";
-      setTimeout(()=>{
-        pushUndo();
-        players[i].cards.splice(ci,1);
-        players[i].override=null;
-        renderAll(); save();
-      }, 120);
-      return;
-    }
-
-    // Tap round label => Cards tab (requested)
-    const openCards = e.target.closest('button[data-open="cards"]');
-    if(openCards){
-      e.preventDefault();
-      const i=Number(openCards.dataset.i);
-      openPopup(i, false);
-      return;
-    }
-
-    const plus=e.target.closest(".plusBtn");
-    if(plus){
-      e.preventDefault();
-      const i=Number(plus.dataset.i);
-      longPressFired=false;
-      clearTimeout(pressTimer);
-      pressTimer=setTimeout(()=>{
-        longPressFired=true;
-        openPopup(i, true); // long press => direct
-      }, 320);
-      plus.setPointerCapture?.(e.pointerId);
-    }
-  },{passive:false});
-
-  $("playersContainer").addEventListener("pointerup",(e)=>{
-    const plus=e.target.closest(".plusBtn");
-    if(!plus) return;
+    const i=Number(plus.dataset.i);
+    longPressFired=false;
     clearTimeout(pressTimer);
-    if(!longPressFired){
-      const i=Number(plus.dataset.i);
-      openPopup(i, false); // tap => cards
-    }
-  },{passive:false});
+    pressTimer=setTimeout(()=>{
+      longPressFired=true;
+      openPopup(i, true);
+    }, 320);
+    plus.setPointerCapture?.(e.pointerId);
+  }
+},{passive:false});
+
+$("playersContainer").addEventListener("pointerup",(e)=>{
+  const plus=e.target.closest(".plusBtn");
+  if(!plus) return;
+  clearTimeout(pressTimer);
+  if(!longPressFired){
+    const i=Number(plus.dataset.i);
+    openPopup(i, false);
+  }
+},{passive:false});
+
+/* ---------- Utils ---------- */
+function escapeHtml(str){
+  return String(str)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
 
 /* ---------- Init ---------- */
-document.addEventListener("DOMContentLoaded",()=>{
-  setVh();
-  updateBarAlpha();
-  window.addEventListener("resize", setVh, {passive:true});
-  window.addEventListener("orientationchange", setVh, {passive:true});
-  window.addEventListener("scroll", updateBarAlpha, {passive:true});
-
-  buildPopupGrids();
-  load();
-  syncTogglesUI();
-  renderAll();
-  renderSheetPlayers();
-  wireEvents();
-});
+buildPopupGrids();
+load();
+syncTogglesUI();
+renderAll();
+renderSheetPlayers();
