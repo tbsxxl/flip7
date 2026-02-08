@@ -15,19 +15,53 @@
   --mod:#f8b22d;      /* +2/+4/+6/+8/+10 & x2 Button-Farbe im Popup */
   --danger:#ef4444;
 }
-*{-webkit-tap-highlight-color:transparent}
-button,.chip,.cardchip,.cardBtn,.iconBtn{touch-action:manipulation}
-body{
-  font-family:system-ui,Arial; margin:0; padding:14px; background:var(--bg); color:var(--text);
-  font-variant-numeric:tabular-nums;
+
+/* High Contrast (Sonne) */
+body.highContrast{
+  --text:#0b1220;
+  --sub:#334155;
+  --muted2:#cfd6df;
+  --sh1:0 0 0 rgba(0,0,0,0);
+  --sh2:0 0 0 rgba(0,0,0,0);
 }
+
+/* Compact Mode */
+body.compact{
+  padding:10px;
+}
+body.compact .player-box{ padding:10px; margin-bottom:8px; }
+body.compact .progress-container{ height:8px; margin:6px 0 6px 0; }
+body.compact .cardchip{ padding:6px 9px; font-size:.85rem; }
+body.compact #endRoundBtn{ padding:14px 12px; }
+body.compact .plusBtn{ width:44px;height:44px;border-radius:14px; }
+
+*{-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:system-ui,Arial;
+  margin:0;
+  padding:14px;
+  background:var(--bg);
+  color:var(--text);
+  font-variant-numeric:tabular-nums;
+  min-height:100dvh;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+button,input{touch-action:manipulation}
+
 h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 
 @media (prefers-reduced-motion: reduce){
   *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
 
-#topbar{position:sticky;top:0;z-index:100;background:rgba(246,247,249,.92);backdrop-filter:blur(8px);padding:8px 0 10px 0}
+#topbar{
+  position:sticky; top:0; z-index:100;
+  background:rgba(246,247,249,.92);
+  backdrop-filter:blur(10px);
+  padding: calc(8px + env(safe-area-inset-top)) 0 10px 0;
+}
 
 #leaderStrip{
   background:var(--card); border-radius:16px; box-shadow:var(--sh1),var(--sh2);
@@ -35,7 +69,7 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
   overflow:visible;
 }
 
-/* Spotlight */
+/* Leader spotlight */
 #leaderStrip.spotlight::after{
   content:"";
   position:absolute; inset:-40px;
@@ -57,11 +91,15 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 #leaderCrown{display:inline-flex;transform-origin:center}
 #leaderCrown.pop{animation:crownPop .22s ease}
 @keyframes crownPop{0%{transform:scale(.95);opacity:.75}100%{transform:scale(1);opacity:1}}
-#leaderText{
+
+#leaderName{
   font-weight:950; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  max-width:58vw; font-size:1.02rem;
+  max-width:42vw; font-size:1.02rem;
 }
-#leaderText.crossfade{animation:crossfade .15s ease}
+#leaderScore{
+  font-weight:950;
+}
+.crossfade{animation:crossfade .15s ease}
 @keyframes crossfade{0%{opacity:.2}100%{opacity:1}}
 
 #leaderHint{font-weight:900;color:var(--sub);font-size:.9rem;display:none}
@@ -70,7 +108,7 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 
 .iconBtn{
   background:var(--muted); border:none; border-radius:12px; padding:10px 12px; font-weight:950; cursor:pointer;
-  min-width:44px; min-height:44px;
+  min-width:48px; min-height:48px;
 }
 .iconBtn:active{transform:scale(.98)}
 .iconBtn[aria-expanded="true"]{box-shadow:inset 0 0 0 2px rgba(30,136,229,.25)}
@@ -91,7 +129,7 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 .rankName{font-weight:950;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rankScore{font-weight:950}
 
-/* Tools menu (portaled to body, fixed positioning) */
+/* Tools menu */
 #toolsMenu{
   position:fixed; z-index:100000;
   background:var(--card);
@@ -99,15 +137,22 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
   box-shadow:var(--sh2);
   padding:8px;
   display:none;
-  min-width:220px;
+  min-width:240px;
   transform-origin:top right;
 }
 #toolsMenu.open{display:block; animation:menuIn .12s ease}
 @keyframes menuIn{0%{opacity:0;transform:scale(.98)}100%{opacity:1;transform:scale(1)}}
 
 .menuItem{
-  width:100%; text-align:left; border:none; background:transparent; padding:12px 12px; border-radius:12px;
-  font-weight:950; cursor:pointer;
+  width:100%;
+  text-align:left;
+  border:none;
+  background:transparent;
+  padding:12px 12px;
+  border-radius:12px;
+  font-weight:950;
+  cursor:pointer;
+  min-height:48px;
 }
 .menuItem:hover{background:var(--muted)}
 .menuItem.danger{color:#b91c1c}
@@ -121,6 +166,7 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 #targetPoints{
   flex:1; padding:10px 12px; border-radius:12px; border:1px solid #d7dbe4; font-weight:950; outline:none;
 }
+
 #emptyState{
   display:none; background:var(--card); border-radius:16px; box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06);
   padding:14px; margin-top:10px; font-weight:900; color:#334155;
@@ -139,27 +185,41 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 .miniBadge.action{background:var(--action);color:#fff}
 
 .plusBtn{
-  width:44px;height:44px;border-radius:14px;border:none;background:#1e88e5;color:#fff;font-weight:1000;font-size:22px;cursor:pointer
+  width:48px;height:48px;border-radius:16px;border:none;background:#1e88e5;color:#fff;font-weight:1000;font-size:22px;cursor:pointer
 }
 .plusBtn:active{transform:scale(.98)}
 
 .progress-container{
   background:var(--muted2);height:10px;border-radius:6px;overflow:hidden;margin:8px 0 6px 0; position:relative;
 }
+
+/* Tick markers 25/50/75 */
 .progress-container::before{
   content:"";
   position:absolute; inset:0;
   background:
     linear-gradient(to right,
-      transparent 24.8%, rgba(15,23,42,.14) 25%, transparent 25.2%,
-      transparent 49.8%, rgba(15,23,42,.14) 50%, transparent 50.2%,
-      transparent 74.8%, rgba(15,23,42,.14) 75%, transparent 75.2%
+      transparent 24.75%, rgba(15,23,42,.14) 25%, transparent 25.25%,
+      transparent 49.75%, rgba(15,23,42,.14) 50%, transparent 50.25%,
+      transparent 74.75%, rgba(15,23,42,.14) 75%, transparent 75.25%
     );
   opacity:.35;
   pointer-events:none;
 }
 .progress-container.tickPulse::before{ animation:tickPulse .45s ease; }
 @keyframes tickPulse{ 0%{opacity:.25} 50%{opacity:.85} 100%{opacity:.35} }
+
+/* extra: 50% thicker for 0.2s */
+.progress-container.tick50::before{
+  background:
+    linear-gradient(to right,
+      transparent 24.75%, rgba(15,23,42,.14) 25%, transparent 25.25%,
+      transparent 49.55%, rgba(15,23,42,.26) 50%, transparent 50.45%,
+      transparent 74.75%, rgba(15,23,42,.14) 75%, transparent 75.25%
+    );
+  animation:tick50 .2s ease;
+}
+@keyframes tick50{0%{opacity:.35}50%{opacity:.9}100%{opacity:.35}}
 
 .progress-container.bustRing{ box-shadow:0 0 0 3px rgba(239,68,68,.22); }
 .progress-container.bustFlash::after{
@@ -172,7 +232,19 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 }
 @keyframes bustFlash{ 0%{opacity:0} 20%{opacity:1} 100%{opacity:0} }
 
-.progress-bar{height:100%;transition:width .4s ease; transform-origin:left center;}
+/* Progress Snap + Glow (only when bar moves) */
+.progress-container.barGlow::after{
+  content:"";
+  position:absolute; inset:-2px;
+  border-radius:10px;
+  box-shadow:0 0 0 3px rgba(30,136,229,.16);
+  opacity:0;
+  animation:barGlow .2s ease forwards;
+  pointer-events:none;
+}
+@keyframes barGlow{0%{opacity:0}40%{opacity:1}100%{opacity:0}}
+
+.progress-bar{height:100%;transition:width .35s ease; transform-origin:left center;}
 .progress-bar.resetBounce{ animation:resetBounce .22s ease; }
 @keyframes resetBounce{
   0%{transform:scaleX(1)}
@@ -181,9 +253,13 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 }
 
 .divider{height:1px;background:rgba(15,23,42,.12);margin:8px 0}
-.player-line{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:950}
-.sub{font-weight:950;color:#334155;font-size:.90rem}
-.dim{color:var(--sub);font-weight:900}
+.player-line{
+  display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  font-weight:950;
+}
+.sub{font-weight:900;color:#334155;font-size:.88rem}
+.dim{color:var(--sub);font-weight:850;font-size:.88rem}
+.totalBig{font-weight:1000;font-size:1.06rem}
 
 .deltaPill{
   display:inline-flex; align-items:center;
@@ -235,13 +311,21 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
   flex:0 0 auto;
 }
 .cardchip:active{transform:scale(.98)}
+/* subtle insert animation */
+.cardchip.addAnim{ animation:chipIn .12s ease; }
+@keyframes chipIn{0%{opacity:0;transform:translateX(-4px)}100%{opacity:1;transform:translateX(0)}}
+
+/* remove animation helper */
+@keyframes chipOut{to{opacity:0;transform:scale(.96)}}
 
 #bottomBar{
-  position:sticky; bottom:0; z-index:90; background:rgba(246,247,249,.92); backdrop-filter:blur(8px);
+  position:sticky; bottom:0; z-index:90;
+  background:rgba(246,247,249,.92);
+  backdrop-filter: blur(12px);
   padding:10px 0 calc(10px + env(safe-area-inset-bottom)) 0;
 }
 #endRoundBtn{
-  width:100%; border:none; border-radius:16px; padding:16px 12px; font-weight:1000; cursor:pointer; min-height:52px;
+  width:100%; border:none; border-radius:16px; padding:16px 12px; font-weight:1000; cursor:pointer; min-height:54px;
   background:#22c55e; color:#fff; box-shadow:0 12px 28px rgba(34,197,94,.18);
   position:relative;
 }
@@ -269,51 +353,63 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
   display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:500; opacity:0; transition:opacity .18s ease;
 }
 .overlay.open{opacity:1}
+
+/* Popup */
 .popup{
-  display:none; position:fixed; top:6%; left:50%; transform:translateX(-50%) translateY(12px);
+  display:none; position:fixed; top:6%; left:50%;
+  transform:translateX(-50%) translateY(12px);
   width:92%; max-width:560px; background:var(--card); padding:16px; border-radius:18px; max-height:88%; overflow:auto;
   z-index:1000; opacity:0; transition:opacity .18s ease,transform .18s ease;
+  will-change: transform;
 }
 .popup.open{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (orientation:landscape){
+  .popup{ top:3%; max-height:94%; }
+  #rankingPanel.open{max-height:360px}
+}
+.grabBarWrap{display:flex; justify-content:center; padding:4px 0 8px 0;}
+.grabBar{width:54px; height:5px; border-radius:999px; background:rgba(15,23,42,.18);}
+
 .popupHeader{
   position:sticky; top:0; background:var(--card); padding:0 0 10px 0; z-index:6;
   border-bottom:1px solid rgba(15,23,42,.08);
 }
 .headerRow{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.headerRight{display:flex;gap:8px;align-items:center}
-.undoMini{
-  min-width:44px; min-height:44px; border:none; border-radius:12px; background:var(--muted);
-  font-weight:1000; cursor:pointer;
-}
-.undoMini:active{transform:scale(.98)}
 .tabs{display:flex;gap:8px;margin:10px 0 0 0}
-.tab{flex:1;background:var(--muted);border:none;border-radius:12px;padding:10px 12px;font-weight:950;cursor:pointer;min-height:44px}
+.tab{flex:1;background:var(--muted);border:none;border-radius:12px;padding:10px 12px;font-weight:950;cursor:pointer;min-height:48px}
 .tab.active{background:#1e88e5;color:#fff}
 
 .selectedWrap{background:var(--bg);border-radius:14px;padding:10px;margin:10px 0}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{background:#fff;border:1px solid #e2e6ee;border-radius:999px;padding:8px 10px;font-weight:950;cursor:pointer;user-select:none}
+.chip{
+  background:#fff;border:1px solid #e2e6ee;border-radius:999px;
+  padding:8px 10px;font-weight:950;cursor:pointer;user-select:none;
+}
 .chip:active{transform:scale(.98)}
+/* insert/remove for popup chips */
+.chip.addAnim{ animation:chipIn .12s ease; }
+.chip.removing{ animation:chipOut .12s ease forwards; }
+
 .hint{font-size:.92rem;font-weight:900;color:#444;margin-top:8px;padding:8px 10px;border-radius:12px;background:#fff;border:1px solid var(--muted)}
 .hint.bust{background:#ffe3e3;border-color:#ffc3c3;color:#8a1f1f}
 .hint.bonus{background:#e9ffe9;border-color:#c5f3c5;color:#145214}
 
 .gridNumbers{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .gridMods{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+
 .cardBtn{
-  border:none;border-radius:14px;padding:16px 0;font-weight:1000;font-size:1.05rem;cursor:pointer;min-height:44px;
+  border:none;border-radius:14px;padding:16px 0;font-weight:1000;font-size:1.05rem;cursor:pointer;min-height:48px;
   box-shadow:inset 0 0 0 1px rgba(15,23,42,.08);
 }
 .cardBtn:active{transform:scale(.98)}
 .cardBtn.modBtn{background:var(--mod)!important;color:#1a1a1a!important;box-shadow:inset 0 0 0 1px rgba(15,23,42,.10)}
 .cardBtn.x2{grid-column:auto}
 
-
 .directRow{display:flex;gap:8px;align-items:center}
 .directRow input{
   flex:1;padding:12px 12px;border-radius:14px;border:1px solid #d7dbe4;font-weight:1000;outline:none;font-size:1.05rem
 }
-.directRow button{border:none;border-radius:14px;padding:12px 14px;font-weight:1000;background:#22c55e;color:#fff;cursor:pointer;white-space:nowrap;min-height:44px}
+.directRow button{border:none;border-radius:14px;padding:12px 14px;font-weight:1000;background:#22c55e;color:#fff;cursor:pointer;white-space:nowrap;min-height:48px}
 .lastDirectRow{margin-top:10px}
 .lastDirectChip{
   display:inline-flex; align-items:center; gap:8px;
@@ -322,18 +418,42 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 }
 .lastDirectChip:active{transform:scale(.98)}
 
-.popupFooter{position:sticky;bottom:-16px;background:var(--card);padding:10px 0 0 0;margin-top:12px;border-top:1px solid rgba(15,23,42,.08)}
-.popupFooterRow{display:flex;gap:8px}
-.popupFooterRow button{flex:1;border:none;border-radius:14px;padding:14px 12px;font-weight:1000;cursor:pointer;min-height:48px}
-.footerGhost{background:var(--muted);color:#111}
-.footerRed{background:#ef4444;color:#fff}
-.footerBlue{background:#1e88e5;color:#fff}
+.popupFooter{
+  position:sticky;
+  bottom:-16px;
+  background:var(--card);
+  padding:10px 0 0 0;
+  margin-top:12px;
+  border-top:1px solid rgba(15,23,42,.08);
+}
+.popupFooterRow{display:flex;gap:8px;flex-wrap:wrap}
+.popupFooterRow button{
+  border:none;border-radius:14px;padding:14px 12px;font-weight:1000;cursor:pointer;min-height:52px
+}
+.footerIcon{min-width:56px;background:var(--muted);color:#111}
+.footerGhost{flex:1;background:var(--muted);color:#111}
+.footerRed{flex:1;background:#ef4444;color:#fff}
+.footerBlue{flex:1;background:#1e88e5;color:#fff}
 
+/* Winner rising glow + lift */
 #winnerScreen{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);justify-content:center;align-items:center;z-index:2000}
 #winnerCard{
   background:var(--card); padding:34px 26px; border-radius:24px; text-align:center; box-shadow:var(--sh2);
   position:relative; overflow:hidden;
+  animation:winnerLift .35s ease;
 }
+@keyframes winnerLift{0%{transform:translateY(8px);opacity:.8}100%{transform:translateY(0);opacity:1}}
+#winnerCard::before{
+  content:"";
+  position:absolute; inset:-60px;
+  background:radial-gradient(circle at 50% 60%, rgba(34,197,94,.22), transparent 55%);
+  opacity:0;
+  animation:winnerGlow .8s ease forwards;
+  pointer-events:none;
+}
+@keyframes winnerGlow{0%{opacity:0;transform:translateY(12px)}35%{opacity:1}100%{opacity:0;transform:translateY(-12px)}}
+
+/* minimal confetti stays (optional) */
 .confetti{
   position:absolute; width:6px; height:10px; border-radius:2px;
   top:40%; left:50%;
@@ -346,7 +466,7 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
   100%{opacity:0; transform:translate(var(--dx), var(--dy)) rotate(var(--rot))}
 }
 
-/* Undo Runde Toast */
+/* Round toast motion */
 #roundToast{
   position:fixed; left:14px; right:14px;
   bottom: calc(16px + env(safe-area-inset-bottom));
@@ -355,18 +475,101 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
   color:#fff;
   border-radius:16px;
   padding:12px 12px;
-  display:none;
+  display:flex;
   align-items:center;
   justify-content:space-between;
   gap:12px;
   box-shadow:0 12px 28px rgba(0,0,0,.18);
+  opacity:0; transform:translateY(10px);
+  pointer-events:none;
+  transition:opacity .16s ease, transform .16s ease;
+}
+#roundToast.show{
+  opacity:1; transform:translateY(0);
+  pointer-events:auto;
 }
 #roundToast .tText{font-weight:950; color:#fff; font-size:.95rem}
 #roundToast .tBtn{
   border:none; border-radius:12px; padding:10px 12px; font-weight:1000;
-  background:rgba(255,255,255,.14); color:#fff; cursor:pointer; min-width:84px;
+  background:rgba(255,255,255,.14); color:#fff; cursor:pointer; min-width:84px; min-height:44px;
 }
 #roundToast .tBtn:active{transform:scale(.98)}
+
+/* Bottom sheet (Player management + settings) */
+#sheetOverlay{
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:3000; opacity:0; transition:opacity .18s ease;
+}
+#sheetOverlay.open{opacity:1}
+#sheet{
+  position:fixed; left:0; right:0; bottom:0; z-index:3100;
+  background:var(--card);
+  border-top-left-radius:18px; border-top-right-radius:18px;
+  box-shadow:0 -18px 40px rgba(0,0,0,.22);
+  transform:translateY(110%);
+  transition:transform .22s ease;
+  padding:10px 14px calc(14px + env(safe-area-inset-bottom)) 14px;
+  max-height:88dvh;
+  overflow:auto;
+}
+#sheet.open{transform:translateY(0)}
+.sheetGrabWrap{display:flex;justify-content:center;padding:2px 0 10px 0}
+.sheetGrab{width:54px;height:5px;border-radius:999px;background:rgba(15,23,42,.18)}
+.sheetHead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sheetTitle{font-weight:1000;font-size:1.05rem}
+.sheetClose{border:none;background:var(--muted);border-radius:12px;min-height:44px;min-width:44px;font-weight:1000;cursor:pointer}
+.sheetClose:active{transform:scale(.98)}
+
+.sheetSection{margin-top:12px}
+.sheetSection h4{margin:0 0 8px 0;font-size:.95rem}
+.row{
+  display:flex; gap:8px; align-items:center; margin:8px 0;
+}
+.row input{
+  flex:1; padding:12px 12px; border-radius:14px; border:1px solid #d7dbe4; font-weight:950; outline:none;
+}
+.row button{
+  border:none; border-radius:14px; padding:12px 14px; font-weight:1000; cursor:pointer; min-height:48px;
+  background:#22c55e; color:#fff; white-space:nowrap;
+}
+.row button:disabled{opacity:.5;cursor:not-allowed}
+.listItem{
+  display:flex; align-items:center; gap:10px;
+  padding:10px 10px;
+  border-radius:14px;
+  border:1px solid rgba(15,23,42,.10);
+  margin:8px 0;
+}
+.liDot{width:10px;height:10px;border-radius:50%}
+.liName{font-weight:1000;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.liBtns{display:flex;gap:8px}
+.liBtns button{
+  border:none; border-radius:12px; min-height:44px; min-width:44px;
+  background:var(--muted); font-weight:1000; cursor:pointer;
+}
+.liBtns button:active{transform:scale(.98)}
+.liBtns .del{background:rgba(239,68,68,.12); color:#8a1f1f}
+
+.toggleRow{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:12px 10px;
+  border-radius:14px;
+  border:1px solid rgba(15,23,42,.10);
+  margin:8px 0;
+}
+.toggleRow .tLabel{font-weight:950}
+.switch{
+  width:52px;height:30px;border-radius:999px;
+  background:#cbd5e1; position:relative; cursor:pointer; flex:0 0 auto;
+}
+.switch::after{
+  content:"";
+  position:absolute; top:3px; left:3px;
+  width:24px;height:24px;border-radius:50%;
+  background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.18);
+  transition:left .18s ease;
+}
+.switch.on{background:#22c55e}
+.switch.on::after{left:25px}
 </style>
 </head>
 
@@ -381,10 +584,11 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
         <div id="leaderDot"></div>
         <div id="leaderTextWrap">
           <span id="leaderCrown">👑</span>
-          <div id="leaderText">Noch keine Spieler</div>
+          <span id="leaderName">Noch keine Spieler</span>
+          <span id="leaderScore"></span>
         </div>
       </div>
-      <div id="leaderHint">Öffne ⋯ um Spieler hinzuzufügen.</div>
+      <div id="leaderHint">Öffne ⋯ um Spieler zu verwalten.</div>
       <div id="subLine">
         <span id="roundBadge" class="badge">Runde: 0</span>
         <span id="goalBadge" class="badge">Ziel: 200</span>
@@ -405,7 +609,7 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
   <input type="number" id="targetPoints" value="200" inputmode="numeric" pattern="[0-9]*" />
 </div>
 
-<div id="emptyState">Keine Spieler. Öffne ⋯ → <b>Spieler hinzufügen</b>.</div>
+<div id="emptyState">Keine Spieler. Öffne ⋯ → <b>Spieler verwalten</b>.</div>
 
 <div id="playersContainer"></div>
 
@@ -426,9 +630,9 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
   <button class="tBtn" id="toastUndoBtn" type="button">Undo</button>
 </div>
 
-<!-- Tools menu (portaled to body by JS) -->
+<!-- Tools menu -->
 <div id="toolsMenu" role="menu" aria-label="Tools-Menü">
-  <button class="menuItem" id="addPlayerBtn" type="button" role="menuitem">Spieler hinzufügen</button>
+  <button class="menuItem" id="manageBtn" type="button" role="menuitem">Spieler verwalten</button>
   <div class="menuSep"></div>
   <button class="menuItem" id="colorsBtn" type="button" role="menuitem">Farben neu verteilen</button>
   <div class="menuSep"></div>
@@ -438,17 +642,55 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
   <button class="menuItem danger" id="newGameBtn" type="button" role="menuitem">New Game</button>
 </div>
 
+<!-- Bottom sheet -->
+<div id="sheetOverlay"></div>
+<div id="sheet">
+  <div class="sheetGrabWrap"><div class="sheetGrab"></div></div>
+  <div class="sheetHead">
+    <div class="sheetTitle">Spieler & Einstellungen</div>
+    <button class="sheetClose" id="sheetCloseBtn" type="button">✕</button>
+  </div>
+
+  <div class="sheetSection">
+    <h4>Spieler (nur vor Spielstart)</h4>
+    <div class="row">
+      <input id="sheetAddName" type="text" placeholder="Spielername" autocomplete="off" />
+      <button id="sheetAddBtn" type="button">Hinzufügen</button>
+    </div>
+    <div id="sheetPlayersList"></div>
+    <div style="font-weight:900;color:var(--sub);font-size:.9rem;">
+      Während des Spiels ist Spielerverwaltung gesperrt.
+    </div>
+  </div>
+
+  <div class="sheetSection">
+    <h4>Design</h4>
+    <div class="toggleRow">
+      <div class="tLabel">Compact Mode</div>
+      <div id="toggleCompact" class="switch" role="switch" aria-checked="false" tabindex="0"></div>
+    </div>
+    <div class="toggleRow">
+      <div class="tLabel">High Contrast</div>
+      <div id="toggleContrast" class="switch" role="switch" aria-checked="false" tabindex="0"></div>
+    </div>
+  </div>
+</div>
+
 <!-- Popup -->
 <div class="overlay" id="overlay"></div>
 <div class="popup" id="popup">
-  <div class="popupHeader">
+  <div class="popupHeader" id="popupHeader">
+    <div class="grabBarWrap" id="grabArea">
+      <div class="grabBar"></div>
+    </div>
+
     <div class="headerRow">
       <h3 id="popupTitle" style="margin:0;">Karten</h3>
       <div class="headerRight">
-        <button id="popupUndoBtn" class="undoMini" type="button" aria-label="Undo letzte Auswahl">↩︎</button>
         <span id="popupPlayerBadge" class="badge"></span>
       </div>
     </div>
+
     <div class="tabs">
       <button id="tabCards" class="tab active" type="button">Karten</button>
       <button id="tabDirect" class="tab" type="button">Direktpunkte</button>
@@ -483,6 +725,7 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 
   <div class="popupFooter">
     <div class="popupFooterRow">
+      <button class="footerIcon" id="popupUndoBtn" type="button" aria-label="Undo letzte Auswahl">↩︎</button>
       <button class="footerGhost" id="clearBtn" type="button">Leeren</button>
       <button class="footerRed" id="cancelBtn" type="button">Abbrechen</button>
       <button class="footerBlue" id="finishBtn" type="button">Fertig</button>
@@ -499,16 +742,16 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 </div>
 
 <script>
-/* ---------- DOM helpers ---------- */
+/* ---------- Helpers ---------- */
 const $ = (id)=>document.getElementById(id);
 function vib(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
 function lockScroll(lock){ document.body.style.overflow = lock ? "hidden" : ""; }
 const reduceMotion = () => window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/* ---------- Haptik ---------- */
-const HAPT = { add:12, remove:10, finish:18, bust:28, win:40, tick:10, endPress:15 };
+/* Haptik: nur Commit */
+const HAPT = { finish:18, bust:28, win:40, tick:10, endPress:15 };
 
-/* ---------- Farben (Zahlen) ---------- */
+/* Number colors */
 const numStyle = {
   0: { bg:"linear-gradient(135deg,#0cb5be 0%,#0cb5be 20%,#e70200 20%,#e70200 40%,#c2549b 40%,#c2549b 60%,#fd8803 60%,#fd8803 80%,#ffffff 80%,#ffffff 100%)", fg:"#0b1220" },
   1: { bg:"#cbb59e" },
@@ -525,7 +768,6 @@ const numStyle = {
   12:{ bg:"#937972", fg:"#fff" }
 };
 
-/* ---------- State ---------- */
 let players=[];
 let roundNumber=0;
 let gameLocked=false;
@@ -541,6 +783,8 @@ let undoRoundStack=[];
 
 let statsOpen=false;
 let lastLeaderName=null;
+let lastLeaderScore=0;
+let popupStatePushed=false;
 
 const palette=[
   "#2563eb","#16a34a","#ea580c","#9333ea",
@@ -549,12 +793,14 @@ const palette=[
 ];
 const numbers=[...Array(13).keys()];
 
-/* ---------- LocalStorage ---------- */
+/* ---------- Persistenz ---------- */
 function snapshot(){
   return JSON.parse(JSON.stringify({
     players, roundNumber, gameLocked,
     target:Number($("targetPoints").value)||200,
-    statsOpen, lastLeaderName, lastDirectScore
+    statsOpen, lastLeaderName, lastLeaderScore, lastDirectScore,
+    compact:document.body.classList.contains("compact"),
+    contrast:document.body.classList.contains("highContrast"),
   }));
 }
 function restore(s){
@@ -564,20 +810,27 @@ function restore(s){
   if(typeof s.target==="number") $("targetPoints").value=s.target;
   statsOpen=!!s.statsOpen;
   lastLeaderName = s.lastLeaderName ?? null;
+  lastLeaderScore = typeof s.lastLeaderScore==="number" ? s.lastLeaderScore : 0;
   lastDirectScore = (typeof s.lastDirectScore==="number") ? s.lastDirectScore : null;
-  renderAll(); save();
+
+  document.body.classList.toggle("compact", !!s.compact);
+  document.body.classList.toggle("highContrast", !!s.contrast);
+
+  syncTogglesUI();
+  renderAll();
+  save();
 }
 function pushUndo(){
   undoStack.push(snapshot());
-  if(undoStack.length>50) undoStack.shift();
+  if(undoStack.length>60) undoStack.shift();
 }
 function pushUndoRound(){
   undoRoundStack.push(snapshot());
-  if(undoRoundStack.length>20) undoRoundStack.shift();
+  if(undoRoundStack.length>30) undoRoundStack.shift();
 }
-function save(){ localStorage.setItem("flip7_state_v4", JSON.stringify(snapshot())); }
+function save(){ localStorage.setItem("flip7_state_v6", JSON.stringify(snapshot())); }
 function load(){
-  const raw=localStorage.getItem("flip7_state_v4");
+  const raw=localStorage.getItem("flip7_state_v6");
   if(!raw) return;
   try{ restore(JSON.parse(raw)); }catch(e){}
 }
@@ -603,7 +856,6 @@ function scoreFromCards(cards){
   return { score:(sumNums*multi)+modSum+bonus, isBust:false, numbersCount:nums.length, reason:"" };
 }
 
-/* ---------- Ranking ---------- */
 function getRanking(){
   return [...players].map(p=>{
     const live = (p.override!==null) ? p.override : scoreFromCards(p.cards).score;
@@ -616,13 +868,8 @@ function flipReorder(container, newOrderKeys){
   if(reduceMotion()) return;
   const items=[...container.querySelectorAll("[data-key]")];
   const first=new Map(items.map(el=>[el.dataset.key, el.getBoundingClientRect()]));
-
   const map=new Map(items.map(el=>[el.dataset.key, el]));
-  newOrderKeys.forEach(k=>{
-    const el=map.get(k);
-    if(el) container.appendChild(el);
-  });
-
+  newOrderKeys.forEach(k=>{ const el=map.get(k); if(el) container.appendChild(el); });
   const last=[...container.querySelectorAll("[data-key]")];
   last.forEach(el=>{
     const f=first.get(el.dataset.key);
@@ -630,12 +877,26 @@ function flipReorder(container, newOrderKeys){
     if(!f) return;
     const dx=f.left-l.left, dy=f.top-l.top;
     if(dx || dy){
-      el.animate(
-        [{ transform:`translate(${dx}px,${dy}px)` }, { transform:"translate(0,0)" }],
-        { duration:260, easing:"cubic-bezier(.2,.8,.2,1)" }
-      );
+      el.animate([{ transform:`translate(${dx}px,${dy}px)` }, { transform:"translate(0,0)" }],
+        { duration:260, easing:"cubic-bezier(.2,.8,.2,1)" });
     }
   });
+}
+
+/* ---------- Count up ---------- */
+function animateCountUpText(el, from, to, ms){
+  if(reduceMotion() || from===to){
+    el.textContent = to;
+    return;
+  }
+  const start=performance.now();
+  function step(now){
+    const t=Math.min((now-start)/ms,1);
+    const eased=1-Math.pow(1-t,2);
+    el.textContent = Math.round(from+(to-from)*eased);
+    if(t<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
 }
 
 /* ---------- Top render ---------- */
@@ -647,32 +908,41 @@ function renderTop(){
   if(!players.length){
     $("leaderHint").style.display="block";
     $("leaderDot").style.background="#cbd5e1";
-    $("leaderText").textContent="Noch keine Spieler";
+    $("leaderName").textContent="Noch keine Spieler";
+    $("leaderScore").textContent="";
     return;
   }
   $("leaderHint").style.display="none";
   const list=getRanking();
   const leader=list[0];
+
   $("leaderDot").style.background=leader.color;
 
   const changed = (lastLeaderName !== null && leader.name !== lastLeaderName);
-  lastLeaderName = leader.name;
-
-  $("leaderText").textContent = `${leader.name} führt (${leader.score})`;
+  const scoreChanged = leader.score !== lastLeaderScore;
 
   if(changed){
-    const strip=$("leaderStrip");
-    strip.classList.add("spotlight");
-    setTimeout(()=>strip.classList.remove("spotlight"), 650);
+    $("leaderStrip").classList.add("spotlight");
+    setTimeout(()=>$("leaderStrip").classList.remove("spotlight"), 650);
 
-    const crown=$("leaderCrown");
-    crown.classList.add("pop");
-    setTimeout(()=>crown.classList.remove("pop"), 250);
+    $("leaderCrown").classList.add("pop");
+    setTimeout(()=>$("leaderCrown").classList.remove("pop"), 250);
 
-    const text=$("leaderText");
-    text.classList.add("crossfade");
-    setTimeout(()=>text.classList.remove("crossfade"), 170);
+    $("leaderName").classList.add("crossfade");
+    setTimeout(()=>$("leaderName").classList.remove("crossfade"), 170);
   }
+
+  $("leaderName").textContent = leader.name;
+
+  // score minimal count-up (120–180ms)
+  const scoreEl = $("leaderScore");
+  scoreEl.classList.toggle("crossfade", changed || scoreChanged);
+  setTimeout(()=>scoreEl.classList.remove("crossfade"), 170);
+
+  animateCountUpText(scoreEl, lastLeaderScore, leader.score, 160);
+
+  lastLeaderName = leader.name;
+  lastLeaderScore = leader.score;
 }
 
 /* ---------- Ranking panel ---------- */
@@ -680,7 +950,6 @@ function renderRanking(){
   const list=getRanking();
   const panel=$("rankingPanel");
 
-  // rebuild always (simple + reliable)
   panel.innerHTML = list.length ? list.map((p,i)=>`
     <div class="rankItem" data-key="${p.name}">
       <div class="rankNo">${i+1}.</div>
@@ -690,9 +959,11 @@ function renderRanking(){
     </div>
   `).join("") : `<div style="font-weight:900;color:#555;">Noch keine Spieler</div>`;
 
-  // FLIP only if open (feels relevant)
   if(panel.classList.contains("open")) flipReorder(panel, list.map(p=>p.name));
 }
+
+/* Track bar % to add snap+glow when changed */
+const prevBarPct = new Map();
 
 /* ---------- Players render ---------- */
 function renderPlayers(){
@@ -718,6 +989,12 @@ function renderPlayers(){
     div.className="player-box"+(leaderName===p.name?" leader":"");
     div.style.borderLeftColor=p.color;
 
+    const pct = target ? Math.min((total/target)*100,100) : 0;
+    const prev = prevBarPct.get(p.name);
+    const barGlow = (prev!=null && Math.abs(prev-pct) > 0.01);
+
+    prevBarPct.set(p.name, pct);
+
     div.innerHTML=`
       <div class="player-top">
         <div class="player-name">
@@ -728,8 +1005,8 @@ function renderPlayers(){
         <button class="plusBtn" type="button" data-i="${i}" aria-label="Punkte/Karten">+</button>
       </div>
 
-      <div class="progress-container" id="pc_${i}">
-        <div class="progress-bar" id="pb_${i}" style="width:${Math.min((total/target)*100,100)}%; background:${p.color}"></div>
+      <div class="progress-container ${barGlow ? "barGlow":""}" id="pc_${i}">
+        <div class="progress-bar" id="pb_${i}" style="width:${pct}%; background:${p.color}"></div>
       </div>
 
       <div class="divider"></div>
@@ -739,11 +1016,14 @@ function renderPlayers(){
           <button class="sub" data-direct="1" data-i="${i}" style="border:none;background:transparent;padding:0;text-decoration:underline;cursor:pointer">Runde: ${live}</button>
           <span id="delta_${i}"></span>
         </span>
-        <span><b id="total_${i}">${total}</b>/<span>${target}</span> <span class="dim">(noch <span id="left_${i}">${Math.max(target-total,0)}</span>)</span></span>
+        <span>
+          <span class="totalBig" id="total_${i}">${total}</span>/<span>${target}</span>
+          <span class="dim">(noch <span id="left_${i}">${Math.max(target-total,0)}</span>)</span>
+        </span>
       </div>
 
       ${p.cards.length?`
-        <div class="card-container">
+        <div class="card-container" id="chips_${i}">
           ${p.cards.map((c,ci)=>`<span class="cardchip" data-rem="${ci}" data-i="${i}">${c}</span>`).join("")}
         </div>
       `:""}
@@ -769,14 +1049,19 @@ function updateLocks(){
   $("emptyState").style.display = players.length? "none" : "block";
   $("endRoundBtn").disabled = players.length===0;
 
-  $("addPlayerBtn").disabled = (gameLocked || roundNumber>0);
+  // player management only pre-start (before first round ends)
+  const canManage = (!gameLocked && roundNumber===0);
+  $("sheetAddBtn").disabled = !canManage;
 
   const colors = players.map(p=>p.color);
   const hasDup = new Set(colors).size !== colors.length;
-$("colorsBtn").disabled = (players.length === 0);
+  $("colorsBtn").disabled = !(players.length>palette.length || hasDup);
 
   $("undoBtn").disabled = undoStack.length===0;
   $("undoRoundBtn").disabled = undoRoundStack.length===0;
+
+  // disable manage button in menu? (still open sheet to show message)
+  $("manageBtn").disabled = false;
 }
 
 /* ---------- Render all ---------- */
@@ -790,10 +1075,10 @@ function renderAll(){
   updateLocks();
 }
 
-/* ---------- Tools Menu (FIX) ---------- */
+/* ---------- Tools Menu ---------- */
 const toolsBtnEl = $("toolsBtn");
 const toolsMenuEl = $("toolsMenu");
-document.body.appendChild(toolsMenuEl); // portal to body
+document.body.appendChild(toolsMenuEl);
 
 let toolsMenuOpen=false;
 
@@ -847,6 +1132,132 @@ $("rankBtn").addEventListener("click",(e)=>{
   closeToolsMenu();
 }, false);
 
+/* ---------- Bottom sheet (player management + settings) ---------- */
+const sheetOverlay=$("sheetOverlay");
+const sheet=$("sheet");
+
+function openSheet(){
+  closeToolsMenu();
+  sheetOverlay.style.display="block";
+  requestAnimationFrame(()=>sheetOverlay.classList.add("open"));
+  sheet.classList.add("open");
+  lockScroll(true);
+  renderSheetPlayers();
+}
+function closeSheet(){
+  sheet.classList.remove("open");
+  sheetOverlay.classList.remove("open");
+  setTimeout(()=>{ sheetOverlay.style.display="none"; }, 180);
+  lockScroll(false);
+  save();
+}
+
+function renderSheetPlayers(){
+  const list=$("sheetPlayersList");
+  const canManage = (!gameLocked && roundNumber===0);
+  $("sheetAddBtn").disabled = !canManage;
+
+  list.innerHTML = players.length ? players.map((p,idx)=>`
+    <div class="listItem">
+      <div class="liDot" style="background:${p.color}"></div>
+      <div class="liName">${p.name}</div>
+      <div class="liBtns">
+        <button type="button" data-ren="${idx}" ${canManage?"":"disabled"} title="Umbenennen">✎</button>
+        <button type="button" class="del" data-del="${idx}" ${canManage?"":"disabled"} title="Entfernen">✕</button>
+      </div>
+    </div>
+  `).join("") : `<div style="font-weight:900;color:var(--sub);">Noch keine Spieler.</div>`;
+
+  // footer note already visible
+}
+
+function addPlayerFromSheet(){
+  const canManage = (!gameLocked && roundNumber===0);
+  if(!canManage) return;
+
+  const name = $("sheetAddName").value.trim();
+  if(!name) return;
+
+  pushUndo();
+  const used=new Set(players.map(x=>x.color));
+  const free=palette.find(c=>!used.has(c)) || palette[players.length % palette.length];
+
+  players.push({name, color:free, cards:[], total:0, rounds:[], busts:0, override:null});
+  $("sheetAddName").value="";
+  renderAll();
+  renderSheetPlayers();
+  save();
+}
+
+function renamePlayer(idx){
+  const canManage = (!gameLocked && roundNumber===0);
+  if(!canManage) return;
+
+  const current = players[idx].name;
+  const next = prompt("Neuer Name:", current);
+  if(!next) return;
+  pushUndo();
+  players[idx].name = next.trim();
+  renderAll();
+  renderSheetPlayers();
+  save();
+}
+
+function deletePlayer(idx){
+  const canManage = (!gameLocked && roundNumber===0);
+  if(!canManage) return;
+
+  const ok = confirm(`Spieler "${players[idx].name}" entfernen?`);
+  if(!ok) return;
+  pushUndo();
+  players.splice(idx,1);
+  renderAll();
+  renderSheetPlayers();
+  save();
+}
+
+function syncTogglesUI(){
+  const c = document.body.classList.contains("compact");
+  const h = document.body.classList.contains("highContrast");
+
+  const tc=$("toggleCompact");
+  tc.classList.toggle("on", c);
+  tc.setAttribute("aria-checked", c ? "true" : "false");
+
+  const th=$("toggleContrast");
+  th.classList.toggle("on", h);
+  th.setAttribute("aria-checked", h ? "true" : "false");
+}
+
+function toggleClassSwitch(which){
+  if(which==="compact"){
+    document.body.classList.toggle("compact");
+  }else if(which==="contrast"){
+    document.body.classList.toggle("highContrast");
+  }
+  syncTogglesUI();
+  renderAll();
+  save();
+}
+
+$("manageBtn").addEventListener("click",(e)=>{ e.preventDefault(); openSheet(); });
+$("sheetCloseBtn").addEventListener("click",(e)=>{ e.preventDefault(); closeSheet(); });
+sheetOverlay.addEventListener("click",()=>closeSheet(),{passive:true});
+$("sheetAddBtn").addEventListener("click",(e)=>{ e.preventDefault(); addPlayerFromSheet(); });
+$("sheetAddName").addEventListener("keydown",(e)=>{ if(e.key==="Enter") addPlayerFromSheet(); });
+
+$("sheetPlayersList").addEventListener("click",(e)=>{
+  const ren = e.target.closest("[data-ren]");
+  const del = e.target.closest("[data-del]");
+  if(ren) renamePlayer(Number(ren.dataset.ren));
+  if(del) deletePlayer(Number(del.dataset.del));
+});
+
+$("toggleCompact").addEventListener("click",()=>toggleClassSwitch("compact"));
+$("toggleContrast").addEventListener("click",()=>toggleClassSwitch("contrast"));
+$("toggleCompact").addEventListener("keydown",(e)=>{ if(e.key==="Enter"||e.key===" ") toggleClassSwitch("compact"); });
+$("toggleContrast").addEventListener("keydown",(e)=>{ if(e.key==="Enter"||e.key===" ") toggleClassSwitch("contrast"); });
+
 /* ---------- Popup ---------- */
 const overlayEl=$("overlay"), popupEl=$("popup");
 const tabCardsEl=$("tabCards"), tabDirectEl=$("tabDirect");
@@ -885,15 +1296,26 @@ function popupAdd(x){
   popupCards.push(x);
   popupOverride=null;
   $("freeScoreInput").value="";
-  vib(HAPT.add);
   renderPopupSelection();
+  // no vibration here (preview only)
 }
-function popupRemoveAt(idx){
+function popupRemoveAt(idx, el){
+  // remove animation (120ms), then update state
+  if(el){
+    el.classList.add("removing");
+    setTimeout(()=>{
+      stackPopupState();
+      popupCards.splice(idx,1);
+      popupOverride=null;
+      $("freeScoreInput").value="";
+      renderPopupSelection();
+    }, 120);
+    return;
+  }
   stackPopupState();
   popupCards.splice(idx,1);
   popupOverride=null;
   $("freeScoreInput").value="";
-  vib(HAPT.remove);
   renderPopupSelection();
 }
 function applyFree(){
@@ -904,16 +1326,22 @@ function applyFree(){
   lastDirectScore = popupOverride;
   renderPopupSelection();
 }
+
 function renderPopupSelection(){
   const chips=$("selectedChips");
   chips.innerHTML="";
-  if(!popupCards.length) chips.innerHTML=`<span style="font-weight:900;color:#555;">Keine Karten ausgewählt.</span>`;
-  else popupCards.forEach((c,idx)=>{
-    const d=document.createElement("div");
-    d.className="chip"; d.textContent=String(c);
-    d.addEventListener("pointerdown",()=>popupRemoveAt(idx),{passive:true});
-    chips.appendChild(d);
-  });
+  if(!popupCards.length){
+    chips.innerHTML=`<span style="font-weight:900;color:#555;">Keine Karten ausgewählt.</span>`;
+  }else{
+    popupCards.forEach((c,idx)=>{
+      const d=document.createElement("div");
+      d.className="chip addAnim";
+      d.textContent=String(c);
+      d.addEventListener("pointerdown",(e)=>{ e.preventDefault(); popupRemoveAt(idx, d); }, {passive:false});
+      chips.appendChild(d);
+      setTimeout(()=>d.classList.remove("addAnim"), 140);
+    });
+  }
 
   const info=$("popupLiveInfo");
   if(popupOverride!==null){
@@ -934,6 +1362,7 @@ function renderPopupSelection(){
     info.textContent=`Vorschau: ${prev.score} Punkte`+(isBonus?" • +15 Bonus":"");
   }
 }
+
 function setTab(t){
   tabCardsEl.classList.toggle("active", t==="cards");
   tabDirectEl.classList.toggle("active", t==="direct");
@@ -948,11 +1377,16 @@ function setTab(t){
     }else{
       $("lastDirectChip").style.display="none";
     }
-    setTimeout(()=>$("freeScoreInput").focus(), 60);
+    setTimeout(()=>{
+      const inp=$("freeScoreInput");
+      inp.focus();
+      inp.select(); // iPhone: schneller überschreiben
+    }, 60);
   }else{
     $("lastDirectChip").style.display="none";
   }
 }
+
 function openPopup(i, direct){
   selectedPlayer=i;
   popupCards=[...players[i].cards];
@@ -966,10 +1400,17 @@ function openPopup(i, direct){
   requestAnimationFrame(()=>{ popupEl.classList.add("open"); overlayEl.classList.add("open"); });
   lockScroll(true);
 
+  // Back button handling
+  if(!popupStatePushed){
+    history.pushState({popup:true}, "");
+    popupStatePushed=true;
+  }
+
   setTab(direct ? "direct" : "cards");
   renderPopupSelection();
 }
-function closePopup(cancel){
+
+function internalClosePopup(cancel){
   popupEl.classList.remove("open");
   overlayEl.classList.remove("open");
   setTimeout(()=>{ popupEl.style.display="none"; overlayEl.style.display="none"; }, 180);
@@ -980,11 +1421,63 @@ function closePopup(cancel){
     players[selectedPlayer].cards=[...popupCards];
     players[selectedPlayer].override=popupOverride;
     save();
-    vib(HAPT.finish);
+    vib(HAPT.finish); // commit
   }
+
   selectedPlayer=null;
   renderAll();
 }
+
+function closePopup(cancel){
+  // if we pushed state, go back; popstate will call internalClosePopup
+  if(popupStatePushed){
+    // set a flag that we are closing intentionally
+    popupStatePushed=false;
+    internalClosePopup(cancel);
+    // clean history entry (go back once, but avoid double-close)
+    try{ history.back(); }catch(e){}
+    return;
+  }
+  internalClosePopup(cancel);
+}
+
+// Back button closes popup
+window.addEventListener("popstate",(e)=>{
+  if(popupEl.style.display==="block"){
+    popupStatePushed=false;
+    internalClosePopup(true);
+  }
+});
+
+/* swipe-to-close */
+let dragActive=false, dragStartY=0, dragLastY=0, dragStartT=0;
+function setPopupDragTranslate(y){ popupEl.style.transform = `translateX(-50%) translateY(${y}px)`; }
+function endPopupDrag(shouldClose){
+  dragActive=false;
+  popupEl.style.transition = "opacity .18s ease, transform .18s ease";
+  if(shouldClose) closePopup(true);
+  else setPopupDragTranslate(0);
+  setTimeout(()=>{ popupEl.style.transition=""; }, 220);
+}
+$("grabArea").addEventListener("pointerdown",(e)=>{
+  if(popupEl.scrollTop > 0) return;
+  dragActive=true; dragStartY=e.clientY; dragLastY=e.clientY; dragStartT=performance.now();
+  popupEl.setPointerCapture?.(e.pointerId);
+  popupEl.style.transition="none";
+},{passive:true});
+popupEl.addEventListener("pointermove",(e)=>{
+  if(!dragActive) return;
+  dragLastY=e.clientY;
+  const dy=Math.max(0, dragLastY - dragStartY);
+  setPopupDragTranslate(Math.min(dy, 220));
+},{passive:true});
+popupEl.addEventListener("pointerup",()=>{
+  if(!dragActive) return;
+  const dy=Math.max(0, dragLastY - dragStartY);
+  const dt=Math.max(1, performance.now()-dragStartT);
+  const v=dy/dt;
+  endPopupDrag(dy>90 || v>0.7);
+},{passive:true});
 
 /* ---------- Popup grids ---------- */
 function buildPopupGrids(){
@@ -1002,8 +1495,8 @@ function buildPopupGrids(){
 
   const mg=$("modGrid");
   mg.innerHTML="";
-["+2","+4","+6","+8","+10","x2"].forEach(m=>{
-
+  // x2 direkt neben +10
+  ["+2","+4","+6","+8","+10","x2"].forEach(m=>{
     const b=document.createElement("button");
     b.type="button"; b.className="cardBtn modBtn"+(m==="x2"?" x2":"");
     b.textContent=m;
@@ -1016,44 +1509,32 @@ function buildPopupGrids(){
 let toastTimer=null;
 function showRoundToast(){
   const t=$("roundToast");
-  t.style.display="flex";
+  t.classList.add("show");
   clearTimeout(toastTimer);
   toastTimer=setTimeout(()=>hideRoundToast(), 2600);
 }
 function hideRoundToast(){
   clearTimeout(toastTimer);
-  $("roundToast").style.display="none";
+  $("roundToast").classList.remove("show");
 }
 
-/* ---------- Tick / Count-up ---------- */
-function getCrossedTicks(prevPct, nextPct){
-  const ticks=[25,50,75];
-  return ticks.some(t => prevPct < t && nextPct >= t);
-}
-function animateCountUp(el, from, to, ms){
-  if(reduceMotion() || from===to){ el.textContent=to; return; }
-  const start=performance.now();
-  function step(now){
-    const t=Math.min((now-start)/ms,1);
-    const eased = 1 - Math.pow(1-t,2);
-    el.textContent = Math.round(from+(to-from)*eased);
-    if(t<1) requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
+/* Tick crossing helpers */
+function crossed(prevPct, nextPct, tick){
+  return prevPct < tick && nextPct >= tick;
 }
 
-/* ---------- Winner confetti ---------- */
+/* Winner confetti (kept minimal) */
 function spawnConfetti(color){
   if(reduceMotion()) return;
   const card=$("winnerCard");
   [...card.querySelectorAll(".confetti")].forEach(x=>x.remove());
   const colors=[color, "#ffffff", "rgba(255,255,255,.65)", "rgba(15,23,42,.15)"];
-  for(let i=0;i<10;i++){
+  for(let i=0;i<8;i++){
     const s=document.createElement("div");
     s.className="confetti";
     s.style.background=colors[Math.floor(Math.random()*colors.length)];
     s.style.left = (40 + Math.random()*20) + "%";
-    s.style.top  = (35 + Math.random()*10) + "%";
+    s.style.top  = (40 + Math.random()*10) + "%";
     s.style.setProperty("--dx", (Math.random()*160-80).toFixed(0)+"px");
     s.style.setProperty("--dy", (Math.random()*-220-80).toFixed(0)+"px");
     s.style.setProperty("--rot",(Math.random()*260-130).toFixed(0)+"deg");
@@ -1078,7 +1559,6 @@ function endRound(){
 
   const prevTotals = players.map(p => p.total);
   const prevPct = players.map((p,i)=> Math.min((prevTotals[i]/target)*100, 100));
-
   const roundScores=[];
 
   players.forEach(p=>{
@@ -1102,31 +1582,51 @@ function endRound(){
   renderAll();
   showRoundToast();
 
-  // animations + feedback
+  // tick pulses + bust feedback
   players.forEach((p,i)=>{
     const nextTotal=p.total;
     const nextP = Math.min((nextTotal/target)*100, 100);
+    const pc=$("pc_"+i);
+    const pb=$("pb_"+i);
 
-    if(getCrossedTicks(prevPct[i], nextP)){
-      const pc=$("pc_"+i);
-      if(pc){
-        pc.classList.add("tickPulse");
-        setTimeout(()=>pc.classList.remove("tickPulse"), 480);
-        vib(HAPT.tick);
-      }
+    if(crossed(prevPct[i], nextP, 25) || crossed(prevPct[i], nextP, 75)){
+      pc?.classList.add("tickPulse");
+      setTimeout(()=>pc?.classList.remove("tickPulse"), 480);
+      vib(HAPT.tick);
+    }
+    if(crossed(prevPct[i], nextP, 50)){
+      pc?.classList.add("tick50");
+      setTimeout(()=>pc?.classList.remove("tick50"), 220);
+      vib(HAPT.tick);
     }
 
+    // Count-up for total (already used in leader; keep per card subtle)
     const totalEl=$("total_"+i);
     const leftEl=$("left_"+i);
     if(totalEl && leftEl){
-      animateCountUp(totalEl, prevTotals[i], nextTotal, 380);
-      setTimeout(()=>{ leftEl.textContent = Math.max(target-nextTotal,0); }, 420);
+      if(!reduceMotion()){
+        const start=prevTotals[i], end=nextTotal, ms=380;
+        const st=performance.now();
+        function step(now){
+          const t=Math.min((now-st)/ms,1);
+          const eased=1-Math.pow(1-t,2);
+          const val=Math.round(start+(end-start)*eased);
+          totalEl.textContent=val;
+          if(t<1) requestAnimationFrame(step);
+          else leftEl.textContent = Math.max(target-end,0);
+        }
+        requestAnimationFrame(step);
+      }else{
+        totalEl.textContent=nextTotal;
+        leftEl.textContent = Math.max(target-nextTotal,0);
+      }
     }
 
+    // delta pill
     const deltaHost=$("delta_"+i);
     if(deltaHost){
       const s=roundScores[i];
-      deltaHost.innerHTML = "";
+      deltaHost.innerHTML="";
       const pill=document.createElement("span");
       pill.className="deltaPill"+(s===0 ? " bust": "");
       pill.textContent = (s===0) ? "0" : ("+"+s);
@@ -1134,28 +1634,27 @@ function endRound(){
       setTimeout(()=>{ deltaHost.innerHTML=""; }, 800);
     }
 
+    // bust feedback only on commit
     if(roundScores[i]===0){
       const row = document.querySelectorAll(".player-box")[i];
-      const pc  = $("pc_"+i);
-      const pb  = $("pb_"+i);
+
+      row?.classList.add("bustAnim");
+      setTimeout(()=>row?.classList.remove("bustAnim"), 300);
 
       if(row){
-        row.classList.add("bustAnim");
         const toast=document.createElement("div");
         toast.className="bustToast";
         toast.textContent="BUST";
         row.appendChild(toast);
         setTimeout(()=>toast.remove(), 520);
-        setTimeout(()=>row.classList.remove("bustAnim"), 300);
       }
-      if(pc){
-        pc.classList.add("bustRing","bustFlash");
-        setTimeout(()=>pc.classList.remove("bustRing","bustFlash"), 520);
-      }
-      if(pb){
-        pb.classList.add("resetBounce");
-        setTimeout(()=>pb.classList.remove("resetBounce"), 260);
-      }
+
+      pc?.classList.add("bustRing","bustFlash");
+      setTimeout(()=>pc?.classList.remove("bustRing","bustFlash"), 520);
+
+      pb?.classList.add("resetBounce");
+      setTimeout(()=>pb?.classList.remove("resetBounce"), 260);
+
       vib(HAPT.bust);
     }
   });
@@ -1172,19 +1671,6 @@ function endRound(){
 }
 
 /* ---------- Menu actions ---------- */
-function addPlayerSimple(){
-  if(gameLocked || roundNumber>0) return;
-  const name = prompt("Spielername:");
-  if(!name) return;
-
-  pushUndo();
-  const used=new Set(players.map(x=>x.color));
-  const free=palette.find(c=>!used.has(c)) || palette[players.length % palette.length];
-
-  players.push({name:name.trim(), color:free, cards:[], total:0, rounds:[], busts:0, override:null});
-  closeToolsMenu();
-  renderAll(); save();
-}
 function redistributeColors(){
   if(!players.length) return;
   pushUndo();
@@ -1217,7 +1703,7 @@ function newGame(){
   renderAll();
 }
 
-/* ---------- Event wiring ---------- */
+/* ---------- Wiring ---------- */
 $("statsHead").addEventListener("click",()=>{
   statsOpen=!statsOpen;
   $("stats").style.display = statsOpen ? "block" : "none";
@@ -1225,7 +1711,6 @@ $("statsHead").addEventListener("click",()=>{
   save();
 });
 
-$("addPlayerBtn").addEventListener("click",(e)=>{ e.preventDefault(); addPlayerSimple(); });
 $("colorsBtn").addEventListener("click",(e)=>{ e.preventDefault(); redistributeColors(); });
 $("undoBtn").addEventListener("click",(e)=>{ e.preventDefault(); undoAction(); });
 $("undoRoundBtn").addEventListener("click",(e)=>{ e.preventDefault(); undoRound(); });
@@ -1263,20 +1748,26 @@ $("winnerNewGame").addEventListener("click",(e)=>{
 
 overlayEl.addEventListener("pointerdown",()=>closePopup(true),{passive:true});
 
-/* Delegation: chips remove + open popup (tap + / tap Runde) + long-press shortcut */
+/* Delegation: chip remove (with remove animation), open popup (+), tap Runde for Direktpunkte */
 let pressTimer=null;
 let longPressFired=false;
 
 $("playersContainer").addEventListener("pointerdown",(e)=>{
   const rem = e.target.closest(".cardchip");
   if(rem && rem.dataset.rem!=null){
-    pushUndo();
     const i=Number(rem.dataset.i);
     const ci=Number(rem.dataset.rem);
-    players[i].cards.splice(ci,1);
-    players[i].override=null;
-    vib(HAPT.remove);
-    renderAll(); save();
+
+    // animate chip out then commit removal + save
+    rem.style.animation = "chipOut .12s ease forwards";
+    setTimeout(()=>{
+      pushUndo();
+      players[i].cards.splice(ci,1);
+      players[i].override=null;
+      renderAll(); save();
+      // no vibration here (still preview-ish edit)
+    }, 120);
+
     return;
   }
 
@@ -1312,45 +1803,10 @@ $("playersContainer").addEventListener("pointerup",(e)=>{
   }
 },{passive:false});
 
-/* ---------- Popup open/close buttons ---------- */
-function openPopup(i, direct){
-  selectedPlayer=i;
-  popupCards=[...players[i].cards];
-  popupOverride=players[i].override;
-  popupActionStack=[];
-  $("popupPlayerBadge").textContent=players[i].name;
-  $("freeScoreInput").value = popupOverride!==null ? popupOverride : "";
-
-  popupEl.style.display="block";
-  overlayEl.style.display="block";
-  requestAnimationFrame(()=>{ popupEl.classList.add("open"); overlayEl.classList.add("open"); });
-  lockScroll(true);
-
-  setTab(direct ? "direct" : "cards");
-  renderPopupSelection();
-}
-function closePopup(cancel){
-  popupEl.classList.remove("open");
-  overlayEl.classList.remove("open");
-  setTimeout(()=>{ popupEl.style.display="none"; overlayEl.style.display="none"; }, 180);
-  lockScroll(false);
-
-  if(!cancel && selectedPlayer!==null){
-    pushUndo();
-    players[selectedPlayer].cards=[...popupCards];
-    players[selectedPlayer].override=popupOverride;
-    save();
-    vib(HAPT.finish);
-  }
-  selectedPlayer=null;
-  renderAll();
-}
-
-/* ---------- Build popup grids ---------- */
-buildPopupGrids();
-
 /* ---------- Init ---------- */
+buildPopupGrids();
 load();
+syncTogglesUI();
 renderAll();
 </script>
 </body>
