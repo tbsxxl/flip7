@@ -5,6 +5,8 @@
   --action:#937972;
   --mod:#f8b22d;
   --danger:#ef4444;
+*, *::before, *::after { box-sizing: border-box; }
+html, body { overflow-x: hidden; }
 
 
   /* iOS “Liquid Glass” Material */
