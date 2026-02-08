@@ -1018,22 +1018,11 @@ function hideRoundToast(){
 }
 
 /* Winner confetti */
-/* Winner confetti */
 function spawnConfetti(color){
   if(reduceMotion()) return;
-  const card = $("winnerCard");
-
-  // alte Confetti-Teile entfernen
-  card.querySelectorAll(".confetti").forEach(x => x.remove());
-
-  // gültige rgba-Werte (0..1)
-  const colors = [
-    color,
-    "#ffffff",
-    "rgba(255,255,255,.65)",
-    "rgba(15,23,42,.15)"
-  ];
-
+  const card=$("winnerCard");
+  [...card.querySelectorAll(".confetti")].forEach(x=>x.remove());
+  const colors=[color, "#ffffff", "rgba(255,255,255,.65)", "rgba(15,23,42,.15)"];
   for(let i=0;i<8;i++){
     const s=document.createElement("div");
     s.className="confetti";
@@ -1047,9 +1036,6 @@ function spawnConfetti(color){
     card.appendChild(s);
   }
 }
-
-
-
 
 /* ---------- End Round ---------- */
 function crossed(prevPct, nextPct, tick){ return prevPct < tick && nextPct >= tick; }
@@ -1319,6 +1305,9 @@ function escapeHtml(str){
 }
 
 /* ---------- Init ---------- */
+// Safety: ensure overlays start hidden
+try{ $('overlay').style.display='none'; $('popup').style.display='none'; $('sheetOverlay').style.display='none'; $('sheet').classList.remove('open'); }catch(e){}
+
 buildPopupGrids();
 load();
 syncTogglesUI();
