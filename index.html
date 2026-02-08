@@ -2,49 +2,70 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Flip 7 – Score Tracker</title>
+
+<!-- PWA / iOS A2HS basics -->
+<meta name="theme-color" content="#f6f7f9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 
 <style>
 :root{
+  /* Colors */
   --bg:#f6f7f9; --card:#fff; --muted:#eef1f5; --muted2:#dfe4ea;
-  --text:#0f172a; --sub:#475569;
-  --sh1:0 1px 2px rgba(0,0,0,.06);
-  --sh2:0 12px 28px rgba(0,0,0,.10);
-  --action:#937972;   /* Bonus +15 & x2 Badge-Farbe */
-  --mod:#f8b22d;      /* +2/+4/+6/+8/+10 & x2 Button-Farbe im Popup */
+  --text:#0f172a; --sub:#475569; --sub2:#64748b;
+  --action:#937972;
+  --mod:#f8b22d;
   --danger:#ef4444;
 
+  /* Shadows */
+  --sh1:0 1px 2px rgba(0,0,0,.06);
+  --sh2:0 12px 28px rgba(0,0,0,.10);
+
+  /* High-contrast borders */
   --hcBorder: rgba(15,23,42,.12);
   --hcInset: rgba(15,23,42,.18);
 
-  --sheetRadius:24px;
+  /* Radii system */
+  --rSheet:24px;
+  --rCard:16px;
+  --rBtn:14px;
+  --rChip:12px;
+
+  /* Typography scale (iOS-ish) */
+  --fsTitle:18px;    /* 17–20 */
+  --fsBody:16px;     /* 15–16 */
+  --fsSecondary:13px;/* 13–14 */
+  --wTitle:800;
+  --wBody:700;
+  --wSecondary:650;
+
+  /* Dynamic bar alpha (set by JS) */
+  --barAlpha:.92;
+
+  /* iOS keyboard vh fix (set by JS) */
+  --vh: 1vh;
 }
 
 /* High Contrast (Sonne) */
 body.highContrast{
   --text:#0b1220;
   --sub:#334155;
-  --muted2:#c7ced8;          /* Progress-Bar Hintergrund dunkler */
+  --sub2:#475569;
+  --muted2:#c7ced8;
   --sh1:0 0 0 rgba(0,0,0,0);
   --sh2:0 0 0 rgba(0,0,0,0);
 }
 
 /* Compact Mode */
-body.compact{
-  padding:10px;
-}
+body.compact{ padding:10px; }
 body.compact .player-box{ padding:10px; margin-bottom:8px; }
-body.compact .progress-container{
-  height:7px;               /* 6–7px */
-  margin:6px 0 6px 0;
-  border-radius:5px;        /* weniger Radius */
-}
-body.compact .progress-bar{ }
-body.compact .card-container{ gap:4px; } /* tighter gap */
-body.compact .cardchip{ padding:5px 8px; font-size:.82rem; } /* tighter chips */
+body.compact .progress-container{ height:7px; margin:6px 0; border-radius:5px; }
+body.compact .card-container{ gap:4px; }
+body.compact .cardchip{ padding:5px 8px; font-size:.82rem; }
 body.compact #endRoundBtn{ padding:14px 12px; }
-body.compact .plusBtn{ width:44px;height:44px;border-radius:14px; } /* hit 44 */
+body.compact .plusBtn{ width:44px;height:44px;border-radius:14px; }
 body.compact .rankItem{ padding:8px 10px; margin:6px 0; }
 body.compact #leaderStrip{ padding:8px 10px; }
 body.compact .badge{ padding:5px 8px; font-size:.84rem; }
@@ -52,43 +73,55 @@ body.compact .badge{ padding:5px 8px; font-size:.84rem; }
 *{-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
 body{
-  font-family:system-ui,Arial;
+  font-family: system-ui, -apple-system, Arial;
   margin:0;
   padding:14px;
   background:var(--bg);
   color:var(--text);
-  font-variant-numeric:tabular-nums;
-  min-height:100dvh;
+  font-variant-numeric: tabular-nums;
+  min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  font-size: var(--fsBody);
+  scroll-padding-bottom: calc(90px + env(safe-area-inset-bottom));
 }
 button,input{touch-action:manipulation}
-
-h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
+h1{
+  text-align:center;
+  margin:8px 0 12px 0;
+  font-size: 20px;
+  font-weight: var(--wTitle);
+  letter-spacing: .2px;
+}
 
 @media (prefers-reduced-motion: reduce){
   *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
 
+/* Topbar / Bottombar dynamic alpha */
 #topbar{
   position:sticky; top:0; z-index:100;
-  background:rgba(246,247,249,.92);
-  backdrop-filter:blur(10px);
+  background: rgba(246,247,249,var(--barAlpha));
+  backdrop-filter: blur(10px);
   padding: calc(8px + env(safe-area-inset-top)) 0 10px 0;
+}
+#bottomBar{
+  position:sticky; bottom:0; z-index:90;
+  background: rgba(246,247,249,var(--barAlpha));
+  backdrop-filter: blur(12px);
+  padding:10px 0 calc(10px + env(safe-area-inset-bottom)) 0;
 }
 
 #leaderStrip{
   background:var(--card);
-  border-radius:16px;
-  box-shadow:var(--sh1),var(--sh2);
+  border-radius: var(--rCard);
+  box-shadow: var(--sh1), var(--sh2);
   padding:10px 12px;
-  display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative;
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  position:relative;
   overflow:visible;
 }
-body.highContrast #leaderStrip{
-  box-shadow:none;
-  border:1px solid var(--hcBorder);
-}
+body.highContrast #leaderStrip{ box-shadow:none; border:1px solid var(--hcBorder); }
 
 /* Leader spotlight */
 #leaderStrip.spotlight::after{
@@ -107,30 +140,37 @@ body.highContrast #leaderStrip{
 #leaderLeft{display:flex;flex-direction:column;gap:6px;min-width:0}
 #leaderLine{display:flex;align-items:center;gap:10px;min-width:0}
 #leaderDot{width:12px;height:12px;border-radius:50%}
-
 #leaderTextWrap{display:flex;align-items:center;gap:8px;min-width:0}
 #leaderCrown{display:inline-flex;transform-origin:center}
 #leaderCrown.pop{animation:crownPop .22s ease}
 @keyframes crownPop{0%{transform:scale(.95);opacity:.75}100%{transform:scale(1);opacity:1}}
 
 #leaderName{
-  font-weight:950; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  max-width:42vw; font-size:1.02rem;
+  font-weight: var(--wTitle);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  max-width:42vw;
+  font-size: 16px;
 }
 #leaderScore{
-  font-weight:950;
+  font-weight: var(--wTitle);
+  font-size: 17px; /* score slightly dominates */
 }
 .crossfade{animation:crossfade .15s ease}
 @keyframes crossfade{0%{opacity:.2}100%{opacity:1}}
 
-#leaderHint{font-weight:900;color:var(--sub);font-size:.9rem;display:none}
+#leaderHint{
+  font-weight: var(--wSecondary);
+  color: var(--sub);
+  font-size: var(--fsSecondary);
+  display:none
+}
 #subLine{display:flex;gap:8px;flex-wrap:wrap}
 .badge{
   background:var(--muted);
   border-radius:999px;
   padding:6px 10px;
-  font-weight:900;
-  font-size:.88rem;
+  font-weight: var(--wBody);
+  font-size: var(--fsSecondary);
   letter-spacing:.2px;
   white-space:nowrap;
 }
@@ -140,52 +180,50 @@ body.highContrast #leaderStrip{
   border:none;
   border-radius:12px;
   padding:10px 12px;
-  font-weight:950;
+  font-weight: var(--wBody);
   cursor:pointer;
   min-width:48px; min-height:48px;
 }
 .iconBtn:active{transform:scale(.98)}
 .iconBtn[aria-expanded="true"]{box-shadow:inset 0 0 0 2px rgba(30,136,229,.25)}
-body.highContrast .iconBtn{
-  box-shadow:inset 0 0 0 1px rgba(15,23,42,.14);
-}
-body.highContrast .iconBtn:active{
-  box-shadow:inset 0 0 0 2px var(--hcInset);
-  transform:scale(.99);
-}
+body.highContrast .iconBtn{ box-shadow:inset 0 0 0 1px rgba(15,23,42,.14); }
+body.highContrast .iconBtn:active{ box-shadow:inset 0 0 0 2px var(--hcInset); transform:scale(.99); }
 
 #rankingPanel{
-  margin-top:10px; background:var(--card); border-radius:16px;
-  box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06);
-  padding:0 12px; overflow:hidden; max-height:0; opacity:0; transform:translateY(-4px);
+  margin-top:10px;
+  background:var(--card);
+  border-radius: var(--rCard);
+  box-shadow: var(--sh1), 0 10px 25px rgba(0,0,0,.06);
+  padding:0 12px;
+  overflow:hidden;
+  max-height:0;
+  opacity:0;
+  transform:translateY(-4px);
   transition:max-height .28s ease,opacity .22s ease,transform .22s ease,padding .22s ease;
 }
 #rankingPanel.open{padding:12px;max-height:560px;opacity:1;transform:translateY(0)}
-body.highContrast #rankingPanel{
-  box-shadow:none;
-  border:1px solid var(--hcBorder);
-}
+body.highContrast #rankingPanel{ box-shadow:none; border:1px solid var(--hcBorder); }
+
 .rankItem{
   border:1px solid rgba(15,23,42,.10);
-  border-radius:14px;
+  border-radius: var(--rBtn);
   padding:10px 12px;
   display:flex; align-items:center; gap:10px;
   margin:8px 0;
   box-shadow:0 1px 2px rgba(0,0,0,.04);
-  position:relative; will-change:transform;
 }
 body.highContrast .rankItem{ box-shadow:none; }
-.rankNo{font-weight:950;width:26px;color:#334155}
+.rankNo{font-weight: var(--wBody);width:26px;color:var(--sub)}
 .rankDot{width:10px;height:10px;border-radius:50%}
-.rankName{font-weight:950;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rankScore{font-weight:950}
+.rankName{font-weight: var(--wBody);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rankScore{font-weight: var(--wTitle); font-size: 16px;} /* score dominates */
 
-/* Tools menu */
+/* Tools menu (popover) */
 #toolsMenu{
   position:fixed; z-index:100000;
   background:var(--card);
-  border-radius:14px;
-  box-shadow:var(--sh2);
+  border-radius: var(--rBtn);
+  box-shadow: var(--sh2);
   padding:8px;
   display:none;
   min-width:240px;
@@ -196,6 +234,23 @@ body.highContrast #toolsMenu{ box-shadow:none; border:1px solid var(--hcBorder);
 #toolsMenu.open{display:block; animation:menuIn .12s ease}
 @keyframes menuIn{0%{opacity:0;transform:scale(.98)}100%{opacity:1;transform:scale(1)}}
 
+/* caret */
+#toolsMenu::before{
+  content:"";
+  position:absolute;
+  width:12px;height:12px;
+  transform: rotate(45deg);
+  top:-6px;
+  right:18px;
+  background: var(--card);
+  border-left:1px solid rgba(15,23,42,.10);
+  border-top:1px solid rgba(15,23,42,.10);
+}
+body.highContrast #toolsMenu::before{
+  border-left:1px solid var(--hcBorder);
+  border-top:1px solid var(--hcBorder);
+}
+
 .menuItem{
   width:100%;
   text-align:left;
@@ -203,34 +258,40 @@ body.highContrast #toolsMenu{ box-shadow:none; border:1px solid var(--hcBorder);
   background:transparent;
   padding:12px 12px;
   border-radius:12px;
-  font-weight:950;
+  font-weight: var(--wBody);
   cursor:pointer;
   min-height:48px;
+  font-size: 15px;
 }
-.menuItem:hover{background:var(--muted)}
+.menuItem:active{background:rgba(15,23,42,.06)}
 .menuItem.danger{color:#b91c1c}
 .menuItem:disabled{opacity:.45;cursor:not-allowed}
 .menuSep{height:1px;background:rgba(15,23,42,.10);margin:6px 0}
 
 #targetRow{
-  margin:10px 0 10px 0;
+  margin:10px 0;
   background:var(--card);
-  border-radius:16px;
-  box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06);
+  border-radius: var(--rCard);
+  box-shadow: var(--sh1), 0 10px 25px rgba(0,0,0,.06);
   padding:10px 12px;
   display:flex; align-items:center; gap:10px;
 }
 body.highContrast #targetRow{ box-shadow:none; border:1px solid var(--hcBorder); }
+#targetRow strong{font-weight: var(--wBody)}
 #targetPoints{
   flex:1; padding:10px 12px; border-radius:12px;
-  border:1px solid #d7dbe4; font-weight:950; outline:none;
+  border:1px solid #d7dbe4; font-weight: var(--wBody); outline:none;
 }
 body.highContrast #targetPoints{ border-color: rgba(15,23,42,.18); }
 
 #emptyState{
-  display:none; background:var(--card); border-radius:16px;
-  box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06);
-  padding:14px; margin-top:10px; font-weight:900; color:#334155;
+  display:none;
+  background:var(--card);
+  border-radius: var(--rCard);
+  box-shadow: var(--sh1), 0 10px 25px rgba(0,0,0,.06);
+  padding:14px; margin-top:10px;
+  font-weight: var(--wBody);
+  color: var(--sub);
 }
 body.highContrast #emptyState{ box-shadow:none; border:1px solid var(--hcBorder); }
 
@@ -238,11 +299,11 @@ body.highContrast #emptyState{ box-shadow:none; border:1px solid var(--hcBorder)
 
 .player-box{
   background:var(--card);
-  border-radius:16px;
+  border-radius: var(--rCard);
   padding:12px;
   margin-bottom:10px;
   border-left:6px solid #ccc;
-  box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06);
+  box-shadow: var(--sh1), 0 10px 25px rgba(0,0,0,.06);
   position:relative;
 }
 body.highContrast .player-box{
@@ -250,23 +311,34 @@ body.highContrast .player-box{
   border:1px solid var(--hcBorder);
   border-left-width:6px;
 }
-.player-box.leader{box-shadow:var(--sh1),var(--sh2);transform:scale(1.01)}
+.player-box.leader{box-shadow: var(--sh1), var(--sh2); transform:scale(1.01)}
 body.highContrast .player-box.leader{ box-shadow:none; }
 
 .player-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.player-name{font-weight:980;font-size:1.10rem;display:flex;align-items:center;gap:8px;min-width:0}
+.player-name{
+  font-weight: var(--wBody);
+  font-size: 16px;
+  display:flex;align-items:center;gap:8px;min-width:0
+}
 .player-dot{width:10px;height:10px;border-radius:50%}
-.miniBadge{background:var(--muted);border-radius:999px;padding:5px 8px;font-weight:950;font-size:.82rem;letter-spacing:.2px}
+.miniBadge{
+  background:var(--muted);
+  border-radius:999px;
+  padding:5px 8px;
+  font-weight: var(--wBody);
+  font-size: var(--fsSecondary);
+  letter-spacing:.2px
+}
 .miniBadge.action{background:var(--action);color:#fff}
 
 /* Plus button: visual 42px, hit 44px */
 .plusBtn{
   width:44px;height:44px;border-radius:14px;border:none;background:transparent;
-  color:#fff;font-weight:1000;font-size:22px;cursor:pointer;position:relative;
+  color:#fff;font-weight: var(--wTitle);font-size:22px;cursor:pointer;position:relative;
 }
 .plusBtn::before{
   content:"";
-  position:absolute; inset:1px; /* 44 -> 42 visual */
+  position:absolute; inset:1px;
   border-radius:13px;
   background:#1e88e5;
 }
@@ -275,12 +347,8 @@ body.highContrast .player-box.leader{ box-shadow:none; }
 body.highContrast .plusBtn::before{
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.08), inset 0 0 0 1px rgba(15,23,42,.16);
 }
-body.highContrast .plusBtn:active{
-  transform:scale(.99);
-}
-body.highContrast .plusBtn:active::before{
-  box-shadow:inset 0 0 0 2px var(--hcInset);
-}
+body.highContrast .plusBtn:active{transform:scale(.99)}
+body.highContrast .plusBtn:active::before{box-shadow:inset 0 0 0 2px var(--hcInset);}
 
 .progress-container{
   background:var(--muted2);
@@ -290,7 +358,6 @@ body.highContrast .plusBtn:active::before{
   margin:8px 0 6px 0;
   position:relative;
 }
-body.highContrast .progress-container{ background:var(--muted2); }
 
 /* Tick markers 25/50/75 */
 .progress-container::before{
@@ -305,13 +372,9 @@ body.highContrast .progress-container{ background:var(--muted2); }
   opacity:.35;
   pointer-events:none;
 }
-body.compact .progress-container::before{ opacity:.22; } /* ruhiger */
-body.highContrast .progress-container::before{ opacity:.22; } /* nicht dunkler, eher weniger */
+body.compact .progress-container::before{ opacity:.22; }
+body.highContrast .progress-container::before{ opacity:.22; }
 
-.progress-container.tickPulse::before{ animation:tickPulse .45s ease; }
-@keyframes tickPulse{ 0%{opacity:.18} 50%{opacity:.55} 100%{opacity:.22} }
-
-/* extra: 50% thicker for 0.2s */
 .progress-container.tick50::before{
   background:
     linear-gradient(to right,
@@ -334,7 +397,6 @@ body.highContrast .progress-container::before{ opacity:.22; } /* nicht dunkler, 
 }
 @keyframes bustFlash{ 0%{opacity:0} 20%{opacity:1} 100%{opacity:0} }
 
-/* Progress Snap + Glow (only when bar moves) */
 .progress-container.barGlow::after{
   content:"";
   position:absolute; inset:-2px;
@@ -348,47 +410,44 @@ body.highContrast .progress-container::before{ opacity:.22; } /* nicht dunkler, 
 
 .progress-bar{height:100%;transition:width .35s ease; transform-origin:left center;}
 .progress-bar.resetBounce{ animation:resetBounce .22s ease; }
-@keyframes resetBounce{
-  0%{transform:scaleX(1)}
-  55%{transform:scaleX(.985)}
-  100%{transform:scaleX(1)}
-}
+@keyframes resetBounce{ 0%{transform:scaleX(1)} 55%{transform:scaleX(.985)} 100%{transform:scaleX(1)} }
 
 .divider{height:1px;background:rgba(15,23,42,.12);margin:8px 0}
 .player-line{
   display:flex;align-items:baseline;justify-content:space-between;gap:10px;
-  font-weight:950;
+  font-weight: var(--wBody);
 }
-.sub{font-weight:900;color:#334155;font-size:.88rem}
-.dim{color:var(--sub);font-weight:850;font-size:.88rem}
-.totalBig{font-weight:1000;font-size:1.06rem}
-
-body.highContrast .sub,
-body.highContrast .dim{ color:var(--sub); }
-
-/* compact score line typography */
-body.compact .player-line{ font-size:.95rem; }
-body.compact .sub, body.compact .dim{ font-size:.86rem; }
+.sub{
+  font-weight: var(--wBody);
+  color: var(--sub);
+  font-size: var(--fsSecondary);
+}
+.dim{
+  color: var(--sub2);
+  font-weight: var(--wSecondary);
+  font-size: var(--fsSecondary);
+}
+.totalBig{
+  font-weight: var(--wTitle);
+  font-size: 17px; /* score dominates */
+}
+body.compact .player-line{ font-size: 15px; }
+body.compact .sub, body.compact .dim{ font-size: 13px; }
 
 .deltaPill{
   display:inline-flex; align-items:center;
   margin-left:8px;
   padding:4px 8px; border-radius:999px;
-  font-weight:1000; font-size:.82rem;
-  background:#e9edf3; color:#334155;
+  font-weight: var(--wTitle);
+  font-size: var(--fsSecondary);
+  background:#e9edf3; color:var(--sub);
   animation:deltaIn .2s ease;
 }
 .deltaPill.bust{background:#ffe3e3;color:#8a1f1f}
 @keyframes deltaIn{0%{opacity:0;transform:translateY(2px)}100%{opacity:1;transform:translateY(0)}}
 
 .player-box.bustAnim{ animation:bustShake .28s ease; }
-@keyframes bustShake{
-  0%{transform:translateX(0)}
-  25%{transform:translateX(-2px)}
-  50%{transform:translateX(2px)}
-  75%{transform:translateX(-1px)}
-  100%{transform:translateX(0)}
-}
+@keyframes bustShake{ 0%{transform:translateX(0)} 25%{transform:translateX(-2px)} 50%{transform:translateX(2px)} 75%{transform:translateX(-1px)} 100%{transform:translateX(0)} }
 
 .bustToast{
   position:absolute; top:10px; right:12px;
@@ -397,7 +456,8 @@ body.compact .sub, body.compact .dim{ font-size:.86rem; }
   border:1px solid rgba(239,68,68,.25);
   padding:6px 10px;
   border-radius:999px;
-  font-weight:1000; font-size:.85rem;
+  font-weight: var(--wTitle);
+  font-size: var(--fsSecondary);
   animation:toastInOut .5s ease forwards;
   pointer-events:none;
 }
@@ -408,20 +468,17 @@ body.compact .sub, body.compact .dim{ font-size:.86rem; }
   100%{opacity:0; transform:translateY(-4px)}
 }
 
-/* Chips: one-line scroll + scroll-fade */
-.cardFade{
-  position:relative;
-  margin-top:8px;
-}
+/* Chips scroller + fades */
+.cardFade{ position:relative; margin-top:8px; }
 .card-container{
   display:flex; gap:6px;
   overflow-x:auto; -webkit-overflow-scrolling:touch;
   padding:0 2px 2px 2px;
   scroll-behavior:smooth;
+  touch-action: pan-x; /* reduce vertical scroll hang */
 }
 .card-container::-webkit-scrollbar{display:none}
-.cardFade::before,
-.cardFade::after{
+.cardFade::before,.cardFade::after{
   content:"";
   position:absolute; top:0; bottom:0;
   width:22px;
@@ -440,41 +497,25 @@ body.compact .sub, body.compact .dim{ font-size:.86rem; }
 .cardFade.showLeft::before{opacity:1}
 .cardFade.showRight::after{opacity:1}
 
-/* adapt fades in HC (same bg color feel) */
-body.highContrast .cardFade::before{
-  background:linear-gradient(to right, rgba(246,247,249,1), rgba(246,247,249,0));
-}
-body.highContrast .cardFade::after{
-  background:linear-gradient(to left, rgba(246,247,249,1), rgba(246,247,249,0));
-}
-
 .cardchip{
   background:var(--muted);
   padding:7px 10px;
   border-radius:999px;
-  font-weight:950;
-  font-size:.9rem;
+  font-weight: var(--wBody);
+  font-size: 14px;
   cursor:pointer;
   user-select:none;
   flex:0 0 auto;
 }
 .cardchip:active{transform:scale(.98)}
-.cardchip.addAnim{ animation:chipIn .12s ease; }
-@keyframes chipIn{0%{opacity:0;transform:translateX(-4px)}100%{opacity:1;transform:translateX(0)}}
 @keyframes chipOut{to{opacity:0;transform:scale(.96)}}
 
-#bottomBar{
-  position:sticky; bottom:0; z-index:90;
-  background:rgba(246,247,249,.92);
-  backdrop-filter: blur(12px);
-  padding:10px 0 calc(10px + env(safe-area-inset-bottom)) 0;
-}
 #endRoundBtn{
   width:100%;
   border:none;
-  border-radius:16px;
+  border-radius: var(--rCard);
   padding:16px 12px;
-  font-weight:1000;
+  font-weight: var(--wTitle);
   cursor:pointer;
   min-height:54px;
   background:#22c55e;
@@ -492,43 +533,37 @@ body.highContrast .cardFade::after{
   opacity:0;
   animation:savedTick .4s ease forwards;
 }
-@keyframes savedTick{
-  0%{opacity:0;transform:translateY(-50%) scale(.9)}
-  35%{opacity:1;transform:translateY(-50%) scale(1)}
-  100%{opacity:0;transform:translateY(-50%) scale(1)}
-}
-body.highContrast #endRoundBtn{
-  box-shadow:none;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);
-}
-body.highContrast #endRoundBtn:active{
-  box-shadow:inset 0 0 0 2px rgba(0,0,0,.12);
-}
+@keyframes savedTick{ 0%{opacity:0;transform:translateY(-50%) scale(.9)} 35%{opacity:1;transform:translateY(-50%) scale(1)} 100%{opacity:0;transform:translateY(-50%) scale(1)} }
+body.highContrast #endRoundBtn{ box-shadow: inset 0 0 0 1px rgba(255,255,255,.10); }
+body.highContrast #endRoundBtn:active{ box-shadow: inset 0 0 0 2px rgba(0,0,0,.12); }
 
 #statsWrap{
   margin:12px 0 14px 0;
   background:var(--card);
-  border-radius:16px;
-  box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06);
+  border-radius: var(--rCard);
+  box-shadow: var(--sh1),0 10px 25px rgba(0,0,0,.06);
   padding:12px
 }
 body.highContrast #statsWrap{ box-shadow:none; border:1px solid var(--hcBorder); }
 #statsHead{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
-#stats{display:none;margin-top:10px;font-weight:900;line-height:1.55}
+#statsHead strong{font-weight: var(--wBody)}
+#stats{display:none;margin-top:10px;font-weight: var(--wBody);line-height:1.55}
 
 .overlay{
-  display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:500; opacity:0; transition:opacity .18s ease;
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,.35);
+  z-index:500; opacity:0; transition:opacity .18s ease;
 }
 .overlay.open{opacity:1}
 
 /* Popup */
 .popup{
-  display:none; position:fixed; top:6%; left:50%;
+  display:none;
+  position:fixed; top:6%; left:50%;
   transform:translateX(-50%) translateY(12px);
   width:92%; max-width:560px;
   background:var(--card);
   padding:16px;
-  border-radius:18px;
+  border-radius: 18px;
   max-height:88%;
   overflow:auto;
   z-index:1000;
@@ -552,22 +587,31 @@ body.highContrast .popup{ box-shadow:none; border:1px solid var(--hcBorder); }
 }
 .headerRow{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .tabs{display:flex;gap:8px;margin:10px 0 0 0}
-.tab{flex:1;background:var(--muted);border:none;border-radius:12px;padding:10px 12px;font-weight:950;cursor:pointer;min-height:48px}
+.tab{
+  flex:1;background:var(--muted);border:none;border-radius:12px;padding:10px 12px;
+  font-weight: var(--wBody);cursor:pointer;min-height:48px
+}
 .tab.active{background:#1e88e5;color:#fff}
 body.highContrast .tab{ box-shadow:inset 0 0 0 1px rgba(15,23,42,.12); }
 body.highContrast .tab:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
 
-.selectedWrap{background:var(--bg);border-radius:14px;padding:10px;margin:10px 0}
+.selectedWrap{background:var(--bg);border-radius: var(--rBtn);padding:10px;margin:10px 0}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{
   background:#fff;border:1px solid #e2e6ee;border-radius:999px;
-  padding:8px 10px;font-weight:950;cursor:pointer;user-select:none;
+  padding:8px 10px;font-weight: var(--wBody);cursor:pointer;user-select:none;
 }
 .chip:active{transform:scale(.98)}
+@keyframes chipIn{0%{opacity:0;transform:translateX(-4px)}100%{opacity:1;transform:translateX(0)}}
 .chip.addAnim{ animation:chipIn .12s ease; }
 .chip.removing{ animation:chipOut .12s ease forwards; }
 
-.hint{font-size:.92rem;font-weight:900;color:#444;margin-top:8px;padding:8px 10px;border-radius:12px;background:#fff;border:1px solid var(--muted)}
+.hint{
+  font-size: var(--fsSecondary);
+  font-weight: var(--wBody);
+  color: var(--sub);
+  margin-top:8px;padding:8px 10px;border-radius:12px;background:#fff;border:1px solid var(--muted)
+}
 .hint.bust{background:#ffe3e3;border-color:#ffc3c3;color:#8a1f1f}
 .hint.bonus{background:#e9ffe9;border-color:#c5f3c5;color:#145214}
 
@@ -575,7 +619,8 @@ body.highContrast .tab:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
 .gridMods{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 
 .cardBtn{
-  border:none;border-radius:14px;padding:16px 0;font-weight:1000;font-size:1.05rem;cursor:pointer;min-height:48px;
+  border:none;border-radius: var(--rBtn);padding:16px 0;font-weight: var(--wTitle);font-size:1.05rem;
+  cursor:pointer;min-height:48px;
   box-shadow:inset 0 0 0 1px rgba(15,23,42,.10);
 }
 .cardBtn:active{transform:scale(.98)}
@@ -585,14 +630,17 @@ body.highContrast .cardBtn:active{ box-shadow:inset 0 0 0 2px var(--hcInset); tr
 
 .directRow{display:flex;gap:8px;align-items:center}
 .directRow input{
-  flex:1;padding:12px 12px;border-radius:14px;border:1px solid #d7dbe4;font-weight:1000;outline:none;font-size:1.05rem
+  flex:1;padding:12px 12px;border-radius: var(--rBtn);border:1px solid #d7dbe4;font-weight: var(--wTitle);outline:none;font-size:1.05rem
 }
-.directRow button{border:none;border-radius:14px;padding:12px 14px;font-weight:1000;background:#22c55e;color:#fff;cursor:pointer;white-space:nowrap;min-height:48px}
+.directRow button{
+  border:none;border-radius: var(--rBtn);padding:12px 14px;font-weight: var(--wTitle);
+  background:#22c55e;color:#fff;cursor:pointer;white-space:nowrap;min-height:48px
+}
 .lastDirectRow{margin-top:10px}
 .lastDirectChip{
   display:inline-flex; align-items:center; gap:8px;
   padding:8px 10px; border-radius:999px; background:var(--muted);
-  font-weight:1000; cursor:pointer;
+  font-weight: var(--wTitle); cursor:pointer;
 }
 .lastDirectChip:active{transform:scale(.98)}
 
@@ -606,7 +654,8 @@ body.highContrast .cardBtn:active{ box-shadow:inset 0 0 0 2px var(--hcInset); tr
 }
 .popupFooterRow{display:flex;gap:8px;flex-wrap:wrap}
 .popupFooterRow button{
-  border:none;border-radius:14px;padding:14px 12px;font-weight:1000;cursor:pointer;min-height:52px;
+  border:none;border-radius: var(--rBtn);padding:14px 12px;font-weight: var(--wTitle);
+  cursor:pointer;min-height:52px;
   box-shadow:inset 0 0 0 1px rgba(15,23,42,.10);
 }
 .popupFooterRow button:active{transform:scale(.99)}
@@ -621,7 +670,7 @@ body.highContrast .popupFooterRow button:active{ box-shadow:inset 0 0 0 2px var(
 #winnerCard{
   background:var(--card);
   padding:34px 26px;
-  border-radius:24px;
+  border-radius: var(--rSheet);
   text-align:center;
   box-shadow:var(--sh2);
   position:relative; overflow:hidden;
@@ -630,15 +679,6 @@ body.highContrast .popupFooterRow button:active{ box-shadow:inset 0 0 0 2px var(
 }
 body.highContrast #winnerCard{ box-shadow:none; border:1px solid var(--hcBorder); }
 @keyframes winnerLift{0%{transform:translateY(8px);opacity:.8}100%{transform:translateY(0);opacity:1}}
-#winnerCard::before{
-  content:"";
-  position:absolute; inset:-60px;
-  background:radial-gradient(circle at 50% 60%, rgba(34,197,94,.22), transparent 55%);
-  opacity:0;
-  animation:winnerGlow .8s ease forwards;
-  pointer-events:none;
-}
-@keyframes winnerGlow{0%{opacity:0;transform:translateY(12px)}35%{opacity:1}100%{opacity:0;transform:translateY(-12px)}}
 .confetti{
   position:absolute; width:6px; height:10px; border-radius:2px;
   top:40%; left:50%;
@@ -658,7 +698,7 @@ body.highContrast #winnerCard{ box-shadow:none; border:1px solid var(--hcBorder)
   z-index:2500;
   background:rgba(15,23,42,.92);
   color:#fff;
-  border-radius:16px;
+  border-radius: var(--rCard);
   padding:12px 12px;
   display:flex;
   align-items:center;
@@ -673,14 +713,14 @@ body.highContrast #winnerCard{ box-shadow:none; border:1px solid var(--hcBorder)
   opacity:1; transform:translateY(0);
   pointer-events:auto;
 }
-#roundToast .tText{font-weight:950; color:#fff; font-size:.95rem}
+#roundToast .tText{font-weight: var(--wTitle); color:#fff; font-size: 14px}
 #roundToast .tBtn{
-  border:none; border-radius:12px; padding:10px 12px; font-weight:1000;
+  border:none; border-radius:12px; padding:10px 12px; font-weight: var(--wTitle);
   background:rgba(255,255,255,.14); color:#fff; cursor:pointer; min-width:84px; min-height:44px;
 }
 #roundToast .tBtn:active{transform:scale(.98)}
 
-/* Bottom sheet (iOS-like + snap points) */
+/* Bottom sheet */
 #sheetOverlay{
   display:none;
   position:fixed; inset:0;
@@ -696,18 +736,17 @@ body.highContrast #winnerCard{ box-shadow:none; border:1px solid var(--hcBorder)
   position:fixed; left:0; right:0; bottom:0;
   z-index:3100;
   background:rgba(255,255,255,.98);
-  border-top-left-radius:var(--sheetRadius);
-  border-top-right-radius:var(--sheetRadius);
+  border-top-left-radius:var(--rSheet);
+  border-top-right-radius:var(--rSheet);
   transform:translateY(110%);
-  transition:transform .22s ease;
-  max-height:90dvh;
-  height:90dvh; /* full snap */
+  transition:transform .22s cubic-bezier(.2,.8,.2,1);
+  max-height: calc(var(--vh) * 100);
+  height: calc(var(--vh) * 100);
   overflow:hidden;
   border:1px solid rgba(15,23,42,.12);
   border-bottom:none;
 }
 body.highContrast #sheet{ border-color: var(--hcBorder); }
-
 #sheet.open{transform:translateY(var(--sheetTranslate, 0px));}
 
 .sheetHeader{
@@ -720,8 +759,8 @@ body.highContrast #sheet{ border-color: var(--hcBorder); }
 .sheetGrab{width:54px;height:5px;border-radius:999px;background:rgba(15,23,42,.18)}
 .sheetHeadRow{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .sheetTitle{
-  font-weight:1000;
-  font-size:1.05rem;
+  font-weight: var(--wTitle);
+  font-size: 16px;
   display:flex;
   align-items:center;
   gap:8px;
@@ -729,42 +768,49 @@ body.highContrast #sheet{ border-color: var(--hcBorder); }
 .sheetClose{
   border:none;background:var(--muted);
   border-radius:12px;min-height:44px;min-width:44px;
-  font-weight:1000;cursor:pointer;
+  font-weight: var(--wTitle);cursor:pointer;
   box-shadow:inset 0 0 0 1px rgba(15,23,42,.10);
 }
 .sheetClose:active{transform:scale(.99)}
 body.highContrast .sheetClose:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
-
 .sheetDivider{height:1px;background:rgba(15,23,42,.10);margin-top:10px}
 
 .sheetBody{
-  height:calc(90dvh - 70px);
+  height: calc((var(--vh) * 100) - 120px);
   overflow:auto;
   -webkit-overflow-scrolling:touch;
   padding:0 14px calc(14px + env(safe-area-inset-bottom)) 14px;
 }
 
+/* Sticky add row at bottom of sheet body (keyboard-friendly) */
+#sheetAddSticky{
+  position: sticky;
+  bottom: 0;
+  background: rgba(255,255,255,.98);
+  padding: 10px 0 calc(10px + env(safe-area-inset-bottom)) 0;
+  border-top: 1px solid rgba(15,23,42,.10);
+  z-index: 2;
+}
+
 .sheetSection{margin-top:14px}
 .sheetSection h4{
   margin:0 0 8px 0;
-  font-size:.92rem;
-  color:var(--sub);
-  font-weight:950;
+  font-size: var(--fsSecondary);
+  color: var(--sub2);
+  font-weight: var(--wSecondary);
 }
-body.highContrast .sheetSection h4{ color: var(--sub); }
+body.highContrast .sheetSection h4{ color: var(--sub2); }
 
-.row{
-  display:flex; gap:8px; align-items:center; margin:8px 0;
-}
+.row{ display:flex; gap:8px; align-items:center; margin:8px 0; }
 .row input{
   flex:1; padding:12px 12px;
-  border-radius:14px; border:1px solid #d7dbe4;
-  font-weight:950; outline:none;
+  border-radius: var(--rBtn); border:1px solid #d7dbe4;
+  font-weight: var(--wBody); outline:none;
 }
 body.highContrast .row input{ border-color: rgba(15,23,42,.18); }
 .row button{
-  border:none; border-radius:14px;
-  padding:12px 14px; font-weight:1000;
+  border:none; border-radius: var(--rBtn);
+  padding:12px 14px; font-weight: var(--wTitle);
   cursor:pointer; min-height:48px;
   background:#22c55e; color:#fff;
   white-space:nowrap;
@@ -774,37 +820,49 @@ body.highContrast .row input{ border-color: rgba(15,23,42,.18); }
 .row button:active{transform:scale(.99)}
 body.highContrast .row button:active{ box-shadow:inset 0 0 0 2px rgba(0,0,0,.12); }
 
+/* List look (less "card") in compact/sheet */
 .listItem{
   display:flex; align-items:center; gap:10px;
-  padding:10px 10px;
-  border-radius:14px;
+  padding:12px 6px;
+  margin:0;
+  background:#fff;
+  border-bottom:1px solid rgba(15,23,42,.10);
+}
+#sheetPlayersList{
   border:1px solid rgba(15,23,42,.10);
-  margin:8px 0;
+  border-radius: var(--rBtn);
+  overflow:hidden;
   background:#fff;
 }
-body.compact .listItem{ padding:8px 10px; margin:6px 0; }
+body.highContrast #sheetPlayersList{ border-color: var(--hcBorder); }
+body.compact .listItem{ padding:10px 6px; }
+
 .liDot{width:10px;height:10px;border-radius:50%}
-.liName{font-weight:1000;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.liName{font-weight: var(--wBody);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .liBtns{display:flex;gap:8px}
 .liBtns button{
   border:none; border-radius:12px; min-height:44px; min-width:44px;
-  background:var(--muted); font-weight:1000; cursor:pointer;
+  background:var(--muted); font-weight: var(--wTitle); cursor:pointer;
   box-shadow:inset 0 0 0 1px rgba(15,23,42,.10);
 }
 .liBtns button:active{transform:scale(.99)}
 body.highContrast .liBtns button:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
-.liBtns .del{background:transparent; color:#b91c1c}
-.liBtns .del:active{background:rgba(239,68,68,.08)}
 
-.renameRow{
-  display:flex; gap:8px; align-items:center; flex:1; min-width:0;
+/* Delete: red trash icon (no red fill) */
+.liBtns .del{
+  background:transparent;
+  box-shadow:none;
+  color:#b91c1c;
 }
+.liBtns .del:active{background:rgba(239,68,68,.08); border-radius:12px}
+
+.renameRow{ display:flex; gap:8px; align-items:center; flex:1; min-width:0; }
 .renameRow input{
   flex:1;
   padding:10px 10px;
   border-radius:12px;
   border:1px solid rgba(15,23,42,.18);
-  font-weight:950;
+  font-weight: var(--wBody);
   outline:none;
   min-width:0;
 }
@@ -813,7 +871,7 @@ body.highContrast .liBtns button:active{ box-shadow:inset 0 0 0 2px var(--hcInse
   border-radius:12px;
   min-height:44px;
   padding:0 12px;
-  font-weight:1000;
+  font-weight: var(--wTitle);
   background:var(--muted);
   cursor:pointer;
   box-shadow:inset 0 0 0 1px rgba(15,23,42,.10);
@@ -824,12 +882,12 @@ body.highContrast .renameRow button:active{ box-shadow:inset 0 0 0 2px var(--hcI
 .toggleRow{
   display:flex; align-items:center; justify-content:space-between; gap:10px;
   padding:12px 10px;
-  border-radius:14px;
+  border-radius: var(--rBtn);
   border:1px solid rgba(15,23,42,.10);
   margin:8px 0;
   background:#fff;
 }
-.toggleRow .tLabel{font-weight:950; color: var(--text); opacity:.82} /* nicht zu niedrig */
+.toggleRow .tLabel{font-weight: var(--wBody); color: var(--text); opacity:.85}
 .switch{
   width:52px;height:30px;border-radius:999px;
   background:#cbd5e1; position:relative; cursor:pointer; flex:0 0 auto;
@@ -840,7 +898,7 @@ body.highContrast .renameRow button:active{ box-shadow:inset 0 0 0 2px var(--hcI
   position:absolute; top:3px; left:3px;
   width:24px;height:24px;border-radius:50%;
   background:#fff;
-  box-shadow:0 1px 3px rgba(0,0,0,.14); /* softer */
+  box-shadow:0 1px 3px rgba(0,0,0,.14);
   transition:left .18s ease;
 }
 .switch.on{background:#22c55e}
@@ -848,25 +906,19 @@ body.highContrast .renameRow button:active{ box-shadow:inset 0 0 0 2px var(--hcI
 .switch:active{ box-shadow:inset 0 0 0 2px rgba(15,23,42,.14); }
 body.highContrast .switch:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
 
-/* iOS Settings-like destructive action: red text, no red fill */
 .sheetDestructive{
   width:100%;
   text-align:left;
   padding:14px 12px;
-  border-radius:14px;
+  border-radius: var(--rBtn);
   border:1px solid rgba(15,23,42,.10);
   background:#fff;
-  font-weight:1000;
+  font-weight: var(--wTitle);
   color:#b91c1c;
   cursor:pointer;
 }
 .sheetDestructive:active{ background:rgba(239,68,68,.06); }
 body.highContrast .sheetDestructive:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
-
-/* compact: reduce ranking panel typography inside open state */
-body.compact .rankNo{ width:22px; }
-body.compact .rankName{ font-size:.95rem; }
-body.compact .rankScore{ font-size:.95rem; }
 </style>
 </head>
 
@@ -954,13 +1006,19 @@ body.compact .rankScore{ font-size:.95rem; }
   <div class="sheetBody" id="sheetBody">
     <div class="sheetSection">
       <h4>Spieler (nur vor Spielstart)</h4>
-      <div class="row" id="sheetAddRow">
-        <input id="sheetAddName" type="text" placeholder="Spielername" autocomplete="off" />
-        <button id="sheetAddBtn" type="button">Hinzufügen</button>
-      </div>
+
       <div id="sheetPlayersList"></div>
-      <div style="font-weight:900;color:var(--sub);font-size:.9rem;">
+
+      <div style="font-weight:var(--wSecondary);color:var(--sub2);font-size:var(--fsSecondary); margin-top:10px;">
         Während des Spiels ist Spielerverwaltung gesperrt.
+      </div>
+
+      <!-- Sticky add row -->
+      <div id="sheetAddSticky">
+        <div class="row" id="sheetAddRow" style="margin:0;">
+          <input id="sheetAddName" type="text" placeholder="Spielername" autocomplete="off" />
+          <button id="sheetAddBtn" type="button">Hinzufügen</button>
+        </div>
       </div>
     </div>
 
@@ -994,7 +1052,7 @@ body.compact .rankScore{ font-size:.95rem; }
     </div>
 
     <div class="headerRow">
-      <h3 id="popupTitle" style="margin:0;">Karten</h3>
+      <h3 id="popupTitle" style="margin:0;font-size:17px;font-weight:var(--wTitle);">Karten</h3>
       <div class="headerRight">
         <span id="popupPlayerBadge" class="badge"></span>
       </div>
@@ -1012,10 +1070,10 @@ body.compact .rankScore{ font-size:.95rem; }
       <div id="popupLiveInfo" class="hint">Vorschau: –</div>
     </div>
 
-    <div style="font-weight:1000;margin:12px 0 8px 0;">Zahlen</div>
+    <div style="font-weight:var(--wTitle);margin:12px 0 8px 0;">Zahlen</div>
     <div id="numberGrid" class="gridNumbers"></div>
 
-    <div style="font-weight:1000;margin:12px 0 8px 0;">Modifier</div>
+    <div style="font-weight:var(--wTitle);margin:12px 0 8px 0;">Modifier</div>
     <div id="modGrid" class="gridMods"></div>
   </div>
 
@@ -1045,7 +1103,7 @@ body.compact .rankScore{ font-size:.95rem; }
 <!-- Winner -->
 <div id="winnerScreen">
   <div id="winnerCard">
-    <h2 id="winnerText" style="margin:0 0 16px 0;"></h2>
+    <h2 id="winnerText" style="margin:0 0 16px 0;font-weight:var(--wTitle);"></h2>
     <button class="iconBtn" id="winnerNewGame" type="button" style="background:#22c55e;color:#fff;width:100%;">Neues Spiel</button>
   </div>
 </div>
@@ -1057,13 +1115,30 @@ function vib(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} 
 function lockScroll(lock){ document.body.style.overflow = lock ? "hidden" : ""; }
 const reduceMotion = () => window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/* Haptik: sparsam (iOS-like) */
+/* iOS keyboard vh fix */
+function setVh(){
+  const vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty("--vh", vh + "px");
+}
+setVh();
+window.addEventListener("resize", setVh, {passive:true});
+window.addEventListener("orientationchange", setVh, {passive:true});
+
+/* Top/bottom bar alpha changes with scroll */
+function updateBarAlpha(){
+  const y = window.scrollY || 0;
+  // 0..120px => .94.. .86
+  const a = Math.max(0.86, 0.94 - (y/120)*0.08);
+  document.documentElement.style.setProperty("--barAlpha", a.toFixed(3));
+}
+updateBarAlpha();
+window.addEventListener("scroll", updateBarAlpha, {passive:true});
+
+/* Haptik: nur "open sheet", "snap reached", "commit", "delete confirmed", "bust", "win" */
 const HAPT = {
   finish:18,
   bust:28,
   win:40,
-  tick:10,
-  endPress:15,
   sheetOpen:12,
   sheetSnap:10,
   delete:18
@@ -1102,7 +1177,9 @@ let undoRoundStack=[];
 let statsOpen=false;
 let lastLeaderName=null;
 let lastLeaderScore=0;
+
 let popupStatePushed=false;
+let sheetStatePushed=false;
 
 const palette=[
   "#2563eb","#16a34a","#ea580c","#9333ea",
@@ -1146,9 +1223,9 @@ function pushUndoRound(){
   undoRoundStack.push(snapshot());
   if(undoRoundStack.length>30) undoRoundStack.shift();
 }
-function save(){ localStorage.setItem("flip7_state_v7", JSON.stringify(snapshot())); }
+function save(){ localStorage.setItem("flip7_state_v8", JSON.stringify(snapshot())); }
 function load(){
-  const raw=localStorage.getItem("flip7_state_v7");
+  const raw=localStorage.getItem("flip7_state_v8");
   if(!raw) return;
   try{ restore(JSON.parse(raw)); }catch(e){}
 }
@@ -1179,26 +1256,6 @@ function getRanking(){
     const live = (p.override!==null) ? p.override : scoreFromCards(p.cards).score;
     return {name:p.name,color:p.color,score:p.total+live};
   }).sort((a,b)=>b.score-a.score);
-}
-
-/* ---------- FLIP reorder ---------- */
-function flipReorder(container, newOrderKeys){
-  if(reduceMotion()) return;
-  const items=[...container.querySelectorAll("[data-key]")];
-  const first=new Map(items.map(el=>[el.dataset.key, el.getBoundingClientRect()]));
-  const map=new Map(items.map(el=>[el.dataset.key, el]));
-  newOrderKeys.forEach(k=>{ const el=map.get(k); if(el) container.appendChild(el); });
-  const last=[...container.querySelectorAll("[data-key]")];
-  last.forEach(el=>{
-    const f=first.get(el.dataset.key);
-    const l=el.getBoundingClientRect();
-    if(!f) return;
-    const dx=f.left-l.left, dy=f.top-l.top;
-    if(dx || dy){
-      el.animate([{ transform:`translate(${dx}px,${dy}px)` }, { transform:"translate(0,0)" }],
-        { duration:260, easing:"cubic-bezier(.2,.8,.2,1)" });
-    }
-  });
 }
 
 /* ---------- Count up ---------- */
@@ -1270,15 +1327,13 @@ function renderRanking(){
   const panel=$("rankingPanel");
 
   panel.innerHTML = list.length ? list.map((p,i)=>`
-    <div class="rankItem" data-key="${p.name}">
+    <div class="rankItem" data-key="${escapeHtml(p.name)}">
       <div class="rankNo">${i+1}.</div>
       <div class="rankDot" style="background:${p.color}"></div>
-      <div class="rankName">${p.name}</div>
+      <div class="rankName">${escapeHtml(p.name)}</div>
       <div class="rankScore">${p.score}</div>
     </div>
-  `).join("") : `<div style="font-weight:900;color:#555;">Noch keine Spieler</div>`;
-
-  if(panel.classList.contains("open")) flipReorder(panel, list.map(p=>p.name));
+  `).join("") : `<div style="font-weight:700;color:#555;">Noch keine Spieler</div>`;
 }
 
 /* Track bar % to add snap+glow when changed */
@@ -1298,7 +1353,6 @@ function wireChipFades(){
     const sc = w.querySelector(".card-container");
     if(!sc) return;
     const on = ()=>updateFadeFor(w);
-    sc.removeEventListener("scroll", on);
     sc.addEventListener("scroll", on, {passive:true});
     requestAnimationFrame(on);
   });
@@ -1309,7 +1363,6 @@ function renderPlayers(){
   const target=Number($("targetPoints").value)||200;
   const rank=getRanking();
   const leaderName = rank.length ? rank[0].name : null;
-
   const compact = document.body.classList.contains("compact");
 
   const wrap=$("playersContainer");
@@ -1337,7 +1390,6 @@ function renderPlayers(){
 
     const left = Math.max(target-total,0);
 
-    // Score line compact format: X · Y/Z (−N)
     const leftLabel = compact
       ? `<button class="sub" data-direct="1" data-i="${i}" style="border:none;background:transparent;padding:0;text-decoration:underline;cursor:pointer">${live}</button>
          <span id="delta_${i}"></span>`
@@ -1352,7 +1404,7 @@ function renderPlayers(){
       <div class="player-top">
         <div class="player-name">
           <span class="player-dot" style="background:${p.color}"></span>
-          <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</span>
+          <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(p.name)}</span>
           ${bonusBadge} ${manualBadge}
         </div>
         <button class="plusBtn" type="button" data-i="${i}" aria-label="Punkte/Karten"><span>+</span></button>
@@ -1372,7 +1424,7 @@ function renderPlayers(){
       ${p.cards.length?`
         <div class="cardFade" id="fade_${i}">
           <div class="card-container" id="chips_${i}">
-            ${p.cards.map((c,ci)=>`<span class="cardchip" data-rem="${ci}" data-i="${i}">${c}</span>`).join("")}
+            ${p.cards.map((c,ci)=>`<span class="cardchip" data-rem="${ci}" data-i="${i}">${escapeHtml(String(c))}</span>`).join("")}
           </div>
         </div>
       `:""}
@@ -1386,11 +1438,11 @@ function renderPlayers(){
 /* ---------- Stats ---------- */
 function renderStats(){
   const box=$("stats");
-  if(!players.length){ box.innerHTML=`<div style="font-weight:900;color:#555;">Noch keine Daten</div>`; return; }
+  if(!players.length){ box.innerHTML=`<div style="font-weight:700;color:#555;">Noch keine Daten</div>`; return; }
   box.innerHTML = players.map(p=>{
     const avg=(p.rounds.reduce((a,b)=>a+b,0)/(p.rounds.length||1)).toFixed(1);
     const bustQ=p.rounds.length?Math.round((p.busts/p.rounds.length)*100):0;
-    return `<div style="margin:6px 0;"><b>${p.name}</b>: Ø ${avg} • Bust ${bustQ}% (${p.busts}/${p.rounds.length})</div>`;
+    return `<div style="margin:6px 0;"><b>${escapeHtml(p.name)}</b>: Ø ${avg} • Bust ${bustQ}% (${p.busts}/${p.rounds.length})</div>`;
   }).join("");
 }
 
@@ -1409,8 +1461,6 @@ function updateLocks(){
 
   $("undoBtn").disabled = undoStack.length===0;
   $("undoRoundBtn").disabled = undoRoundStack.length===0;
-
-  $("manageBtn").disabled = false;
 }
 
 /* ---------- Render all ---------- */
@@ -1424,7 +1474,7 @@ function renderAll(){
   updateLocks();
 }
 
-/* ---------- Tools Menu ---------- */
+/* ---------- Tools Menu (FIXED: pointer-based, no immediate close) ---------- */
 const toolsBtnEl = $("toolsBtn");
 const toolsMenuEl = $("toolsMenu");
 document.body.appendChild(toolsMenuEl);
@@ -1455,33 +1505,39 @@ function openToolsMenu(){
 }
 function toggleToolsMenu(){ toolsMenuOpen ? closeToolsMenu() : openToolsMenu(); }
 
-toolsBtnEl.addEventListener("click",(e)=>{
+toolsBtnEl.addEventListener("pointerdown",(e)=>{
+  e.preventDefault();
+  e.stopPropagation();
+}, {passive:false});
+
+toolsBtnEl.addEventListener("pointerup",(e)=>{
   e.preventDefault();
   e.stopPropagation();
   toggleToolsMenu();
-}, false);
+}, {passive:false});
 
-toolsMenuEl.addEventListener("click",(e)=>{ e.stopPropagation(); }, false);
+toolsMenuEl.addEventListener("pointerdown",(e)=>{ e.stopPropagation(); }, {passive:true});
+toolsMenuEl.addEventListener("pointerup",(e)=>{ e.stopPropagation(); }, {passive:true});
 
-document.addEventListener("click",(e)=>{
+document.addEventListener("pointerdown",(e)=>{
   if(!toolsMenuOpen) return;
   if(e.target === toolsBtnEl) return;
   if(toolsMenuEl.contains(e.target)) return;
   closeToolsMenu();
-}, true);
+}, {passive:true, capture:true});
 
 window.addEventListener("resize",()=>{ if(toolsMenuOpen) positionToolsMenu(); }, {passive:true});
 window.addEventListener("scroll",()=>{ if(toolsMenuOpen) positionToolsMenu(); }, {passive:true});
 
 /* ---------- Ranking toggle ---------- */
-$("rankBtn").addEventListener("click",(e)=>{
+$("rankBtn").addEventListener("pointerup",(e)=>{
   e.preventDefault(); e.stopPropagation();
   const open = $("rankingPanel").classList.toggle("open");
   $("rankBtn").setAttribute("aria-expanded", open ? "true" : "false");
   closeToolsMenu();
-}, false);
+}, {passive:false});
 
-/* ---------- Bottom sheet (snap points + interactive drag) ---------- */
+/* ---------- Bottom sheet (snap points + interactive drag + history) ---------- */
 const sheetOverlay=$("sheetOverlay");
 const sheet=$("sheet");
 const sheetBody=$("sheetBody");
@@ -1495,20 +1551,17 @@ let sheetLastY=0;
 let sheetStartT=0;
 
 function computeSnapTranslate(which){
-  // sheet height is 90vh. Half shows 55vh -> translate by (90-55)=35vh.
   const vh = window.innerHeight;
   const fullH = Math.round(vh * 0.90);
   const halfVisible = Math.round(vh * 0.55);
-  const halfTranslate = Math.max(0, fullH - halfVisible); // px down
+  const halfTranslate = Math.max(0, fullH - halfVisible);
   return (which==="full") ? 0 : halfTranslate;
 }
 function applySheetTranslate(px, withTransition){
-  if(withTransition) sheet.style.transition = "transform .22s ease";
-  else sheet.style.transition = "none";
+  sheet.style.transition = withTransition ? "transform .22s cubic-bezier(.2,.8,.2,1)" : "none";
   sheet.style.setProperty("--sheetTranslate", px+"px");
 }
 function setSheetTitleBySnap(which){
-  // minimal “crossfade”
   sheetTitle.classList.add("crossfade");
   sheetTitle.textContent = (which==="full") ? "Spieler & Einstellungen" : "Spieler";
   setTimeout(()=>sheetTitle.classList.remove("crossfade"), 160);
@@ -1518,8 +1571,7 @@ function snapSheet(which, reason){
   const px = computeSnapTranslate(which);
   applySheetTranslate(px, true);
   setSheetTitleBySnap(which);
-  if(!reduceMotion() && reason==="user") vib(HAPT.sheetSnap);
-  // allow scroll in body always; iOS feel comes from snap points + drag
+  if(reason==="user") vib(HAPT.sheetSnap);
 }
 function openSheet(){
   closeToolsMenu();
@@ -1533,6 +1585,11 @@ function openSheet(){
   renderSheetPlayers();
   vib(HAPT.sheetOpen);
   snapSheet("half", "program");
+
+  if(!sheetStatePushed){
+    history.pushState({sheet:true}, "");
+    sheetStatePushed=true;
+  }
 }
 function closeSheet(){
   sheetOpen=false;
@@ -1542,15 +1599,38 @@ function closeSheet(){
   setTimeout(()=>{ sheetOverlay.style.display="none"; }, 180);
   lockScroll(false);
   save();
+
+  // cleanup history state (avoid double-back)
+  if(sheetStatePushed){
+    sheetStatePushed=false;
+    try{ history.back(); }catch(e){}
+  }
 }
+sheetOverlay.addEventListener("pointerdown",()=>{ if(sheetOpen) closeSheet(); }, {passive:true});
+
+window.addEventListener("popstate",()=>{
+  if(sheetOpen){
+    // back gesture closes sheet without commit
+    sheetOpen=false;
+    sheet.classList.remove("open");
+    sheetOverlay.classList.remove("open");
+    sheet.setAttribute("aria-hidden","true");
+    setTimeout(()=>{ sheetOverlay.style.display="none"; }, 180);
+    lockScroll(false);
+    save();
+  }
+  if(popupEl && popupEl.style.display==="block"){
+    popupStatePushed=false;
+    internalClosePopup(true);
+  }
+});
+
 function rubberBand(dy){
-  // simple rubber band effect
   const sign = dy < 0 ? -1 : 1;
   const abs = Math.abs(dy);
   const damp = abs / (abs + 260);
   return sign * abs * (1 - damp);
 }
-
 function beginSheetDrag(clientY){
   sheetDrag=true;
   sheetStartY=clientY;
@@ -1565,7 +1645,6 @@ function moveSheetDrag(clientY){
   const dy = sheetLastY - sheetStartY;
   let next = sheetStartTranslate + dy;
 
-  // rubber band beyond bounds
   if(next < 0) next = rubberBand(next);
   const half = computeSnapTranslate("half");
   if(next > half) next = half + rubberBand(next - half);
@@ -1583,28 +1662,25 @@ function endSheetDrag(){
   const half = computeSnapTranslate("half");
   const current = sheetStartTranslate + dy;
 
-  // thresholds: close if strong downward from half, else snap half/full
   if(sheetSnap==="half"){
     const closeThresh = half + 110;
     const shouldClose = (current > closeThresh) || (v > 0.85);
-    if(shouldClose){ applySheetTranslate(half+300, true); setTimeout(()=>closeSheet(), 180); return; }
+    if(shouldClose){
+      applySheetTranslate(half+320, true);
+      setTimeout(()=>closeSheet(), 180);
+      return;
+    }
   }
 
-  // decide snap
-  // If drag up enough or flick up => full
   const toFull = (current < (half * 0.55)) || (v < -0.65);
-  const toHalf = !toFull;
-
   if(toFull) snapSheet("full", "user");
   else snapSheet("half", "user");
 
   sheet.style.transition = "";
 }
 
-/* Drag handle: only on header/grabber */
 $("sheetGrabArea").addEventListener("pointerdown",(e)=>{
   if(!sheetOpen) return;
-  // if body scrolled, allow drag only when at top to avoid fighting scroll
   if(sheetBody.scrollTop > 0) return;
   beginSheetDrag(e.clientY);
   sheet.setPointerCapture?.(e.pointerId);
@@ -1620,20 +1696,12 @@ sheet.addEventListener("pointerup",()=>{
   endSheetDrag();
 },{passive:true});
 
-/* Optional: quick snap to full when user pulls list up at top (like iOS) */
-sheetBody.addEventListener("scroll",()=>{
-  if(!sheetOpen) return;
-  if(sheetBody.scrollTop === 0 && sheetSnap==="half"){
-    // user likely wants more space; do nothing automatically to avoid surprise
-  }
-},{passive:true});
-
 window.addEventListener("resize",()=>{
   if(!sheetOpen) return;
   snapSheet(sheetSnap, "program");
 }, {passive:true});
 
-/* ---------- Sheet players (inline rename) ---------- */
+/* ---------- Sheet players (inline rename + trash icon) ---------- */
 let editingIdx = null;
 
 function renderSheetPlayers(){
@@ -1642,7 +1710,7 @@ function renderSheetPlayers(){
   $("sheetAddBtn").disabled = !canManage;
 
   if(!players.length){
-    list.innerHTML = `<div style="font-weight:900;color:var(--sub);">Noch keine Spieler.</div>`;
+    list.innerHTML = `<div style="padding:12px;font-weight:700;color:var(--sub2);">Noch keine Spieler.</div>`;
     return;
   }
 
@@ -1657,12 +1725,12 @@ function renderSheetPlayers(){
       : `<div class="liName">${escapeHtml(p.name)}</div>`;
 
     return `
-      <div class="listItem" data-li="${idx}">
+      <div class="listItem">
         <div class="liDot" style="background:${p.color}"></div>
         ${nameCell}
         <div class="liBtns">
-          <button type="button" data-ren="${idx}" ${canManage?"":"disabled"} title="Umbenennen">✎</button>
-          <button type="button" class="del" data-del="${idx}" ${canManage?"":"disabled"} title="Entfernen">Löschen</button>
+          <button type="button" data-ren="${idx}" ${canManage?"":"disabled"} aria-label="Umbenennen">✎</button>
+          <button type="button" class="del" data-del="${idx}" ${canManage?"":"disabled"} aria-label="Löschen">🗑️</button>
         </div>
       </div>
     `;
@@ -1722,8 +1790,8 @@ function deletePlayer(idx){
 
   const ok = confirm(`Spieler "${players[idx].name}" entfernen?`);
   if(!ok) return;
-  vib(HAPT.delete);
 
+  vib(HAPT.delete);
   pushUndo();
   players.splice(idx,1);
   editingIdx = null;
@@ -1756,10 +1824,10 @@ function toggleClassSwitch(which){
   save();
 }
 
-$("manageBtn").addEventListener("click",(e)=>{ e.preventDefault(); openSheet(); });
-$("sheetCloseBtn").addEventListener("click",(e)=>{ e.preventDefault(); closeSheet(); });
-sheetOverlay.addEventListener("click",()=>closeSheet(),{passive:true});
-$("sheetAddBtn").addEventListener("click",(e)=>{ e.preventDefault(); addPlayerFromSheet(); });
+$("manageBtn").addEventListener("pointerup",(e)=>{ e.preventDefault(); openSheet(); }, {passive:false});
+$("sheetCloseBtn").addEventListener("pointerup",(e)=>{ e.preventDefault(); closeSheet(); }, {passive:false});
+
+$("sheetAddBtn").addEventListener("pointerup",(e)=>{ e.preventDefault(); addPlayerFromSheet(); }, {passive:false});
 $("sheetAddName").addEventListener("keydown",(e)=>{ if(e.key==="Enter") addPlayerFromSheet(); });
 
 $("sheetPlayersList").addEventListener("click",(e)=>{
@@ -1779,8 +1847,8 @@ $("sheetPlayersList").addEventListener("keydown",(e)=>{
   if(e.key === "Escape"){ editingIdx=null; renderSheetPlayers(); }
 });
 
-$("toggleCompact").addEventListener("click",()=>toggleClassSwitch("compact"));
-$("toggleContrast").addEventListener("click",()=>toggleClassSwitch("contrast"));
+$("toggleCompact").addEventListener("pointerup",()=>toggleClassSwitch("compact"));
+$("toggleContrast").addEventListener("pointerup",()=>toggleClassSwitch("contrast"));
 $("toggleCompact").addEventListener("keydown",(e)=>{ if(e.key==="Enter"||e.key===" ") toggleClassSwitch("compact"); });
 $("toggleContrast").addEventListener("keydown",(e)=>{ if(e.key==="Enter"||e.key===" ") toggleClassSwitch("contrast"); });
 
@@ -1855,7 +1923,7 @@ function renderPopupSelection(){
   const chips=$("selectedChips");
   chips.innerHTML="";
   if(!popupCards.length){
-    chips.innerHTML=`<span style="font-weight:900;color:#555;">Keine Karten ausgewählt.</span>`;
+    chips.innerHTML=`<span style="font-weight:700;color:#555;">Keine Karten ausgewählt.</span>`;
   }else{
     popupCards.forEach((c,idx)=>{
       const d=document.createElement("div");
@@ -1944,7 +2012,7 @@ function internalClosePopup(cancel){
     players[selectedPlayer].cards=[...popupCards];
     players[selectedPlayer].override=popupOverride;
     save();
-    vib(HAPT.finish); // commit
+    vib(HAPT.finish); // haptic only on successful commit
   }
 
   selectedPlayer=null;
@@ -1961,19 +2029,12 @@ function closePopup(cancel){
   internalClosePopup(cancel);
 }
 
-window.addEventListener("popstate",(e)=>{
-  if(popupEl.style.display==="block"){
-    popupStatePushed=false;
-    internalClosePopup(true);
-  }
-});
-
 /* swipe-to-close */
 let dragActive=false, dragStartY=0, dragLastY=0, dragStartT=0;
 function setPopupDragTranslate(y){ popupEl.style.transform = `translateX(-50%) translateY(${y}px)`; }
 function endPopupDrag(shouldClose){
   dragActive=false;
-  popupEl.style.transition = "opacity .18s ease, transform .18s ease";
+  popupEl.style.transition = "opacity .18s ease, transform .18s cubic-bezier(.2,.8,.2,1)";
   if(shouldClose) closePopup(true);
   else setPopupDragTranslate(0);
   setTimeout(()=>{ popupEl.style.transition=""; }, 220);
@@ -2036,11 +2097,6 @@ function hideRoundToast(){
   $("roundToast").classList.remove("show");
 }
 
-/* Tick crossing helpers */
-function crossed(prevPct, nextPct, tick){
-  return prevPct < tick && nextPct >= tick;
-}
-
 /* Winner confetti */
 function spawnConfetti(color){
   if(reduceMotion()) return;
@@ -2062,13 +2118,10 @@ function spawnConfetti(color){
 }
 
 /* ---------- End Round ---------- */
+function crossed(prevPct, nextPct, tick){ return prevPct < tick && nextPct >= tick; }
+
 function endRound(){
   if(!players.length) return;
-
-  const btn=$("endRoundBtn");
-  btn.classList.add("press");
-  setTimeout(()=>btn.classList.remove("press"), 160);
-  vib(HAPT.endPress);
 
   pushUndoRound();
   if(!gameLocked) gameLocked=true;
@@ -2094,31 +2147,26 @@ function endRound(){
 
   roundNumber += 1;
 
+  const btn=$("endRoundBtn");
   btn.classList.add("saved");
   setTimeout(()=>btn.classList.remove("saved"), 420);
 
   renderAll();
   showRoundToast();
 
-  // tick pulses + bust feedback
   players.forEach((p,i)=>{
     const nextTotal=p.total;
     const nextP = Math.min((nextTotal/target)*100, 100);
     const pc=$("pc_"+i);
     const pb=$("pb_"+i);
 
-    if(crossed(prevPct[i], nextP, 25) || crossed(prevPct[i], nextP, 75)){
-      pc?.classList.add("tickPulse");
-      setTimeout(()=>pc?.classList.remove("tickPulse"), 480);
-      vib(HAPT.tick);
-    }
+    // haptic only at 50% tick (optional, reduced noise)
     if(crossed(prevPct[i], nextP, 50)){
       pc?.classList.add("tick50");
       setTimeout(()=>pc?.classList.remove("tick50"), 220);
-      vib(HAPT.tick);
+      vib(HAPT.sheetSnap); // reuse short tick
     }
 
-    // Count-up for totals
     const totalEl=$("total_"+i);
     const leftEl=$("left_"+i);
     if(totalEl && leftEl){
@@ -2140,7 +2188,6 @@ function endRound(){
       }
     }
 
-    // delta pill
     const deltaHost=$("delta_"+i);
     if(deltaHost){
       const s=roundScores[i];
@@ -2152,7 +2199,6 @@ function endRound(){
       setTimeout(()=>{ deltaHost.innerHTML=""; }, 800);
     }
 
-    // bust feedback only on commit
     if(roundScores[i]===0){
       const row = document.querySelectorAll(".player-box")[i];
 
@@ -2235,7 +2281,6 @@ $("colorsBtn").addEventListener("click",(e)=>{ e.preventDefault(); redistributeC
 $("undoBtn").addEventListener("click",(e)=>{ e.preventDefault(); undoAction(); });
 $("undoRoundBtn").addEventListener("click",(e)=>{ e.preventDefault(); undoRound(); });
 $("newGameBtn").addEventListener("click",(e)=>{ e.preventDefault(); newGame(); });
-
 $("sheetNewGameBtn").addEventListener("click",(e)=>{ e.preventDefault(); newGame(); });
 
 $("toastUndoBtn").addEventListener("click",(e)=>{ e.preventDefault(); undoRound(); });
@@ -2270,7 +2315,9 @@ $("winnerNewGame").addEventListener("click",(e)=>{
 
 overlayEl.addEventListener("pointerdown",()=>closePopup(true),{passive:true});
 
-/* Delegation: chip remove, open popup (+), tap Runde for Direktpunkte */
+/* Delegation: chip remove, open popup (+), tap Runde for Direktpunkte
+   Long-press iOS-like: 320ms
+*/
 let pressTimer=null;
 let longPressFired=false;
 
@@ -2287,7 +2334,6 @@ $("playersContainer").addEventListener("pointerdown",(e)=>{
       players[i].override=null;
       renderAll(); save();
     }, 120);
-
     return;
   }
 
@@ -2308,7 +2354,7 @@ $("playersContainer").addEventListener("pointerdown",(e)=>{
     pressTimer=setTimeout(()=>{
       longPressFired=true;
       openPopup(i, true);
-    }, 360);
+    }, 320);
     plus.setPointerCapture?.(e.pointerId);
   }
 },{passive:false});
@@ -2334,13 +2380,37 @@ function escapeHtml(str){
 }
 
 /* ---------- Init ---------- */
-function buildPopup(){
-  buildPopupGrids();
+function buildPopupGrids(){
+  const ng=$("numberGrid");
+  ng.innerHTML="";
+  numbers.forEach(n=>{
+    const b=document.createElement("button");
+    b.type="button"; b.className="cardBtn";
+    const st=numStyle[n]||{bg:"#eef1f5",fg:"#0b1220"};
+    b.style.background=st.bg; b.style.color=st.fg||"#0b1220";
+    b.textContent=String(n);
+    b.addEventListener("pointerdown",(e)=>{e.preventDefault(); popupAdd(n);},{passive:false});
+    ng.appendChild(b);
+  });
+
+  const mg=$("modGrid");
+  mg.innerHTML="";
+  ["+2","+4","+6","+8","+10","x2"].forEach(m=>{
+    const b=document.createElement("button");
+    b.type="button"; b.className="cardBtn modBtn"+(m==="x2"?" x2":"");
+    b.textContent=m;
+    b.addEventListener("pointerdown",(e)=>{e.preventDefault(); popupAdd(m);},{passive:false});
+    mg.appendChild(b);
+  });
 }
-buildPopup();
+
+buildPopupGrids();
 load();
 syncTogglesUI();
 renderAll();
+
+/* Default sheet list render if opened later */
+renderSheetPlayers();
 </script>
 </body>
 </html>
