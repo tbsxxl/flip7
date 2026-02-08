@@ -5,46 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Flip 7 – Score Tracker</title>
 
-<!-- PWA / iOS A2HS basics -->
 <meta name="theme-color" content="#f6f7f9">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
 <style>
 :root{
-  /* iOS26-like neutrals */
-  --bg:#f6f7f9;
-  --card:#ffffff;
-
-  /* Softer “muted” surfaces + clearer separators */
-  --muted:#eef1f5;
-  --muted2:#e6ebf2;                 /* slightly lighter than before */
-  --separator: rgba(15,23,42,.10);
-  --separator2: rgba(15,23,42,.14); /* slightly stronger */
-
-  --text:#0f172a;
-  --sub:#475569;
-  --sub2:#64748b;
-
+  --bg:#f6f7f9; --card:#fff; --muted:#eef1f5; --muted2:#dfe4ea;
+  --text:#0f172a; --sub:#475569; --sub2:#64748b;
   --action:#937972;
   --mod:#f8b22d;
   --danger:#ef4444;
 
-  /* shadows: kept subtle */
   --sh1:0 1px 2px rgba(0,0,0,.06);
   --sh2:0 12px 28px rgba(0,0,0,.10);
 
-  /* High-contrast borders */
   --hcBorder: rgba(15,23,42,.12);
   --hcInset: rgba(15,23,42,.18);
 
-  /* Radii system */
   --rSheet:24px;
   --rCard:16px;
   --rBtn:14px;
   --rChip:12px;
 
-  /* Typography scale (iOS-ish) */
   --fsTitle:18px;
   --fsBody:16px;
   --fsSecondary:13px;
@@ -52,10 +35,7 @@
   --wBody:700;
   --wSecondary:650;
 
-  /* Dynamic bar alpha (set by JS) */
   --barAlpha:.92;
-
-  /* iOS keyboard vh fix (set by JS) */
   --vh: 1vh;
 }
 
@@ -64,9 +44,7 @@ body.highContrast{
   --text:#0b1220;
   --sub:#334155;
   --sub2:#475569;
-  --muted2:#d7dee8;
-  --separator: rgba(15,23,42,.16);
-  --separator2: rgba(15,23,42,.22);
+  --muted2:#c7ced8;
   --sh1:0 0 0 rgba(0,0,0,0);
   --sh2:0 0 0 rgba(0,0,0,0);
 }
@@ -88,14 +66,7 @@ html,body{height:100%}
 body{
   font-family: system-ui, -apple-system, Arial;
   margin:0;
-
-  /* Safe-area aware padding (more iPhone-friendly) */
-  padding:
-    calc(14px + env(safe-area-inset-top))
-    calc(14px + env(safe-area-inset-right))
-    calc(14px + env(safe-area-inset-bottom))
-    calc(14px + env(safe-area-inset-left));
-
+  padding:14px;
   background:var(--bg);
   color:var(--text);
   font-variant-numeric: tabular-nums;
@@ -103,18 +74,8 @@ body{
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   font-size: var(--fsBody);
-
-  /* ensure content doesn’t hide behind bottombar/keyboard */
-  scroll-padding-bottom: calc(100px + env(safe-area-inset-bottom));
+  scroll-padding-bottom: calc(90px + env(safe-area-inset-bottom));
 }
-body.compact{
-  padding:
-    calc(10px + env(safe-area-inset-top))
-    calc(10px + env(safe-area-inset-right))
-    calc(10px + env(safe-area-inset-bottom))
-    calc(10px + env(safe-area-inset-left));
-}
-
 button,input{touch-action:manipulation}
 h1{
   text-align:center;
@@ -128,25 +89,12 @@ h1{
   *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
 
-/* Unified iOS-like tap feedback */
-button, .cardchip, .chip, .menuItem, .listItem, .toggleRow, .sheetDestructive{
-  -webkit-user-select:none;
-  user-select:none;
-}
-button:active, .cardchip:active, .chip:active, .menuItem:active{
-  transform: scale(.98);
-}
-button:focus-visible{
-  outline: 2px solid rgba(30,136,229,.35);
-  outline-offset: 2px;
-}
-
 /* Topbar / Bottombar dynamic alpha */
 #topbar{
   position:sticky; top:0; z-index:100;
   background: rgba(246,247,249,var(--barAlpha));
   backdrop-filter: blur(10px);
-  padding: 8px 0 10px 0;
+  padding: calc(8px + env(safe-area-inset-top)) 0 10px 0;
 }
 #bottomBar{
   position:sticky; bottom:0; z-index:90;
@@ -182,11 +130,47 @@ body.highContrast #leaderStrip{ box-shadow:none; border:1px solid var(--hcBorder
 
 #leaderLeft{display:flex;flex-direction:column;gap:6px;min-width:0}
 #leaderLine{display:flex;align-items:center;gap:10px;min-width:0}
-#leaderDot{width:12px;height:12px;border-radius:50%}
+
+/* Leader dot + halo */
+#leaderDot{
+  width:12px;height:12px;border-radius:50%;
+  position:relative;
+}
+#leaderDot.halo::after{
+  content:"";
+  position:absolute;
+  left:50%; top:50%;
+  width:54px; height:54px;
+  transform:translate(-50%,-50%) scale(.92);
+  border-radius:999px;
+  background:radial-gradient(circle, rgba(255,255,255,.65) 0%, rgba(255,255,255,0) 60%);
+  filter: blur(8px);
+  opacity:0;
+  animation:haloPop .30s ease forwards;
+  pointer-events:none;
+}
+@keyframes haloPop{
+  0%{opacity:0; transform:translate(-50%,-50%) scale(.88)}
+  40%{opacity:.95; transform:translate(-50%,-50%) scale(1.02)}
+  100%{opacity:0; transform:translate(-50%,-50%) scale(1.08)}
+}
+
 #leaderTextWrap{display:flex;align-items:center;gap:8px;min-width:0}
 #leaderCrown{display:inline-flex;transform-origin:center}
+
+/* Crown pop (existing) */
 #leaderCrown.pop{animation:crownPop .22s ease}
 @keyframes crownPop{0%{transform:scale(.95);opacity:.75}100%{transform:scale(1);opacity:1}}
+
+/* Crown shimmer (NEW) */
+#leaderCrown.shimmer{
+  animation:crownShimmer .34s ease forwards;
+}
+@keyframes crownShimmer{
+  0%{filter: drop-shadow(0 0 0 rgba(255,215,0,0)); transform: translateY(0) scale(1);}
+  35%{filter: drop-shadow(0 0 10px rgba(255,215,0,.55)); transform: translateY(-1px) scale(1.02);}
+  100%{filter: drop-shadow(0 0 0 rgba(255,215,0,0)); transform: translateY(0) scale(1);}
+}
 
 #leaderName{
   font-weight: var(--wTitle);
@@ -276,8 +260,6 @@ body.highContrast .rankItem{ box-shadow:none; }
 body.highContrast #toolsMenu{ box-shadow:none; border:1px solid var(--hcBorder); }
 #toolsMenu.open{display:block; animation:menuIn .12s ease}
 @keyframes menuIn{0%{opacity:0;transform:scale(.98)}100%{opacity:1;transform:scale(1)}}
-
-/* caret */
 #toolsMenu::before{
   content:"";
   position:absolute;
@@ -309,7 +291,7 @@ body.highContrast #toolsMenu::before{
 .menuItem:active{background:rgba(15,23,42,.06)}
 .menuItem.danger{color:#b91c1c}
 .menuItem:disabled{opacity:.45;cursor:not-allowed}
-.menuSep{height:1px;background:var(--separator);margin:6px 0}
+.menuSep{height:1px;background:rgba(15,23,42,.10);margin:6px 0}
 
 #targetRow{
   margin:10px 0;
@@ -360,7 +342,7 @@ body.highContrast .player-box.leader{ box-shadow:none; }
 .player-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .player-name{
   font-weight: var(--wBody);
-  font-size: 17px;                 /* clearer hierarchy */
+  font-size: 16px;
   display:flex;align-items:center;gap:8px;min-width:0
 }
 .player-dot{width:10px;height:10px;border-radius:50%}
@@ -374,7 +356,7 @@ body.highContrast .player-box.leader{ box-shadow:none; }
 }
 .miniBadge.action{background:var(--action);color:#fff}
 
-/* Plus button: visual 42px, hit 44px */
+/* Plus button */
 .plusBtn{
   width:44px;height:44px;border-radius:14px;border:none;background:transparent;
   color:#fff;font-weight: var(--wTitle);font-size:22px;cursor:pointer;position:relative;
@@ -393,7 +375,7 @@ body.highContrast .plusBtn::before{
 body.highContrast .plusBtn:active{transform:scale(.99)}
 body.highContrast .plusBtn:active::before{box-shadow:inset 0 0 0 2px var(--hcInset);}
 
-/* Progress: total (committed) + live (this round) */
+/* Progress */
 .progress-container{
   background:var(--muted2);
   height:10px;
@@ -402,47 +384,66 @@ body.highContrast .plusBtn:active::before{box-shadow:inset 0 0 0 2px var(--hcIns
   margin:8px 0 6px 0;
   position:relative;
 }
+
+/* Tick markers 25/50/75 */
 .progress-container::before{
   content:"";
   position:absolute; inset:0;
   background:
     linear-gradient(to right,
-      transparent 24.75%, rgba(15,23,42,.12) 25%, transparent 25.25%,
-      transparent 49.75%, rgba(15,23,42,.12) 50%, transparent 50.25%,
-      transparent 74.75%, rgba(15,23,42,.12) 75%, transparent 75.25%
+      transparent 24.75%, rgba(15,23,42,.14) 25%, transparent 25.25%,
+      transparent 49.75%, rgba(15,23,42,.14) 50%, transparent 50.25%,
+      transparent 74.75%, rgba(15,23,42,.14) 75%, transparent 75.25%
     );
-  opacity:.28;                      /* marker lines more subtle */
+  opacity:.35;
   pointer-events:none;
 }
-body.compact .progress-container::before{ opacity:.20; }
+body.compact .progress-container::before{ opacity:.22; }
 body.highContrast .progress-container::before{ opacity:.22; }
-
-.progress-track{
-  position:absolute; inset:0;
-  display:flex;
-  align-items:stretch;
-}
-.progress-bar-total,
-.progress-bar-live{
-  height:100%;
-  transform-origin:left center;
-  transition:width .35s ease;
-}
-.progress-bar-live{
-  opacity:.40;                       /* lighter segment for this round */
-  filter: saturate(1.05) brightness(1.08);
-}
 
 .progress-container.tick50::before{
   background:
     linear-gradient(to right,
-      transparent 24.75%, rgba(15,23,42,.12) 25%, transparent 25.25%,
+      transparent 24.75%, rgba(15,23,42,.14) 25%, transparent 25.25%,
       transparent 49.55%, rgba(15,23,42,.26) 50%, transparent 50.45%,
-      transparent 74.75%, rgba(15,23,42,.12) 75%, transparent 75.25%
+      transparent 74.75%, rgba(15,23,42,.14) 75%, transparent 75.25%
     );
   animation:tick50 .2s ease;
 }
-@keyframes tick50{0%{opacity:.20}50%{opacity:.58}100%{opacity:.20}}
+@keyframes tick50{0%{opacity:.22}50%{opacity:.65}100%{opacity:.22}}
+
+/* Base + Live bar layers */
+.pbBase, .pbLive{
+  position:absolute; left:0; top:0; bottom:0;
+  width:0%;
+  transform-origin:left center;
+}
+.pbBase{
+  transition:width .35s ease;
+}
+.pbLive{
+  opacity:.55;              /* lighter, distinguishes "this round" */
+  transition:width .35s ease;
+}
+
+/* Live sweep (NEW) */
+.pbLive.sweep::after{
+  content:"";
+  position:absolute; inset:0;
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,.45) 40%,
+    rgba(255,255,255,0) 80%
+  );
+  transform: translateX(-60%);
+  animation: liveSweep .26s ease forwards;
+  pointer-events:none;
+}
+@keyframes liveSweep{
+  0%{transform:translateX(-60%); opacity:.0}
+  20%{opacity:1}
+  100%{transform:translateX(140%); opacity:0}
+}
 
 .progress-container.bustRing{ box-shadow:0 0 0 3px rgba(239,68,68,.22); }
 .progress-container.bustFlash::after{
@@ -466,10 +467,10 @@ body.highContrast .progress-container::before{ opacity:.22; }
 }
 @keyframes barGlow{0%{opacity:0}40%{opacity:1}100%{opacity:0}}
 
-.progress-bar-total.resetBounce{ animation:resetBounce .22s ease; }
+.pbBase.resetBounce, .pbLive.resetBounce{ animation:resetBounce .22s ease; }
 @keyframes resetBounce{ 0%{transform:scaleX(1)} 55%{transform:scaleX(.985)} 100%{transform:scaleX(1)} }
 
-.divider{height:1px;background:var(--separator2);margin:8px 0}
+.divider{height:1px;background:rgba(15,23,42,.12);margin:8px 0}
 .player-line{
   display:flex;align-items:baseline;justify-content:space-between;gap:10px;
   font-weight: var(--wBody);
@@ -477,12 +478,12 @@ body.highContrast .progress-container::before{ opacity:.22; }
 .sub{
   font-weight: var(--wBody);
   color: var(--sub);
-  font-size: 14px;                  /* consistent secondary size */
+  font-size: var(--fsSecondary);
 }
 .dim{
   color: var(--sub2);
   font-weight: var(--wSecondary);
-  font-size: 14px;                  /* consistent secondary size */
+  font-size: var(--fsSecondary);
 }
 .totalBig{
   font-weight: var(--wTitle);
@@ -564,7 +565,7 @@ body.compact .sub, body.compact .dim{ font-size: 13px; }
   user-select:none;
   flex:0 0 auto;
 }
-.cardchip:active{background:rgba(15,23,42,.06)}
+.cardchip:active{transform:scale(.98)}
 @keyframes chipOut{to{opacity:0;transform:scale(.96)}}
 
 #endRoundBtn{
@@ -635,12 +636,12 @@ body.highContrast .popup{ box-shadow:none; border:1px solid var(--hcBorder); }
   .popup{ top:3%; max-height:94%; }
   #rankingPanel.open{max-height:360px}
 }
-.grabBarWrap{display:flex; justify-content:center; padding:4px 0 8px 0; position:relative;}
+.grabBarWrap{display:flex; justify-content:center; padding:4px 0 8px 0;}
 .grabBar{width:54px; height:5px; border-radius:999px; background:rgba(15,23,42,.18);}
 
 .popupHeader{
   position:sticky; top:0; background:var(--card); padding:0 0 10px 0; z-index:6;
-  border-bottom:1px solid var(--separator);
+  border-bottom:1px solid rgba(15,23,42,.10);
 }
 .headerRow{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .tabs{display:flex;gap:8px;margin:10px 0 0 0}
@@ -653,16 +654,8 @@ body.highContrast .tab{ box-shadow:inset 0 0 0 1px rgba(15,23,42,.12); }
 body.highContrast .tab:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
 
 .selectedWrap{background:var(--bg);border-radius: var(--rBtn);padding:10px;margin:10px 0}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{
-  background:#fff;border:1px solid #e2e6ee;border-radius:999px;
-  padding:8px 10px;font-weight: var(--wBody);cursor:pointer;user-select:none;
-}
-.chip:active{background:rgba(15,23,42,.04)}
-@keyframes chipIn{0%{opacity:0;transform:translateX(-4px)}100%{opacity:1;transform:translateX(0)}}
-.chip.addAnim{ animation:chipIn .12s ease; }
-.chip.removing{ animation:chipOut .12s ease forwards; }
 
+/* Popup preview glow (NEW) */
 .hint{
   font-size: var(--fsSecondary);
   font-weight: var(--wBody);
@@ -671,6 +664,25 @@ body.highContrast .tab:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
 }
 .hint.bust{background:#ffe3e3;border-color:#ffc3c3;color:#8a1f1f}
 .hint.bonus{background:#e9ffe9;border-color:#c5f3c5;color:#145214}
+.hint.fxGlow{
+  animation: previewGlow .22s ease forwards;
+  box-shadow: 0 0 0 0 rgba(30,136,229,0);
+}
+@keyframes previewGlow{
+  0%{box-shadow:0 0 0 0 rgba(30,136,229,0); transform:translateY(0)}
+  40%{box-shadow:0 0 0 4px rgba(30,136,229,.14), 0 10px 22px rgba(30,136,229,.10); transform:translateY(-1px)}
+  100%{box-shadow:0 0 0 0 rgba(30,136,229,0); transform:translateY(0)}
+}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{
+  background:#fff;border:1px solid #e2e6ee;border-radius:999px;
+  padding:8px 10px;font-weight: var(--wBody);cursor:pointer;user-select:none;
+}
+.chip:active{transform:scale(.98)}
+@keyframes chipIn{0%{opacity:0;transform:translateX(-4px)}100%{opacity:1;transform:translateX(0)}}
+.chip.addAnim{ animation:chipIn .12s ease; }
+.chip.removing{ animation:chipOut .12s ease forwards; }
 
 .gridNumbers{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .gridMods{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
@@ -680,7 +692,7 @@ body.highContrast .tab:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
   cursor:pointer;min-height:48px;
   box-shadow:inset 0 0 0 1px rgba(15,23,42,.10);
 }
-.cardBtn:active{transform:scale(.98); filter:brightness(.98)}
+.cardBtn:active{transform:scale(.98)}
 body.highContrast .cardBtn:active{ box-shadow:inset 0 0 0 2px var(--hcInset); transform:scale(.99); }
 .cardBtn.modBtn{background:var(--mod)!important;color:#1a1a1a!important;box-shadow:inset 0 0 0 1px rgba(15,23,42,.12)}
 .cardBtn.x2{grid-column:auto}
@@ -707,15 +719,9 @@ body.highContrast .cardBtn:active{ box-shadow:inset 0 0 0 2px var(--hcInset); tr
   background:var(--card);
   padding:10px 0 0 0;
   margin-top:12px;
-  border-top:1px solid var(--separator);
+  border-top:1px solid rgba(15,23,42,.10);
 }
-.popupFooterRow{
-  display:flex;
-  gap:8px;
-  flex-wrap:nowrap;
-  align-items:stretch;
-}
-/* one-hand layout: Cancel left, Finish right */
+.popupFooterRow{display:flex;gap:8px;flex-wrap:wrap}
 .popupFooterRow button{
   border:none;border-radius: var(--rBtn);padding:14px 12px;font-weight: var(--wTitle);
   cursor:pointer;min-height:52px;
@@ -723,12 +729,10 @@ body.highContrast .cardBtn:active{ box-shadow:inset 0 0 0 2px var(--hcInset); tr
 }
 .popupFooterRow button:active{transform:scale(.99)}
 body.highContrast .popupFooterRow button:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
-
-.footerIcon{min-width:56px;background:var(--muted);color:#111; order:1}
-.footerGhost{flex:1;background:var(--muted);color:#111; order:2}
-.footerRed{flex:1;background:transparent;color:#b91c1c; box-shadow:none; order:3} /* iOS destructive: red text, no red fill */
-.footerRed:active{background:rgba(239,68,68,.08); border-radius: var(--rBtn);}
-.footerBlue{flex:1;background:#1e88e5;color:#fff; order:4}
+.footerIcon{min-width:56px;background:var(--muted);color:#111}
+.footerGhost{flex:1;background:var(--muted);color:#111}
+.footerRed{flex:1;background:#ef4444;color:#fff}
+.footerBlue{flex:1;background:#1e88e5;color:#fff}
 
 /* Winner */
 #winnerScreen{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);justify-content:center;align-items:center;z-index:2000}
@@ -820,7 +824,21 @@ body.highContrast #sheet{ border-color: var(--hcBorder); }
   z-index:5;
   padding:10px 14px 8px 14px;
 }
-.sheetGrabWrap{display:flex;justify-content:center;padding:2px 0 8px 0; position:relative;}
+
+/* Invisible hit area for grab handles (keeps visuals unchanged) */
+.grabHit {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(520px, 96%);
+  height: 56px;
+  top: 0;
+  background: transparent;
+  z-index: 10;
+  touch-action: none;
+}
+
+.sheetGrabWrap{display:flex;justify-content:center;padding:2px 0 8px 0}
 .sheetGrab{width:54px;height:5px;border-radius:999px;background:rgba(15,23,42,.18)}
 .sheetHeadRow{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .sheetTitle{
@@ -838,23 +856,21 @@ body.highContrast #sheet{ border-color: var(--hcBorder); }
 }
 .sheetClose:active{transform:scale(.99)}
 body.highContrast .sheetClose:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
-.sheetDivider{height:1px;background:var(--separator);margin-top:10px}
+.sheetDivider{height:1px;background:rgba(15,23,42,.10);margin-top:10px}
 
 .sheetBody{
   height: calc((var(--vh) * 100) - 120px);
   overflow:auto;
   -webkit-overflow-scrolling:touch;
   padding:0 14px calc(14px + env(safe-area-inset-bottom)) 14px;
-  scroll-padding-bottom: calc(90px + env(safe-area-inset-bottom));
 }
 
-/* Sticky add row at bottom of sheet body (keyboard-friendly) */
 #sheetAddSticky{
   position: sticky;
   bottom: 0;
   background: rgba(255,255,255,.98);
   padding: 10px 0 calc(10px + env(safe-area-inset-bottom)) 0;
-  border-top: 1px solid var(--separator);
+  border-top: 1px solid rgba(15,23,42,.10);
   z-index: 2;
 }
 
@@ -863,7 +879,7 @@ body.highContrast .sheetClose:active{ box-shadow:inset 0 0 0 2px var(--hcInset);
   margin:0 0 8px 0;
   font-size: var(--fsSecondary);
   color: var(--sub2);
-  font-weight: 600;
+  font-weight: var(--wSecondary);
 }
 body.highContrast .sheetSection h4{ color: var(--sub2); }
 
@@ -886,9 +902,15 @@ body.highContrast .row input{ border-color: rgba(15,23,42,.18); }
 .row button:active{transform:scale(.99)}
 body.highContrast .row button:active{ box-shadow:inset 0 0 0 2px rgba(0,0,0,.12); }
 
-/* List look (less "card") in compact/sheet */
+.listItem{
+  display:flex; align-items:center; gap:10px;
+  padding:12px 6px;
+  margin:0;
+  background:#fff;
+  border-bottom:1px solid rgba(15,23,42,.10);
+}
 #sheetPlayersList{
-  border:1px solid var(--separator);
+  border:1px solid rgba(15,23,42,.10);
   border-radius: var(--rBtn);
   overflow:hidden;
   background:#fff;
@@ -898,52 +920,21 @@ body.compact .listItem{ padding:10px 6px; }
 
 .liDot{width:10px;height:10px;border-radius:50%}
 .liName{font-weight: var(--wBody);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.liBtns{display:flex;gap:8px}
+.liBtns button{
+  border:none; border-radius:12px; min-height:44px; min-width:44px;
+  background:var(--muted); font-weight: var(--wTitle); cursor:pointer;
+  box-shadow:inset 0 0 0 1px rgba(15,23,42,.10);
+}
+.liBtns button:active{transform:scale(.99)}
+body.highContrast .liBtns button:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
 
-/* Swipe actions (iOS-like) */
-.swipeRow{
-  position:relative;
-  overflow:hidden;
-  background:#fff;
-  border-bottom:1px solid var(--separator);
+.liBtns .del{
+  background:transparent;
+  box-shadow:none;
+  color:#b91c1c;
 }
-.swipeActions{
-  position:absolute; inset:0;
-  display:flex;
-  justify-content:flex-end;
-  align-items:stretch;
-  gap:0;
-}
-.swipeBtn{
-  border:none;
-  min-width:86px;
-  padding:0 14px;
-  font-weight: var(--wTitle);
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.swipeBtn.rename{
-  background:rgba(148,163,184,.25);
-  color:var(--text);
-}
-.swipeBtn.delete{
-  background:#ef4444;
-  color:#fff;
-}
-.swipeBtn:disabled{opacity:.45; cursor:not-allowed}
-.swipeContent{
-  position:relative;
-  display:flex; align-items:center; gap:10px;
-  padding:12px 10px;
-  background:#fff;
-  transform: translateX(0px);
-  transition: transform .16s cubic-bezier(.2,.8,.2,1);
-  will-change: transform;
-}
-.swipeRow.open .swipeContent{
-  transform: translateX(var(--swipeX, -160px));
-}
+.liBtns .del:active{background:rgba(239,68,68,.08); border-radius:12px}
 
 .renameRow{ display:flex; gap:8px; align-items:center; flex:1; min-width:0; }
 .renameRow input{
@@ -1008,19 +999,6 @@ body.highContrast .switch:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
 }
 .sheetDestructive:active{ background:rgba(239,68,68,.06); }
 body.highContrast .sheetDestructive:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
-
-/* Invisible hit area for grab handles (keeps visuals unchanged) */
-.grabHit{
-  position:absolute;
-  left:50%;
-  transform: translateX(-50%);
-  width: min(520px, 96%);
-  height:56px;
-  top:-10px;
-  background:transparent;
-  z-index:10;
-  touch-action:none;
-}
 </style>
 </head>
 
@@ -1097,7 +1075,7 @@ body.highContrast .sheetDestructive:active{ box-shadow:inset 0 0 0 2px var(--hcI
 <div id="sheetOverlay"></div>
 <div id="sheet" aria-hidden="true">
   <div class="sheetHeader" id="sheetHeader">
-    <div class="sheetGrabWrap" id="sheetGrabArea">
+    <div class="sheetGrabWrap" id="sheetGrabArea" style="position:relative;">
       <div class="grabHit" id="sheetGrabHit"></div>
       <div class="sheetGrab"></div>
     </div>
@@ -1114,11 +1092,10 @@ body.highContrast .sheetDestructive:active{ box-shadow:inset 0 0 0 2px var(--hcI
 
       <div id="sheetPlayersList"></div>
 
-      <div style="font-weight:600;color:var(--sub2);font-size:var(--fsSecondary); margin-top:10px;">
+      <div style="font-weight:var(--wSecondary);color:var(--sub2);font-size:var(--fsSecondary); margin-top:10px;">
         Während des Spiels ist Spielerverwaltung gesperrt.
       </div>
 
-      <!-- Sticky add row -->
       <div id="sheetAddSticky">
         <div class="row" id="sheetAddRow" style="margin:0;">
           <input id="sheetAddName" type="text" placeholder="Spielername" autocomplete="off" />
@@ -1152,7 +1129,7 @@ body.highContrast .sheetDestructive:active{ box-shadow:inset 0 0 0 2px var(--hcI
 <div class="overlay" id="overlay"></div>
 <div class="popup" id="popup">
   <div class="popupHeader" id="popupHeader">
-    <div class="grabBarWrap" id="grabArea">
+    <div class="grabBarWrap" id="grabArea" style="position:relative;">
       <div class="grabHit" id="popupGrabHit"></div>
       <div class="grabBar"></div>
     </div>
@@ -1239,14 +1216,15 @@ function updateBarAlpha(){
 updateBarAlpha();
 window.addEventListener("scroll", updateBarAlpha, {passive:true});
 
-/* Haptik: only on confirmed actions */
+/* Haptik */
 const HAPT = {
   finish:18,
   bust:28,
   win:40,
   sheetOpen:12,
   sheetSnap:10,
-  delete:18
+  delete:18,
+  fx:12
 };
 
 /* Number colors */
@@ -1326,11 +1304,12 @@ function pushUndo(){
 }
 function pushUndoRound(){
   undoRoundStack.push(snapshot());
+  if(undoRoundStack.length>30) undoRoundRoundStack.shift?.(); // no-op safety
   if(undoRoundStack.length>30) undoRoundStack.shift();
 }
-function save(){ localStorage.setItem("flip7_state_v9_ios26", JSON.stringify(snapshot())); }
+function save(){ localStorage.setItem("flip7_state_v9", JSON.stringify(snapshot())); }
 function load(){
-  const raw=localStorage.getItem("flip7_state_v9_ios26");
+  const raw=localStorage.getItem("flip7_state_v9");
   if(!raw) return;
   try{ restore(JSON.parse(raw)); }catch(e){}
 }
@@ -1353,7 +1332,7 @@ function scoreFromCards(cards){
 
   const bonus = (nums.length===7) ? 15 : 0;
 
-  return { score:(sumNums*multi)+modSum+bonus, isBust:false, numbersCount:nums.length, reason:"" };
+  return { score:(sumNums*multi)+modSum+bonus, isBust:false, numbersCount:nums.length, reason:"", multi };
 }
 
 function getRanking(){
@@ -1407,8 +1386,15 @@ function renderTop(){
     $("leaderStrip").classList.add("spotlight");
     setTimeout(()=>$("leaderStrip").classList.remove("spotlight"), 650);
 
-    $("leaderCrown").classList.add("pop");
-    setTimeout(()=>$("leaderCrown").classList.remove("pop"), 250);
+    // Crown shimmer + pop (NEW)
+    $("leaderCrown").classList.add("pop","shimmer");
+    setTimeout(()=>{
+      $("leaderCrown").classList.remove("pop","shimmer");
+    }, 380);
+
+    // Halo behind dot (NEW)
+    $("leaderDot").classList.add("halo");
+    setTimeout(()=>$("leaderDot").classList.remove("halo"), 320);
 
     $("leaderName").classList.add("crossfade");
     setTimeout(()=>$("leaderName").classList.remove("crossfade"), 170);
@@ -1441,8 +1427,10 @@ function renderRanking(){
   `).join("") : `<div style="font-weight:700;color:#555;">Noch keine Spieler</div>`;
 }
 
-/* Track bar % to add snap+glow when changed */
+/* Track bar % */
 const prevBarPct = new Map();
+/* Track live % for sweep (NEW) */
+const prevLivePct = new Map();
 
 /* ---------- Chips fade helpers ---------- */
 function updateFadeFor(wrapper){
@@ -1475,7 +1463,7 @@ function renderPlayers(){
 
   players.forEach((p,i)=>{
     const res = (p.override!==null)
-      ? {score:p.override,isBust:(p.override===0),numbersCount:0, reason:""}
+      ? {score:p.override,isBust:(p.override===0),numbersCount:0, reason:"", multi:1}
       : scoreFromCards(p.cards);
 
     const live=res.score;
@@ -1488,13 +1476,17 @@ function renderPlayers(){
     div.className="player-box"+(leaderName===p.name?" leader":"");
     div.style.borderLeftColor=p.color;
 
-    const committedPct = target ? Math.min((p.total/target)*100, 100) : 0;
-    const totalPct = target ? Math.min((total/target)*100, 100) : 0;
-    const livePct = Math.max(0, totalPct - committedPct);
+    const pctTotal = target ? Math.min((total/target)*100,100) : 0;
+    const pctBase  = target ? Math.min((p.total/target)*100,100) : 0;
+    const pctLive  = target ? Math.min((live/target)*100, Math.max(0, 100 - pctBase)) : 0;
 
     const prev = prevBarPct.get(p.name);
-    const barGlow = (prev!=null && Math.abs(prev-totalPct) > 0.01);
-    prevBarPct.set(p.name, totalPct);
+    const barGlow = (prev!=null && Math.abs(prev-pctTotal) > 0.01);
+    prevBarPct.set(p.name, pctTotal);
+
+    const prevL = prevLivePct.get(p.name);
+    const liveChanged = (prevL!=null && Math.abs(prevL - pctLive) > 0.01);
+    prevLivePct.set(p.name, pctLive);
 
     const left = Math.max(target-total,0);
 
@@ -1519,10 +1511,8 @@ function renderPlayers(){
       </div>
 
       <div class="progress-container ${barGlow ? "barGlow":""}" id="pc_${i}">
-        <div class="progress-track">
-          <div class="progress-bar-total" id="pbT_${i}" style="width:${committedPct}%; background:${p.color}"></div>
-          <div class="progress-bar-live"  id="pbL_${i}" style="width:${livePct}%; background:${p.color}"></div>
-        </div>
+        <div class="pbBase" id="pbBase_${i}" style="width:${pctBase}%; background:${p.color}"></div>
+        <div class="pbLive ${liveChanged ? "sweep":""}" id="pbLive_${i}" style="width:${pctTotal}%; background:${p.color}"></div>
       </div>
 
       <div class="divider"></div>
@@ -1541,6 +1531,12 @@ function renderPlayers(){
       `:""}
     `;
     wrap.appendChild(div);
+
+    // Remove sweep class after animation completes
+    if(liveChanged){
+      const el = div.querySelector("#pbLive_"+i);
+      setTimeout(()=>el?.classList.remove("sweep"), 280);
+    }
   });
 
   wireChipFades();
@@ -1616,17 +1612,8 @@ function openToolsMenu(){
 }
 function toggleToolsMenu(){ toolsMenuOpen ? closeToolsMenu() : openToolsMenu(); }
 
-toolsBtnEl.addEventListener("pointerdown",(e)=>{
-  e.preventDefault();
-  e.stopPropagation();
-}, {passive:false});
-
-toolsBtnEl.addEventListener("pointerup",(e)=>{
-  e.preventDefault();
-  e.stopPropagation();
-  toggleToolsMenu();
-}, {passive:false});
-
+toolsBtnEl.addEventListener("pointerdown",(e)=>{ e.preventDefault(); e.stopPropagation(); }, {passive:false});
+toolsBtnEl.addEventListener("pointerup",(e)=>{ e.preventDefault(); e.stopPropagation(); toggleToolsMenu(); }, {passive:false});
 toolsMenuEl.addEventListener("pointerdown",(e)=>{ e.stopPropagation(); }, {passive:true});
 toolsMenuEl.addEventListener("pointerup",(e)=>{ e.stopPropagation(); }, {passive:true});
 
@@ -1788,7 +1775,7 @@ function endSheetDrag(){
   sheet.style.transition = "";
 }
 
-/* Drag hit area (wider touch, same visuals) */
+// (NEW) pointerdown on hit area (not visible bar)
 $("sheetGrabHit").addEventListener("pointerdown",(e)=>{
   if(!sheetOpen) return;
   if(sheetBody.scrollTop > 0) return;
@@ -1796,32 +1783,13 @@ $("sheetGrabHit").addEventListener("pointerdown",(e)=>{
   sheet.setPointerCapture?.(e.pointerId);
 },{passive:true});
 
-sheet.addEventListener("pointermove",(e)=>{
-  if(!sheetDrag) return;
-  moveSheetDrag(e.clientY);
-},{passive:true});
+sheet.addEventListener("pointermove",(e)=>{ if(sheetDrag) moveSheetDrag(e.clientY); },{passive:true});
+sheet.addEventListener("pointerup",()=>{ if(sheetDrag) endSheetDrag(); },{passive:true});
 
-sheet.addEventListener("pointerup",()=>{
-  if(!sheetDrag) return;
-  endSheetDrag();
-},{passive:true});
+window.addEventListener("resize",()=>{ if(sheetOpen) snapSheet(sheetSnap, "program"); }, {passive:true});
 
-window.addEventListener("resize",()=>{
-  if(!sheetOpen) return;
-  snapSheet(sheetSnap, "program");
-}, {passive:true});
-
-/* ---------- Sheet players (swipe actions) ---------- */
+/* ---------- Sheet players ---------- */
 let editingIdx = null;
-
-/* swipe state */
-let openSwipeIdx = null;
-function closeAnySwipe(){
-  if(openSwipeIdx === null) return;
-  const row = $("sheetPlayersList").querySelector(`[data-swipe-row="${openSwipeIdx}"]`);
-  if(row) row.classList.remove("open");
-  openSwipeIdx = null;
-}
 
 function renderSheetPlayers(){
   const list=$("sheetPlayersList");
@@ -1835,27 +1803,21 @@ function renderSheetPlayers(){
 
   list.innerHTML = players.map((p,idx)=>{
     const isEdit = (editingIdx === idx);
-
-    const content = isEdit
+    const nameCell = isEdit
       ? `
         <div class="renameRow">
           <input data-ren-inp="${idx}" value="${escapeHtml(p.name)}" />
           <button type="button" data-ren-done="${idx}">Done</button>
         </div>`
-      : `
-        <div class="liName">${escapeHtml(p.name)}</div>
-      `;
+      : `<div class="liName">${escapeHtml(p.name)}</div>`;
 
     return `
-      <div class="swipeRow" data-swipe-row="${idx}">
-        <div class="swipeActions">
-          <button class="swipeBtn rename" type="button" data-swipe-ren="${idx}" ${canManage?"":"disabled"}>Umbenennen</button>
-          <button class="swipeBtn delete" type="button" data-swipe-del="${idx}" ${canManage?"":"disabled"}>Löschen</button>
-        </div>
-
-        <div class="swipeContent" data-swipe-content="${idx}">
-          <div class="liDot" style="background:${p.color}"></div>
-          ${content}
+      <div class="listItem">
+        <div class="liDot" style="background:${p.color}"></div>
+        ${nameCell}
+        <div class="liBtns">
+          <button type="button" data-ren="${idx}" ${canManage?"":"disabled"} aria-label="Umbenennen">✎</button>
+          <button type="button" class="del" data-del="${idx}" ${canManage?"":"disabled"} aria-label="Löschen">🗑️</button>
         </div>
       </div>
     `;
@@ -1892,7 +1854,6 @@ function startRename(idx){
   const canManage = (!gameLocked && roundNumber===0);
   if(!canManage) return;
   editingIdx = idx;
-  closeAnySwipe();
   renderSheetPlayers();
 }
 function commitRename(idx){
@@ -1921,7 +1882,6 @@ function deletePlayer(idx){
   pushUndo();
   players.splice(idx,1);
   editingIdx = null;
-  closeAnySwipe();
   renderAll();
   renderSheetPlayers();
   save();
@@ -1957,103 +1917,13 @@ $("sheetCloseBtn").addEventListener("pointerup",(e)=>{ e.preventDefault(); close
 $("sheetAddBtn").addEventListener("pointerup",(e)=>{ e.preventDefault(); addPlayerFromSheet(); }, {passive:false});
 $("sheetAddName").addEventListener("keydown",(e)=>{ if(e.key==="Enter") addPlayerFromSheet(); });
 
-/* Swipe gesture handling */
-let swipeActive=false, swipeIdx=null, swipeStartX=0, swipeLastX=0, swipeStartY=0, swipeLocked=false;
-const SWIPE_OPEN = -160;      // px
-const SWIPE_THRESH = -48;     // px to open
-const SWIPE_MAX = -180;       // clamp
-
-function setSwipeX(idx, x){
-  const row = $("sheetPlayersList").querySelector(`[data-swipe-row="${idx}"]`);
-  if(!row) return;
-  row.style.setProperty("--swipeX", x+"px");
-  if(x < -8) row.classList.add("open");
-  else row.classList.remove("open");
-}
-
-$("sheetPlayersList").addEventListener("pointerdown",(e)=>{
-  const content = e.target.closest("[data-swipe-content]");
-  if(!content) return;
-
-  const idx = Number(content.dataset.swipeContent);
-
-  // tap anywhere closes other opened swipe
-  if(openSwipeIdx !== null && openSwipeIdx !== idx){
-    closeAnySwipe();
-  }
-
-  // do not swipe while editing input
-  if(e.target.closest("input") || e.target.closest("button")) return;
-
-  swipeActive=true;
-  swipeIdx=idx;
-  swipeStartX=e.clientX;
-  swipeStartY=e.clientY;
-  swipeLastX=e.clientX;
-  swipeLocked=false;
-
-  content.setPointerCapture?.(e.pointerId);
-},{passive:true});
-
-$("sheetPlayersList").addEventListener("pointermove",(e)=>{
-  if(!swipeActive) return;
-
-  swipeLastX=e.clientX;
-  const dx = swipeLastX - swipeStartX;
-  const dy = e.clientY - swipeStartY;
-
-  // lock to horizontal
-  if(!swipeLocked){
-    if(Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)){
-      swipeActive=false;
-      swipeIdx=null;
-      return;
-    }
-    if(Math.abs(dx) > 6) swipeLocked=true;
-  }
-  if(!swipeLocked) return;
-
-  // allow only left swipe to reveal
-  let x = Math.min(0, dx);
-  x = Math.max(SWIPE_MAX, x);
-  setSwipeX(swipeIdx, x);
-},{passive:true});
-
-$("sheetPlayersList").addEventListener("pointerup",()=>{
-  if(!swipeActive) return;
-
-  const dx = swipeLastX - swipeStartX;
-  const shouldOpen = dx <= SWIPE_THRESH;
-
-  if(shouldOpen){
-    openSwipeIdx = swipeIdx;
-    setSwipeX(swipeIdx, SWIPE_OPEN);
-  }else{
-    setSwipeX(swipeIdx, 0);
-    if(openSwipeIdx === swipeIdx) openSwipeIdx=null;
-  }
-
-  swipeActive=false;
-  swipeIdx=null;
-},{passive:true});
-
-/* Tap on open row closes it (unless tapping action buttons) */
 $("sheetPlayersList").addEventListener("click",(e)=>{
-  const renDone = e.target.closest("[data-ren-done]");
-  const ren = e.target.closest("[data-swipe-ren]");
-  const del = e.target.closest("[data-swipe-del]");
-
-  if(renDone){ commitRename(Number(renDone.dataset.renDone)); return; }
-  if(ren){ startRename(Number(ren.dataset.swipeRen)); return; }
-  if(del){ deletePlayer(Number(del.dataset.swipeDel)); return; }
-
-  // tap on open row content closes it
-  const row = e.target.closest("[data-swipe-row]");
-  if(row && row.classList.contains("open") && !e.target.closest("button")){
-    const idx = Number(row.dataset.swipeRow);
-    setSwipeX(idx, 0);
-    openSwipeIdx=null;
-  }
+  const ren = e.target.closest("[data-ren]");
+  const del = e.target.closest("[data-del]");
+  const done = e.target.closest("[data-ren-done]");
+  if(done) commitRename(Number(done.dataset.renDone));
+  if(ren) startRename(Number(ren.dataset.ren));
+  if(del) deletePlayer(Number(del.dataset.del));
 });
 
 $("sheetPlayersList").addEventListener("keydown",(e)=>{
@@ -2074,6 +1944,9 @@ const overlayEl=$("overlay"), popupEl=$("popup");
 const tabCardsEl=$("tabCards"), tabDirectEl=$("tabDirect");
 const cardsView=$("popupCardsView"), directView=$("popupDirectView");
 let lastUndoTap=0;
+
+// FX flags (NEW): detect transitions to trigger glow+haptic once
+let popupFxPrev = { bonus:false, x2:false };
 
 function stackPopupState(){
   popupActionStack.push(JSON.parse(JSON.stringify({cards:popupCards, override:popupOverride, free:$("freeScoreInput").value})));
@@ -2136,6 +2009,16 @@ function applyFree(){
   renderPopupSelection();
 }
 
+function triggerPreviewGlow(){
+  const info=$("popupLiveInfo");
+  info.classList.remove("fxGlow");
+  // force reflow to restart animation
+  void info.offsetWidth;
+  info.classList.add("fxGlow");
+  vib(HAPT.fx);
+  setTimeout(()=>info.classList.remove("fxGlow"), 240);
+}
+
 function renderPopupSelection(){
   const chips=$("selectedChips");
   chips.innerHTML="";
@@ -2153,22 +2036,43 @@ function renderPopupSelection(){
   }
 
   const info=$("popupLiveInfo");
+
+  // Reset FX on manual override (no bonus/x2 semantics)
   if(popupOverride!==null){
     info.className="hint";
     info.textContent=`Vorschau: ${popupOverride} Punkte (manuell)`;
+    popupFxPrev = { bonus:false, x2:false };
     return;
   }
   if(!popupCards.length){
-    info.className="hint"; info.textContent="Vorschau: –"; return;
+    info.className="hint"; info.textContent="Vorschau: –";
+    popupFxPrev = { bonus:false, x2:false };
+    return;
   }
+
   const prev=scoreFromCards(popupCards);
+
+  // Detect FX conditions (NEW)
+  const hasX2 = !prev.isBust && popupCards.some(x=>x==="x2");
+  const hasBonus = !prev.isBust && prev.numbersCount===7;
+
+  // Trigger glow only on "entering" bonus/x2 state
+  const enteredBonus = hasBonus && !popupFxPrev.bonus;
+  const enteredX2    = hasX2 && !popupFxPrev.x2;
+  if(enteredBonus || enteredX2){
+    triggerPreviewGlow();
+  }
+  popupFxPrev = { bonus:hasBonus, x2:hasX2 };
+
   if(prev.isBust){
     info.className="hint bust";
     info.textContent=`Vorschau: BUST (0 Punkte) • ${prev.reason}`;
   }else{
-    const isBonus=prev.numbersCount===7;
-    info.className="hint"+(isBonus?" bonus":"");
-    info.textContent=`Vorschau: ${prev.score} Punkte`+(isBonus?" • +15 Bonus":"");
+    info.className="hint"+(hasBonus?" bonus":"");
+    const parts=[];
+    if(hasX2) parts.push("x2");
+    if(hasBonus) parts.push("+15 Bonus");
+    info.textContent=`Vorschau: ${prev.score} Punkte` + (parts.length ? (" • " + parts.join(" • ")) : "");
   }
 }
 
@@ -2201,6 +2105,7 @@ function openPopup(i, direct){
   popupCards=[...players[i].cards];
   popupOverride=players[i].override;
   popupActionStack=[];
+  popupFxPrev = { bonus:false, x2:false }; // reset FX state each open
   $("popupPlayerBadge").textContent=players[i].name;
   $("freeScoreInput").value = popupOverride!==null ? popupOverride : "";
 
@@ -2214,7 +2119,6 @@ function openPopup(i, direct){
     popupStatePushed=true;
   }
 
-  /* default: cards tab unless explicitly opened as direct */
   setTab(direct ? "direct" : "cards");
   renderPopupSelection();
 }
@@ -2247,7 +2151,7 @@ function closePopup(cancel){
   internalClosePopup(cancel);
 }
 
-/* swipe-to-close */
+/* swipe-to-close (NEW: pointerdown moved to hit area) */
 let dragActive=false, dragStartY=0, dragLastY=0, dragStartT=0;
 function setPopupDragTranslate(y){ popupEl.style.transform = `translateX(-50%) translateY(${y}px)`; }
 function endPopupDrag(shouldClose){
@@ -2258,7 +2162,6 @@ function endPopupDrag(shouldClose){
   setTimeout(()=>{ popupEl.style.transition=""; }, 220);
 }
 
-/* Drag hit area (wider touch, same visuals) */
 $("popupGrabHit").addEventListener("pointerdown",(e)=>{
   if(popupEl.scrollTop > 0) return;
   dragActive=true; dragStartY=e.clientY; dragLastY=e.clientY; dragStartT=performance.now();
@@ -2272,7 +2175,6 @@ popupEl.addEventListener("pointermove",(e)=>{
   const dy=Math.max(0, dragLastY - dragStartY);
   setPopupDragTranslate(Math.min(dy, 220));
 },{passive:true});
-
 popupEl.addEventListener("pointerup",()=>{
   if(!dragActive) return;
   const dy=Math.max(0, dragLastY - dragStartY);
@@ -2380,8 +2282,11 @@ function endRound(){
     const nextTotal=p.total;
     const nextP = Math.min((nextTotal/target)*100, 100);
 
+    const pc=$("pc_"+i);
+    const pbBase=$("pbBase_"+i);
+    const pbLive=$("pbLive_"+i);
+
     if(crossed(prevPct[i], nextP, 50)){
-      const pc=$("pc_"+i);
       pc?.classList.add("tick50");
       setTimeout(()=>pc?.classList.remove("tick50"), 220);
       vib(HAPT.sheetSnap);
@@ -2433,13 +2338,15 @@ function endRound(){
         setTimeout(()=>toast.remove(), 520);
       }
 
-      const pc=$("pc_"+i);
       pc?.classList.add("bustRing","bustFlash");
       setTimeout(()=>pc?.classList.remove("bustRing","bustFlash"), 520);
 
-      const pbT=$("pbT_"+i);
-      pbT?.classList.add("resetBounce");
-      setTimeout(()=>pbT?.classList.remove("resetBounce"), 260);
+      pbBase?.classList.add("resetBounce");
+      pbLive?.classList.add("resetBounce");
+      setTimeout(()=>{
+        pbBase?.classList.remove("resetBounce");
+        pbLive?.classList.remove("resetBounce");
+      }, 260);
 
       vib(HAPT.bust);
     }
@@ -2486,7 +2393,6 @@ function newGame(){
   $("rankingPanel").classList.remove("open");
   $("rankBtn").setAttribute("aria-expanded","false");
   editingIdx = null;
-  openSwipeIdx = null;
   save();
   renderAll();
   if(sheetOpen) renderSheetPlayers();
@@ -2517,19 +2423,15 @@ $("targetPoints").addEventListener("change",()=>{
 $("tabCards").addEventListener("click",(e)=>{ e.preventDefault(); setTab("cards"); });
 $("tabDirect").addEventListener("click",(e)=>{ e.preventDefault(); setTab("direct"); });
 $("applyFreeBtn").addEventListener("click",(e)=>{ e.preventDefault(); applyFree(); });
-
-/* Keyboard flow: Enter/Done applies direct points */
-$("freeScoreInput").addEventListener("keydown",(e)=>{
-  if(e.key === "Enter"){
-    e.preventDefault();
-    applyFree();
-  }
-});
-
 $("clearBtn").addEventListener("click",(e)=>{ e.preventDefault(); clearPopup(); });
 $("cancelBtn").addEventListener("click",(e)=>{ e.preventDefault(); closePopup(true); });
 $("finishBtn").addEventListener("click",(e)=>{ e.preventDefault(); closePopup(false); });
 $("popupUndoBtn").addEventListener("click",(e)=>{ e.preventDefault(); popupUndoTap(); });
+
+// Enter/Done => applyFree (usability)
+$("freeScoreInput").addEventListener("keydown",(e)=>{
+  if(e.key==="Enter") applyFree();
+});
 
 $("lastDirectChip").addEventListener("click",(e)=>{
   e.preventDefault();
@@ -2547,9 +2449,7 @@ $("winnerNewGame").addEventListener("click",(e)=>{
 
 overlayEl.addEventListener("pointerdown",()=>closePopup(true),{passive:true});
 
-/* Delegation: chip remove, open popup (+), tap Runde for Direktpunkte
-   Long-press iOS-like: 320ms
-*/
+/* Delegation: chip remove, open popup (+), tap Runde for Direktpunkte */
 let pressTimer=null;
 let longPressFired=false;
 
