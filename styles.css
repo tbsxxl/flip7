@@ -1,32 +1,44 @@
 /* styles.css */
 :root{
+  /* 기존 */
   --bg:#f6f7f9; --card:#fff; --muted:#eef1f5; --muted2:#dfe4ea;
   --text:#0f172a; --sub:#475569; --sub2:#64748b;
   --action:#937972;
   --mod:#f8b22d;
   --danger:#ef4444;
 
+  /* iOS “Liquid Glass” Material */
+  --glass: rgba(255,255,255,.62);
+  --glass2: rgba(255,255,255,.48);
+  --glassBorder: rgba(255,255,255,.38);
+  --hairline: rgba(15,23,42,.08);
+
+  /* iOS-ish tint */
+  --iosBlue: rgba(0,122,255,.92);
+  --iosBlueShadow: rgba(0,122,255,.18);
+
+  /* Shadow/Depth (weicher + inner highlight) */
   --sh1:0 1px 2px rgba(0,0,0,.06);
-  --sh2:0 12px 28px rgba(0,0,0,.10);
+  --sh2:0 18px 44px rgba(0,0,0,.12);
 
-  --hcBorder: rgba(15,23,42,.12);
-  --hcInset: rgba(15,23,42,.18);
-
+  /* Radius */
   --rSheet:24px;
   --rCard:16px;
   --rBtn:14px;
   --rChip:12px;
 
+  /* Typography (weniger “heavy”) */
   --fsTitle:18px;
   --fsBody:16px;
   --fsSecondary:13px;
-  --wTitle:800;
-  --wBody:700;
-  --wSecondary:650;
+  --wTitle:700;
+  --wBody:600;
+  --wSecondary:500;
 
   --barAlpha:.92;
   --vh: 1vh;
 }
+
 
 /* High Contrast */
 body.highContrast{
@@ -56,7 +68,10 @@ body{
   font-family: system-ui, -apple-system, Arial;
   margin:0;
   padding:14px;
-  background:var(--bg);
+
+  /* iOS-artiger Hintergrund */
+  background: radial-gradient(circle at 20% -10%, #ffffff 0%, #f3f4f6 42%, #eef2f7 100%);
+
   color:var(--text);
   font-variant-numeric: tabular-nums;
   min-height: 100dvh;
@@ -64,7 +79,20 @@ body{
   text-rendering: optimizeLegibility;
   font-size: var(--fsBody);
   scroll-padding-bottom: calc(90px + env(safe-area-inset-bottom));
+  position: relative;
 }
+body::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  opacity: .10;
+  background:
+    repeating-radial-gradient(circle at 20% 30%, rgba(0,0,0,.06) 0 1px, transparent 1px 6px),
+    repeating-radial-gradient(circle at 70% 60%, rgba(0,0,0,.05) 0 1px, transparent 1px 7px);
+}
+
 button,input{touch-action:manipulation}
 h1{
   text-align:center;
@@ -78,18 +106,36 @@ h1{
   *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
 
-/* Topbar / Bottombar dynamic alpha */
 #topbar{
   position:sticky; top:0; z-index:100;
   background: rgba(246,247,249,var(--barAlpha));
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
   padding: calc(8px + env(safe-area-inset-top)) 0 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,.45);
 }
+
 #bottomBar{
   position:sticky; bottom:0; z-index:90;
   background: rgba(246,247,249,var(--barAlpha));
-  backdrop-filter: blur(12px);
-  padding:10px 0 calc(10px + env(safe-area-inset-bottom)) 0;
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  padding:10px 0 calc(12px + env(safe-area-inset-bottom)) 0;
+  border-top: 1px solid rgba(255,255,255,.45);
+}
+
+/* Shared glass surface */
+:is(#leaderStrip, #rankingPanel, #targetRow, #emptyState, .player-box, #statsWrap, #toolsMenu, #winnerCard){
+  background: var(--glass);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid var(--glassBorder);
+  box-shadow: var(--sh1), var(--sh2), inset 0 1px 0 rgba(255,255,255,.55);
+}
+
+body.highContrast :is(#leaderStrip, #rankingPanel, #targetRow, #emptyState, .player-box, #statsWrap, #toolsMenu, #winnerCard){
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
 }
 
 #leaderStrip{
@@ -186,18 +232,20 @@ body.highContrast #leaderStrip{ box-shadow:none; border:1px solid var(--hcBorder
 }
 
 .iconBtn{
-  background:var(--muted);
-  border:none;
+  background: rgba(255,255,255,.55);
+  border: 1px solid rgba(255,255,255,.38);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
   border-radius:12px;
   padding:10px 12px;
   font-weight: var(--wBody);
   cursor:pointer;
   min-width:48px; min-height:48px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.08), inset 0 1px 0 rgba(255,255,255,.55);
 }
 .iconBtn:active{transform:scale(.98)}
-.iconBtn[aria-expanded="true"]{box-shadow:inset 0 0 0 2px rgba(30,136,229,.25)}
-body.highContrast .iconBtn{ box-shadow:inset 0 0 0 1px rgba(15,23,42,.14); }
-body.highContrast .iconBtn:active{ box-shadow:inset 0 0 0 2px var(--hcInset); transform:scale(.99); }
+.iconBtn[aria-expanded="true"]{box-shadow:0 10px 28px rgba(0,0,0,.10), inset 0 0 0 2px rgba(0,122,255,.22)}
+
 
 #rankingPanel{
   margin-top:10px;
@@ -345,11 +393,10 @@ body.highContrast .player-box.leader{ box-shadow:none; }
   color:#fff;font-weight: var(--wTitle);font-size:22px;cursor:pointer;position:relative;
 }
 .plusBtn::before{
-  content:"";
-  position:absolute; inset:1px;
-  border-radius:13px;
-  background:#1e88e5;
+  background: var(--iosBlue);
+  box-shadow: 0 10px 22px var(--iosBlueShadow);
 }
+
 .plusBtn > span{ position:relative; z-index:1; display:inline-block; transform:translateY(-1px); }
 .plusBtn:active{transform:scale(.98)}
 body.highContrast .plusBtn::before{
@@ -596,22 +643,42 @@ body.highContrast #statsWrap{ box-shadow:none; border:1px solid var(--hcBorder);
 .overlay.open{opacity:1}
 
 /* Popup */
+/* Popup -> iOS Bottom Sheet */
 .popup{
   display:none;
-  position:fixed; top:6%; left:50%;
-  transform:translateX(-50%) translateY(12px);
-  width:92%; max-width:560px;
-  background:var(--card);
-  padding:16px;
-  border-radius: 18px;
-  max-height:88%;
+  position:fixed;
+  left:0; right:0; bottom:0;
+  top:auto;
+
+  width:100%;
+  max-width:none;
+
+  background: var(--glass);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+
+  padding:16px 16px calc(14px + env(safe-area-inset-bottom)) 16px;
+
+  border-top-left-radius: 22px;
+  border-top-right-radius: 22px;
+
+  max-height: calc((var(--vh) * 100) - env(safe-area-inset-top));
   overflow:auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+
   z-index:1000;
   opacity:0;
-  transition:opacity .18s ease,transform .18s ease;
+  transform: translateY(24px);
+  transition:opacity .18s ease, transform .18s cubic-bezier(.2,.8,.2,1);
   will-change: transform;
-  border:1px solid rgba(15,23,42,.10);
+
+  border: 1px solid rgba(255,255,255,.40);
+  border-bottom:none;
+  box-shadow: 0 18px 60px rgba(0,0,0,.16), inset 0 1px 0 rgba(255,255,255,.55);
 }
+.popup.open{opacity:1; transform: translateY(0)}
+
 body.highContrast .popup{ box-shadow:none; border:1px solid var(--hcBorder); }
 .popup.open{opacity:1;transform:translateX(-50%) translateY(0)}
 @media (orientation:landscape){
@@ -622,16 +689,21 @@ body.highContrast .popup{ box-shadow:none; border:1px solid var(--hcBorder); }
 .grabBar{width:54px; height:5px; border-radius:999px; background:rgba(15,23,42,.18);}
 
 .popupHeader{
-  position:sticky; top:0; background:var(--card); padding:0 0 10px 0; z-index:6;
-  border-bottom:1px solid rgba(15,23,42,.10);
+  position:sticky; top:0;
+  background: rgba(255,255,255,.35);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  padding:0 0 10px 0; z-index:6;
+  border-bottom:1px solid rgba(255,255,255,.35);
 }
+
 .headerRow{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .tabs{display:flex;gap:8px;margin:10px 0 0 0}
 .tab{
   flex:1;background:var(--muted);border:none;border-radius:12px;padding:10px 12px;
   font-weight: var(--wBody);cursor:pointer;min-height:48px
 }
-.tab.active{background:#1e88e5;color:#fff}
+.tab.active{background: var(--iosBlue); color:#fff}
 body.highContrast .tab{ box-shadow:inset 0 0 0 1px rgba(15,23,42,.12); }
 body.highContrast .tab:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
 
@@ -642,8 +714,15 @@ body.highContrast .tab:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
   font-size: var(--fsSecondary);
   font-weight: var(--wBody);
   color: var(--sub);
-  margin-top:8px;padding:8px 10px;border-radius:12px;background:#fff;border:1px solid var(--muted)
+  margin-top:8px;
+  padding:8px 10px;
+  border-radius:12px;
+  background: rgba(255,255,255,.55);
+  border: 1px solid rgba(255,255,255,.40);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
 }
+
 .hint.bust{background:#ffe3e3;border-color:#ffc3c3;color:#8a1f1f}
 .hint.bonus{background:#e9ffe9;border-color:#c5f3c5;color:#145214}
 .hint.fxGlow{
@@ -698,11 +777,14 @@ body.highContrast .cardBtn:active{ box-shadow:inset 0 0 0 2px var(--hcInset); tr
 .popupFooter{
   position:sticky;
   bottom:-16px;
-  background:var(--card);
-  padding:10px 0 0 0;
+  background: rgba(255,255,255,.35);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  padding:10px 0 calc(10px + env(safe-area-inset-bottom)) 0;
   margin-top:12px;
-  border-top:1px solid rgba(15,23,42,.10);
+  border-top:1px solid rgba(255,255,255,.35);
 }
+
 .popupFooterRow{display:flex;gap:8px;flex-wrap:wrap}
 .popupFooterRow button{
   border:none;border-radius: var(--rBtn);padding:14px 12px;font-weight: var(--wTitle);
@@ -714,7 +796,7 @@ body.highContrast .popupFooterRow button:active{ box-shadow:inset 0 0 0 2px var(
 .footerIcon{min-width:56px;background:var(--muted);color:#111}
 .footerGhost{flex:1;background:var(--muted);color:#111}
 .footerRed{flex:1;background:#ef4444;color:#fff}
-.footerBlue{flex:1;background:#1e88e5;color:#fff}
+.footerBlue{flex:1;background: var(--iosBlue);color:#fff}
 
 /* Winner */
 #winnerScreen{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);justify-content:center;align-items:center;z-index:2000}
