@@ -948,7 +948,10 @@ function closePopup(cancel){
 
 /* swipe-to-close (grabHit) */
 let dragActive=false, dragStartY=0, dragLastY=0, dragStartT=0;
-function setPopupDragTranslate(y){ popupEl.style.transform = `translateY(${y}px)`; }
+function setPopupDragTranslate(y){
+  popupEl.style.transform = `translateY(${y}px)`;
+}
+
 function endPopupDrag(shouldClose){
   dragActive=false;
   popupEl.style.transition = "opacity .18s ease, transform .18s cubic-bezier(.2,.8,.2,1)";
