@@ -14,13 +14,18 @@
   --action:#937972;   /* Bonus +15 & x2 Badge-Farbe */
   --mod:#f8b22d;      /* +2/+4/+6/+8/+10 & x2 Button-Farbe im Popup */
   --danger:#ef4444;
+
+  --hcBorder: rgba(15,23,42,.12);
+  --hcInset: rgba(15,23,42,.18);
+
+  --sheetRadius:24px;
 }
 
 /* High Contrast (Sonne) */
 body.highContrast{
   --text:#0b1220;
   --sub:#334155;
-  --muted2:#cfd6df;
+  --muted2:#c7ced8;          /* Progress-Bar Hintergrund dunkler */
   --sh1:0 0 0 rgba(0,0,0,0);
   --sh2:0 0 0 rgba(0,0,0,0);
 }
@@ -30,10 +35,19 @@ body.compact{
   padding:10px;
 }
 body.compact .player-box{ padding:10px; margin-bottom:8px; }
-body.compact .progress-container{ height:8px; margin:6px 0 6px 0; }
-body.compact .cardchip{ padding:6px 9px; font-size:.85rem; }
+body.compact .progress-container{
+  height:7px;               /* 6–7px */
+  margin:6px 0 6px 0;
+  border-radius:5px;        /* weniger Radius */
+}
+body.compact .progress-bar{ }
+body.compact .card-container{ gap:4px; } /* tighter gap */
+body.compact .cardchip{ padding:5px 8px; font-size:.82rem; } /* tighter chips */
 body.compact #endRoundBtn{ padding:14px 12px; }
-body.compact .plusBtn{ width:44px;height:44px;border-radius:14px; }
+body.compact .plusBtn{ width:44px;height:44px;border-radius:14px; } /* hit 44 */
+body.compact .rankItem{ padding:8px 10px; margin:6px 0; }
+body.compact #leaderStrip{ padding:8px 10px; }
+body.compact .badge{ padding:5px 8px; font-size:.84rem; }
 
 *{-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
@@ -64,9 +78,16 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 }
 
 #leaderStrip{
-  background:var(--card); border-radius:16px; box-shadow:var(--sh1),var(--sh2);
-  padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative;
+  background:var(--card);
+  border-radius:16px;
+  box-shadow:var(--sh1),var(--sh2);
+  padding:10px 12px;
+  display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative;
   overflow:visible;
+}
+body.highContrast #leaderStrip{
+  box-shadow:none;
+  border:1px solid var(--hcBorder);
 }
 
 /* Leader spotlight */
@@ -104,26 +125,56 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 
 #leaderHint{font-weight:900;color:var(--sub);font-size:.9rem;display:none}
 #subLine{display:flex;gap:8px;flex-wrap:wrap}
-.badge{background:var(--muted);border-radius:999px;padding:6px 10px;font-weight:900;font-size:.88rem;letter-spacing:.2px;white-space:nowrap}
+.badge{
+  background:var(--muted);
+  border-radius:999px;
+  padding:6px 10px;
+  font-weight:900;
+  font-size:.88rem;
+  letter-spacing:.2px;
+  white-space:nowrap;
+}
 
 .iconBtn{
-  background:var(--muted); border:none; border-radius:12px; padding:10px 12px; font-weight:950; cursor:pointer;
+  background:var(--muted);
+  border:none;
+  border-radius:12px;
+  padding:10px 12px;
+  font-weight:950;
+  cursor:pointer;
   min-width:48px; min-height:48px;
 }
 .iconBtn:active{transform:scale(.98)}
 .iconBtn[aria-expanded="true"]{box-shadow:inset 0 0 0 2px rgba(30,136,229,.25)}
+body.highContrast .iconBtn{
+  box-shadow:inset 0 0 0 1px rgba(15,23,42,.14);
+}
+body.highContrast .iconBtn:active{
+  box-shadow:inset 0 0 0 2px var(--hcInset);
+  transform:scale(.99);
+}
 
 #rankingPanel{
-  margin-top:10px; background:var(--card); border-radius:16px; box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06);
+  margin-top:10px; background:var(--card); border-radius:16px;
+  box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06);
   padding:0 12px; overflow:hidden; max-height:0; opacity:0; transform:translateY(-4px);
   transition:max-height .28s ease,opacity .22s ease,transform .22s ease,padding .22s ease;
 }
 #rankingPanel.open{padding:12px;max-height:560px;opacity:1;transform:translateY(0)}
+body.highContrast #rankingPanel{
+  box-shadow:none;
+  border:1px solid var(--hcBorder);
+}
 .rankItem{
-  border:1px solid rgba(15,23,42,.08); border-radius:14px; padding:10px 12px; display:flex; align-items:center; gap:10px;
-  margin:8px 0; box-shadow:0 1px 2px rgba(0,0,0,.04);
+  border:1px solid rgba(15,23,42,.10);
+  border-radius:14px;
+  padding:10px 12px;
+  display:flex; align-items:center; gap:10px;
+  margin:8px 0;
+  box-shadow:0 1px 2px rgba(0,0,0,.04);
   position:relative; will-change:transform;
 }
+body.highContrast .rankItem{ box-shadow:none; }
 .rankNo{font-weight:950;width:26px;color:#334155}
 .rankDot{width:10px;height:10px;border-radius:50%}
 .rankName{font-weight:950;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -139,7 +190,9 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
   display:none;
   min-width:240px;
   transform-origin:top right;
+  border:1px solid rgba(15,23,42,.10);
 }
+body.highContrast #toolsMenu{ box-shadow:none; border:1px solid var(--hcBorder); }
 #toolsMenu.open{display:block; animation:menuIn .12s ease}
 @keyframes menuIn{0%{opacity:0;transform:scale(.98)}100%{opacity:1;transform:scale(1)}}
 
@@ -160,38 +213,84 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 .menuSep{height:1px;background:rgba(15,23,42,.10);margin:6px 0}
 
 #targetRow{
-  margin:10px 0 10px 0; background:var(--card); border-radius:16px; box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06);
-  padding:10px 12px; display:flex; align-items:center; gap:10px;
+  margin:10px 0 10px 0;
+  background:var(--card);
+  border-radius:16px;
+  box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06);
+  padding:10px 12px;
+  display:flex; align-items:center; gap:10px;
 }
+body.highContrast #targetRow{ box-shadow:none; border:1px solid var(--hcBorder); }
 #targetPoints{
-  flex:1; padding:10px 12px; border-radius:12px; border:1px solid #d7dbe4; font-weight:950; outline:none;
+  flex:1; padding:10px 12px; border-radius:12px;
+  border:1px solid #d7dbe4; font-weight:950; outline:none;
 }
+body.highContrast #targetPoints{ border-color: rgba(15,23,42,.18); }
 
 #emptyState{
-  display:none; background:var(--card); border-radius:16px; box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06);
+  display:none; background:var(--card); border-radius:16px;
+  box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06);
   padding:14px; margin-top:10px; font-weight:900; color:#334155;
 }
+body.highContrast #emptyState{ box-shadow:none; border:1px solid var(--hcBorder); }
+
 #playersContainer{margin-top:10px}
 
 .player-box{
-  background:var(--card); border-radius:16px; padding:12px; margin-bottom:10px; border-left:6px solid #ccc;
-  box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06); position:relative;
+  background:var(--card);
+  border-radius:16px;
+  padding:12px;
+  margin-bottom:10px;
+  border-left:6px solid #ccc;
+  box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06);
+  position:relative;
+}
+body.highContrast .player-box{
+  box-shadow:none;
+  border:1px solid var(--hcBorder);
+  border-left-width:6px;
 }
 .player-box.leader{box-shadow:var(--sh1),var(--sh2);transform:scale(1.01)}
+body.highContrast .player-box.leader{ box-shadow:none; }
+
 .player-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .player-name{font-weight:980;font-size:1.10rem;display:flex;align-items:center;gap:8px;min-width:0}
 .player-dot{width:10px;height:10px;border-radius:50%}
 .miniBadge{background:var(--muted);border-radius:999px;padding:5px 8px;font-weight:950;font-size:.82rem;letter-spacing:.2px}
 .miniBadge.action{background:var(--action);color:#fff}
 
+/* Plus button: visual 42px, hit 44px */
 .plusBtn{
-  width:48px;height:48px;border-radius:16px;border:none;background:#1e88e5;color:#fff;font-weight:1000;font-size:22px;cursor:pointer
+  width:44px;height:44px;border-radius:14px;border:none;background:transparent;
+  color:#fff;font-weight:1000;font-size:22px;cursor:pointer;position:relative;
 }
+.plusBtn::before{
+  content:"";
+  position:absolute; inset:1px; /* 44 -> 42 visual */
+  border-radius:13px;
+  background:#1e88e5;
+}
+.plusBtn > span{ position:relative; z-index:1; display:inline-block; transform:translateY(-1px); }
 .plusBtn:active{transform:scale(.98)}
+body.highContrast .plusBtn::before{
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08), inset 0 0 0 1px rgba(15,23,42,.16);
+}
+body.highContrast .plusBtn:active{
+  transform:scale(.99);
+}
+body.highContrast .plusBtn:active::before{
+  box-shadow:inset 0 0 0 2px var(--hcInset);
+}
 
 .progress-container{
-  background:var(--muted2);height:10px;border-radius:6px;overflow:hidden;margin:8px 0 6px 0; position:relative;
+  background:var(--muted2);
+  height:10px;
+  border-radius:6px;
+  overflow:hidden;
+  margin:8px 0 6px 0;
+  position:relative;
 }
+body.highContrast .progress-container{ background:var(--muted2); }
 
 /* Tick markers 25/50/75 */
 .progress-container::before{
@@ -206,8 +305,11 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
   opacity:.35;
   pointer-events:none;
 }
+body.compact .progress-container::before{ opacity:.22; } /* ruhiger */
+body.highContrast .progress-container::before{ opacity:.22; } /* nicht dunkler, eher weniger */
+
 .progress-container.tickPulse::before{ animation:tickPulse .45s ease; }
-@keyframes tickPulse{ 0%{opacity:.25} 50%{opacity:.85} 100%{opacity:.35} }
+@keyframes tickPulse{ 0%{opacity:.18} 50%{opacity:.55} 100%{opacity:.22} }
 
 /* extra: 50% thicker for 0.2s */
 .progress-container.tick50::before{
@@ -219,7 +321,7 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
     );
   animation:tick50 .2s ease;
 }
-@keyframes tick50{0%{opacity:.35}50%{opacity:.9}100%{opacity:.35}}
+@keyframes tick50{0%{opacity:.22}50%{opacity:.65}100%{opacity:.22}}
 
 .progress-container.bustRing{ box-shadow:0 0 0 3px rgba(239,68,68,.22); }
 .progress-container.bustFlash::after{
@@ -261,6 +363,13 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 .dim{color:var(--sub);font-weight:850;font-size:.88rem}
 .totalBig{font-weight:1000;font-size:1.06rem}
 
+body.highContrast .sub,
+body.highContrast .dim{ color:var(--sub); }
+
+/* compact score line typography */
+body.compact .player-line{ font-size:.95rem; }
+body.compact .sub, body.compact .dim{ font-size:.86rem; }
+
 .deltaPill{
   display:inline-flex; align-items:center;
   margin-left:8px;
@@ -299,23 +408,59 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
   100%{opacity:0; transform:translateY(-4px)}
 }
 
-/* Chips: one-line scroll */
+/* Chips: one-line scroll + scroll-fade */
+.cardFade{
+  position:relative;
+  margin-top:8px;
+}
 .card-container{
-  display:flex; gap:6px; margin-top:8px;
+  display:flex; gap:6px;
   overflow-x:auto; -webkit-overflow-scrolling:touch;
-  padding-bottom:2px;
+  padding:0 2px 2px 2px;
+  scroll-behavior:smooth;
 }
 .card-container::-webkit-scrollbar{display:none}
+.cardFade::before,
+.cardFade::after{
+  content:"";
+  position:absolute; top:0; bottom:0;
+  width:22px;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .12s ease;
+}
+.cardFade::before{
+  left:0;
+  background:linear-gradient(to right, rgba(246,247,249,1), rgba(246,247,249,0));
+}
+.cardFade::after{
+  right:0;
+  background:linear-gradient(to left, rgba(246,247,249,1), rgba(246,247,249,0));
+}
+.cardFade.showLeft::before{opacity:1}
+.cardFade.showRight::after{opacity:1}
+
+/* adapt fades in HC (same bg color feel) */
+body.highContrast .cardFade::before{
+  background:linear-gradient(to right, rgba(246,247,249,1), rgba(246,247,249,0));
+}
+body.highContrast .cardFade::after{
+  background:linear-gradient(to left, rgba(246,247,249,1), rgba(246,247,249,0));
+}
+
 .cardchip{
-  background:var(--muted); padding:7px 10px; border-radius:999px; font-weight:950; font-size:.9rem; cursor:pointer; user-select:none;
+  background:var(--muted);
+  padding:7px 10px;
+  border-radius:999px;
+  font-weight:950;
+  font-size:.9rem;
+  cursor:pointer;
+  user-select:none;
   flex:0 0 auto;
 }
 .cardchip:active{transform:scale(.98)}
-/* subtle insert animation */
 .cardchip.addAnim{ animation:chipIn .12s ease; }
 @keyframes chipIn{0%{opacity:0;transform:translateX(-4px)}100%{opacity:1;transform:translateX(0)}}
-
-/* remove animation helper */
 @keyframes chipOut{to{opacity:0;transform:scale(.96)}}
 
 #bottomBar{
@@ -325,8 +470,16 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
   padding:10px 0 calc(10px + env(safe-area-inset-bottom)) 0;
 }
 #endRoundBtn{
-  width:100%; border:none; border-radius:16px; padding:16px 12px; font-weight:1000; cursor:pointer; min-height:54px;
-  background:#22c55e; color:#fff; box-shadow:0 12px 28px rgba(34,197,94,.18);
+  width:100%;
+  border:none;
+  border-radius:16px;
+  padding:16px 12px;
+  font-weight:1000;
+  cursor:pointer;
+  min-height:54px;
+  background:#22c55e;
+  color:#fff;
+  box-shadow:0 12px 28px rgba(34,197,94,.18);
   position:relative;
 }
 #endRoundBtn:disabled{background:#cbd5e1;color:#475569;box-shadow:none;cursor:not-allowed}
@@ -344,8 +497,22 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
   35%{opacity:1;transform:translateY(-50%) scale(1)}
   100%{opacity:0;transform:translateY(-50%) scale(1)}
 }
+body.highContrast #endRoundBtn{
+  box-shadow:none;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);
+}
+body.highContrast #endRoundBtn:active{
+  box-shadow:inset 0 0 0 2px rgba(0,0,0,.12);
+}
 
-#statsWrap{margin:12px 0 14px 0;background:var(--card);border-radius:16px;box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06);padding:12px}
+#statsWrap{
+  margin:12px 0 14px 0;
+  background:var(--card);
+  border-radius:16px;
+  box-shadow:var(--sh1),0 10px 25px rgba(0,0,0,.06);
+  padding:12px
+}
+body.highContrast #statsWrap{ box-shadow:none; border:1px solid var(--hcBorder); }
 #statsHead{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
 #stats{display:none;margin-top:10px;font-weight:900;line-height:1.55}
 
@@ -358,10 +525,19 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 .popup{
   display:none; position:fixed; top:6%; left:50%;
   transform:translateX(-50%) translateY(12px);
-  width:92%; max-width:560px; background:var(--card); padding:16px; border-radius:18px; max-height:88%; overflow:auto;
-  z-index:1000; opacity:0; transition:opacity .18s ease,transform .18s ease;
+  width:92%; max-width:560px;
+  background:var(--card);
+  padding:16px;
+  border-radius:18px;
+  max-height:88%;
+  overflow:auto;
+  z-index:1000;
+  opacity:0;
+  transition:opacity .18s ease,transform .18s ease;
   will-change: transform;
+  border:1px solid rgba(15,23,42,.10);
 }
+body.highContrast .popup{ box-shadow:none; border:1px solid var(--hcBorder); }
 .popup.open{opacity:1;transform:translateX(-50%) translateY(0)}
 @media (orientation:landscape){
   .popup{ top:3%; max-height:94%; }
@@ -372,12 +548,14 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 
 .popupHeader{
   position:sticky; top:0; background:var(--card); padding:0 0 10px 0; z-index:6;
-  border-bottom:1px solid rgba(15,23,42,.08);
+  border-bottom:1px solid rgba(15,23,42,.10);
 }
 .headerRow{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .tabs{display:flex;gap:8px;margin:10px 0 0 0}
 .tab{flex:1;background:var(--muted);border:none;border-radius:12px;padding:10px 12px;font-weight:950;cursor:pointer;min-height:48px}
 .tab.active{background:#1e88e5;color:#fff}
+body.highContrast .tab{ box-shadow:inset 0 0 0 1px rgba(15,23,42,.12); }
+body.highContrast .tab:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
 
 .selectedWrap{background:var(--bg);border-radius:14px;padding:10px;margin:10px 0}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -386,7 +564,6 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
   padding:8px 10px;font-weight:950;cursor:pointer;user-select:none;
 }
 .chip:active{transform:scale(.98)}
-/* insert/remove for popup chips */
 .chip.addAnim{ animation:chipIn .12s ease; }
 .chip.removing{ animation:chipOut .12s ease forwards; }
 
@@ -399,10 +576,11 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 
 .cardBtn{
   border:none;border-radius:14px;padding:16px 0;font-weight:1000;font-size:1.05rem;cursor:pointer;min-height:48px;
-  box-shadow:inset 0 0 0 1px rgba(15,23,42,.08);
+  box-shadow:inset 0 0 0 1px rgba(15,23,42,.10);
 }
 .cardBtn:active{transform:scale(.98)}
-.cardBtn.modBtn{background:var(--mod)!important;color:#1a1a1a!important;box-shadow:inset 0 0 0 1px rgba(15,23,42,.10)}
+body.highContrast .cardBtn:active{ box-shadow:inset 0 0 0 2px var(--hcInset); transform:scale(.99); }
+.cardBtn.modBtn{background:var(--mod)!important;color:#1a1a1a!important;box-shadow:inset 0 0 0 1px rgba(15,23,42,.12)}
 .cardBtn.x2{grid-column:auto}
 
 .directRow{display:flex;gap:8px;align-items:center}
@@ -424,24 +602,33 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
   background:var(--card);
   padding:10px 0 0 0;
   margin-top:12px;
-  border-top:1px solid rgba(15,23,42,.08);
+  border-top:1px solid rgba(15,23,42,.10);
 }
 .popupFooterRow{display:flex;gap:8px;flex-wrap:wrap}
 .popupFooterRow button{
-  border:none;border-radius:14px;padding:14px 12px;font-weight:1000;cursor:pointer;min-height:52px
+  border:none;border-radius:14px;padding:14px 12px;font-weight:1000;cursor:pointer;min-height:52px;
+  box-shadow:inset 0 0 0 1px rgba(15,23,42,.10);
 }
+.popupFooterRow button:active{transform:scale(.99)}
+body.highContrast .popupFooterRow button:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
 .footerIcon{min-width:56px;background:var(--muted);color:#111}
 .footerGhost{flex:1;background:var(--muted);color:#111}
 .footerRed{flex:1;background:#ef4444;color:#fff}
 .footerBlue{flex:1;background:#1e88e5;color:#fff}
 
-/* Winner rising glow + lift */
+/* Winner */
 #winnerScreen{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);justify-content:center;align-items:center;z-index:2000}
 #winnerCard{
-  background:var(--card); padding:34px 26px; border-radius:24px; text-align:center; box-shadow:var(--sh2);
+  background:var(--card);
+  padding:34px 26px;
+  border-radius:24px;
+  text-align:center;
+  box-shadow:var(--sh2);
   position:relative; overflow:hidden;
   animation:winnerLift .35s ease;
+  border:1px solid rgba(15,23,42,.10);
 }
+body.highContrast #winnerCard{ box-shadow:none; border:1px solid var(--hcBorder); }
 @keyframes winnerLift{0%{transform:translateY(8px);opacity:.8}100%{transform:translateY(0);opacity:1}}
 #winnerCard::before{
   content:"";
@@ -452,8 +639,6 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
   pointer-events:none;
 }
 @keyframes winnerGlow{0%{opacity:0;transform:translateY(12px)}35%{opacity:1}100%{opacity:0;transform:translateY(-12px)}}
-
-/* minimal confetti stays (optional) */
 .confetti{
   position:absolute; width:6px; height:10px; border-radius:2px;
   top:40%; left:50%;
@@ -466,7 +651,7 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
   100%{opacity:0; transform:translate(var(--dx), var(--dy)) rotate(var(--rot))}
 }
 
-/* Round toast motion */
+/* Round toast */
 #roundToast{
   position:fixed; left:14px; right:14px;
   bottom: calc(16px + env(safe-area-inset-bottom));
@@ -495,59 +680,146 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 }
 #roundToast .tBtn:active{transform:scale(.98)}
 
-/* Bottom sheet (Player management + settings) */
+/* Bottom sheet (iOS-like + snap points) */
 #sheetOverlay{
-  display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:3000; opacity:0; transition:opacity .18s ease;
+  display:none;
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.35);
+  backdrop-filter: blur(8px);
+  z-index:3000;
+  opacity:0;
+  transition:opacity .18s ease;
 }
 #sheetOverlay.open{opacity:1}
+
 #sheet{
-  position:fixed; left:0; right:0; bottom:0; z-index:3100;
-  background:var(--card);
-  border-top-left-radius:18px; border-top-right-radius:18px;
-  box-shadow:0 -18px 40px rgba(0,0,0,.22);
+  position:fixed; left:0; right:0; bottom:0;
+  z-index:3100;
+  background:rgba(255,255,255,.98);
+  border-top-left-radius:var(--sheetRadius);
+  border-top-right-radius:var(--sheetRadius);
   transform:translateY(110%);
   transition:transform .22s ease;
-  padding:10px 14px calc(14px + env(safe-area-inset-bottom)) 14px;
-  max-height:88dvh;
-  overflow:auto;
+  max-height:90dvh;
+  height:90dvh; /* full snap */
+  overflow:hidden;
+  border:1px solid rgba(15,23,42,.12);
+  border-bottom:none;
 }
-#sheet.open{transform:translateY(0)}
-.sheetGrabWrap{display:flex;justify-content:center;padding:2px 0 10px 0}
-.sheetGrab{width:54px;height:5px;border-radius:999px;background:rgba(15,23,42,.18)}
-.sheetHead{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.sheetTitle{font-weight:1000;font-size:1.05rem}
-.sheetClose{border:none;background:var(--muted);border-radius:12px;min-height:44px;min-width:44px;font-weight:1000;cursor:pointer}
-.sheetClose:active{transform:scale(.98)}
+body.highContrast #sheet{ border-color: var(--hcBorder); }
 
-.sheetSection{margin-top:12px}
-.sheetSection h4{margin:0 0 8px 0;font-size:.95rem}
+#sheet.open{transform:translateY(var(--sheetTranslate, 0px));}
+
+.sheetHeader{
+  position:sticky; top:0;
+  background:rgba(255,255,255,.98);
+  z-index:5;
+  padding:10px 14px 8px 14px;
+}
+.sheetGrabWrap{display:flex;justify-content:center;padding:2px 0 8px 0}
+.sheetGrab{width:54px;height:5px;border-radius:999px;background:rgba(15,23,42,.18)}
+.sheetHeadRow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sheetTitle{
+  font-weight:1000;
+  font-size:1.05rem;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.sheetClose{
+  border:none;background:var(--muted);
+  border-radius:12px;min-height:44px;min-width:44px;
+  font-weight:1000;cursor:pointer;
+  box-shadow:inset 0 0 0 1px rgba(15,23,42,.10);
+}
+.sheetClose:active{transform:scale(.99)}
+body.highContrast .sheetClose:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
+
+.sheetDivider{height:1px;background:rgba(15,23,42,.10);margin-top:10px}
+
+.sheetBody{
+  height:calc(90dvh - 70px);
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:0 14px calc(14px + env(safe-area-inset-bottom)) 14px;
+}
+
+.sheetSection{margin-top:14px}
+.sheetSection h4{
+  margin:0 0 8px 0;
+  font-size:.92rem;
+  color:var(--sub);
+  font-weight:950;
+}
+body.highContrast .sheetSection h4{ color: var(--sub); }
+
 .row{
   display:flex; gap:8px; align-items:center; margin:8px 0;
 }
 .row input{
-  flex:1; padding:12px 12px; border-radius:14px; border:1px solid #d7dbe4; font-weight:950; outline:none;
+  flex:1; padding:12px 12px;
+  border-radius:14px; border:1px solid #d7dbe4;
+  font-weight:950; outline:none;
 }
+body.highContrast .row input{ border-color: rgba(15,23,42,.18); }
 .row button{
-  border:none; border-radius:14px; padding:12px 14px; font-weight:1000; cursor:pointer; min-height:48px;
-  background:#22c55e; color:#fff; white-space:nowrap;
+  border:none; border-radius:14px;
+  padding:12px 14px; font-weight:1000;
+  cursor:pointer; min-height:48px;
+  background:#22c55e; color:#fff;
+  white-space:nowrap;
+  box-shadow:inset 0 0 0 1px rgba(15,23,42,.10);
 }
 .row button:disabled{opacity:.5;cursor:not-allowed}
+.row button:active{transform:scale(.99)}
+body.highContrast .row button:active{ box-shadow:inset 0 0 0 2px rgba(0,0,0,.12); }
+
 .listItem{
   display:flex; align-items:center; gap:10px;
   padding:10px 10px;
   border-radius:14px;
   border:1px solid rgba(15,23,42,.10);
   margin:8px 0;
+  background:#fff;
 }
+body.compact .listItem{ padding:8px 10px; margin:6px 0; }
 .liDot{width:10px;height:10px;border-radius:50%}
 .liName{font-weight:1000;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .liBtns{display:flex;gap:8px}
 .liBtns button{
   border:none; border-radius:12px; min-height:44px; min-width:44px;
   background:var(--muted); font-weight:1000; cursor:pointer;
+  box-shadow:inset 0 0 0 1px rgba(15,23,42,.10);
 }
-.liBtns button:active{transform:scale(.98)}
-.liBtns .del{background:rgba(239,68,68,.12); color:#8a1f1f}
+.liBtns button:active{transform:scale(.99)}
+body.highContrast .liBtns button:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
+.liBtns .del{background:transparent; color:#b91c1c}
+.liBtns .del:active{background:rgba(239,68,68,.08)}
+
+.renameRow{
+  display:flex; gap:8px; align-items:center; flex:1; min-width:0;
+}
+.renameRow input{
+  flex:1;
+  padding:10px 10px;
+  border-radius:12px;
+  border:1px solid rgba(15,23,42,.18);
+  font-weight:950;
+  outline:none;
+  min-width:0;
+}
+.renameRow button{
+  border:none;
+  border-radius:12px;
+  min-height:44px;
+  padding:0 12px;
+  font-weight:1000;
+  background:var(--muted);
+  cursor:pointer;
+  box-shadow:inset 0 0 0 1px rgba(15,23,42,.10);
+}
+.renameRow button:active{transform:scale(.99)}
+body.highContrast .renameRow button:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
 
 .toggleRow{
   display:flex; align-items:center; justify-content:space-between; gap:10px;
@@ -555,21 +827,46 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
   border-radius:14px;
   border:1px solid rgba(15,23,42,.10);
   margin:8px 0;
+  background:#fff;
 }
-.toggleRow .tLabel{font-weight:950}
+.toggleRow .tLabel{font-weight:950; color: var(--text); opacity:.82} /* nicht zu niedrig */
 .switch{
   width:52px;height:30px;border-radius:999px;
   background:#cbd5e1; position:relative; cursor:pointer; flex:0 0 auto;
+  box-shadow:inset 0 0 0 1px rgba(15,23,42,.10);
 }
 .switch::after{
   content:"";
   position:absolute; top:3px; left:3px;
   width:24px;height:24px;border-radius:50%;
-  background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.18);
+  background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.14); /* softer */
   transition:left .18s ease;
 }
 .switch.on{background:#22c55e}
 .switch.on::after{left:25px}
+.switch:active{ box-shadow:inset 0 0 0 2px rgba(15,23,42,.14); }
+body.highContrast .switch:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
+
+/* iOS Settings-like destructive action: red text, no red fill */
+.sheetDestructive{
+  width:100%;
+  text-align:left;
+  padding:14px 12px;
+  border-radius:14px;
+  border:1px solid rgba(15,23,42,.10);
+  background:#fff;
+  font-weight:1000;
+  color:#b91c1c;
+  cursor:pointer;
+}
+.sheetDestructive:active{ background:rgba(239,68,68,.06); }
+body.highContrast .sheetDestructive:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
+
+/* compact: reduce ranking panel typography inside open state */
+body.compact .rankNo{ width:22px; }
+body.compact .rankName{ font-size:.95rem; }
+body.compact .rankScore{ font-size:.95rem; }
 </style>
 </head>
 
@@ -644,35 +941,47 @@ h1{text-align:center;margin:8px 0 12px 0;font-size:1.35rem}
 
 <!-- Bottom sheet -->
 <div id="sheetOverlay"></div>
-<div id="sheet">
-  <div class="sheetGrabWrap"><div class="sheetGrab"></div></div>
-  <div class="sheetHead">
-    <div class="sheetTitle">Spieler & Einstellungen</div>
-    <button class="sheetClose" id="sheetCloseBtn" type="button">✕</button>
+<div id="sheet" aria-hidden="true">
+  <div class="sheetHeader" id="sheetHeader">
+    <div class="sheetGrabWrap" id="sheetGrabArea"><div class="sheetGrab"></div></div>
+    <div class="sheetHeadRow">
+      <div class="sheetTitle" id="sheetTitle">Spieler</div>
+      <button class="sheetClose" id="sheetCloseBtn" type="button" aria-label="Schließen">✕</button>
+    </div>
+    <div class="sheetDivider"></div>
   </div>
 
-  <div class="sheetSection">
-    <h4>Spieler (nur vor Spielstart)</h4>
-    <div class="row">
-      <input id="sheetAddName" type="text" placeholder="Spielername" autocomplete="off" />
-      <button id="sheetAddBtn" type="button">Hinzufügen</button>
+  <div class="sheetBody" id="sheetBody">
+    <div class="sheetSection">
+      <h4>Spieler (nur vor Spielstart)</h4>
+      <div class="row" id="sheetAddRow">
+        <input id="sheetAddName" type="text" placeholder="Spielername" autocomplete="off" />
+        <button id="sheetAddBtn" type="button">Hinzufügen</button>
+      </div>
+      <div id="sheetPlayersList"></div>
+      <div style="font-weight:900;color:var(--sub);font-size:.9rem;">
+        Während des Spiels ist Spielerverwaltung gesperrt.
+      </div>
     </div>
-    <div id="sheetPlayersList"></div>
-    <div style="font-weight:900;color:var(--sub);font-size:.9rem;">
-      Während des Spiels ist Spielerverwaltung gesperrt.
-    </div>
-  </div>
 
-  <div class="sheetSection">
-    <h4>Design</h4>
-    <div class="toggleRow">
-      <div class="tLabel">Compact Mode</div>
-      <div id="toggleCompact" class="switch" role="switch" aria-checked="false" tabindex="0"></div>
+    <div class="sheetSection">
+      <h4>Design</h4>
+      <div class="toggleRow">
+        <div class="tLabel">Compact Mode</div>
+        <div id="toggleCompact" class="switch" role="switch" aria-checked="false" tabindex="0"></div>
+      </div>
+      <div class="toggleRow">
+        <div class="tLabel">High Contrast</div>
+        <div id="toggleContrast" class="switch" role="switch" aria-checked="false" tabindex="0"></div>
+      </div>
     </div>
-    <div class="toggleRow">
-      <div class="tLabel">High Contrast</div>
-      <div id="toggleContrast" class="switch" role="switch" aria-checked="false" tabindex="0"></div>
+
+    <div class="sheetSection">
+      <h4>Spiel</h4>
+      <button id="sheetNewGameBtn" class="sheetDestructive" type="button">New Game</button>
     </div>
+
+    <div style="height:10px"></div>
   </div>
 </div>
 
@@ -748,8 +1057,17 @@ function vib(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} 
 function lockScroll(lock){ document.body.style.overflow = lock ? "hidden" : ""; }
 const reduceMotion = () => window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/* Haptik: nur Commit */
-const HAPT = { finish:18, bust:28, win:40, tick:10, endPress:15 };
+/* Haptik: sparsam (iOS-like) */
+const HAPT = {
+  finish:18,
+  bust:28,
+  win:40,
+  tick:10,
+  endPress:15,
+  sheetOpen:12,
+  sheetSnap:10,
+  delete:18
+};
 
 /* Number colors */
 const numStyle = {
@@ -828,9 +1146,9 @@ function pushUndoRound(){
   undoRoundStack.push(snapshot());
   if(undoRoundStack.length>30) undoRoundStack.shift();
 }
-function save(){ localStorage.setItem("flip7_state_v6", JSON.stringify(snapshot())); }
+function save(){ localStorage.setItem("flip7_state_v7", JSON.stringify(snapshot())); }
 function load(){
-  const raw=localStorage.getItem("flip7_state_v6");
+  const raw=localStorage.getItem("flip7_state_v7");
   if(!raw) return;
   try{ restore(JSON.parse(raw)); }catch(e){}
 }
@@ -902,8 +1220,10 @@ function animateCountUpText(el, from, to, ms){
 /* ---------- Top render ---------- */
 function renderTop(){
   const target=Number($("targetPoints").value)||200;
-  $("roundBadge").textContent = "Runde: "+roundNumber;
-  $("goalBadge").textContent  = "Ziel: "+target;
+
+  const compact = document.body.classList.contains("compact");
+  $("roundBadge").textContent = compact ? String(roundNumber) : ("Runde: "+roundNumber);
+  $("goalBadge").textContent  = compact ? String(target) : ("Ziel: "+target);
 
   if(!players.length){
     $("leaderHint").style.display="block";
@@ -934,7 +1254,6 @@ function renderTop(){
 
   $("leaderName").textContent = leader.name;
 
-  // score minimal count-up (120–180ms)
   const scoreEl = $("leaderScore");
   scoreEl.classList.toggle("crossfade", changed || scoreChanged);
   setTimeout(()=>scoreEl.classList.remove("crossfade"), 170);
@@ -965,11 +1284,33 @@ function renderRanking(){
 /* Track bar % to add snap+glow when changed */
 const prevBarPct = new Map();
 
+/* ---------- Chips fade helpers ---------- */
+function updateFadeFor(wrapper){
+  const sc = wrapper.querySelector(".card-container");
+  if(!sc) return;
+  const max = Math.max(0, sc.scrollWidth - sc.clientWidth);
+  const left = sc.scrollLeft;
+  wrapper.classList.toggle("showLeft", left > 2);
+  wrapper.classList.toggle("showRight", left < max - 2);
+}
+function wireChipFades(){
+  document.querySelectorAll(".cardFade").forEach(w=>{
+    const sc = w.querySelector(".card-container");
+    if(!sc) return;
+    const on = ()=>updateFadeFor(w);
+    sc.removeEventListener("scroll", on);
+    sc.addEventListener("scroll", on, {passive:true});
+    requestAnimationFrame(on);
+  });
+}
+
 /* ---------- Players render ---------- */
 function renderPlayers(){
   const target=Number($("targetPoints").value)||200;
   const rank=getRanking();
   const leaderName = rank.length ? rank[0].name : null;
+
+  const compact = document.body.classList.contains("compact");
 
   const wrap=$("playersContainer");
   wrap.innerHTML="";
@@ -992,8 +1333,20 @@ function renderPlayers(){
     const pct = target ? Math.min((total/target)*100,100) : 0;
     const prev = prevBarPct.get(p.name);
     const barGlow = (prev!=null && Math.abs(prev-pct) > 0.01);
-
     prevBarPct.set(p.name, pct);
+
+    const left = Math.max(target-total,0);
+
+    // Score line compact format: X · Y/Z (−N)
+    const leftLabel = compact
+      ? `<button class="sub" data-direct="1" data-i="${i}" style="border:none;background:transparent;padding:0;text-decoration:underline;cursor:pointer">${live}</button>
+         <span id="delta_${i}"></span>`
+      : `<button class="sub" data-direct="1" data-i="${i}" style="border:none;background:transparent;padding:0;text-decoration:underline;cursor:pointer">Runde: ${live}</button>
+         <span id="delta_${i}"></span>`;
+
+    const rightLabel = compact
+      ? `<span><span class="totalBig" id="total_${i}">${total}</span>/<span>${target}</span> <span class="dim">(−<span id="left_${i}">${left}</span>)</span></span>`
+      : `<span><span class="totalBig" id="total_${i}">${total}</span>/<span>${target}</span> <span class="dim">(noch <span id="left_${i}">${left}</span>)</span></span>`;
 
     div.innerHTML=`
       <div class="player-top">
@@ -1002,7 +1355,7 @@ function renderPlayers(){
           <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</span>
           ${bonusBadge} ${manualBadge}
         </div>
-        <button class="plusBtn" type="button" data-i="${i}" aria-label="Punkte/Karten">+</button>
+        <button class="plusBtn" type="button" data-i="${i}" aria-label="Punkte/Karten"><span>+</span></button>
       </div>
 
       <div class="progress-container ${barGlow ? "barGlow":""}" id="pc_${i}">
@@ -1012,24 +1365,22 @@ function renderPlayers(){
       <div class="divider"></div>
 
       <div class="player-line">
-        <span class="sub">
-          <button class="sub" data-direct="1" data-i="${i}" style="border:none;background:transparent;padding:0;text-decoration:underline;cursor:pointer">Runde: ${live}</button>
-          <span id="delta_${i}"></span>
-        </span>
-        <span>
-          <span class="totalBig" id="total_${i}">${total}</span>/<span>${target}</span>
-          <span class="dim">(noch <span id="left_${i}">${Math.max(target-total,0)}</span>)</span>
-        </span>
+        <span class="sub">${leftLabel}</span>
+        ${rightLabel}
       </div>
 
       ${p.cards.length?`
-        <div class="card-container" id="chips_${i}">
-          ${p.cards.map((c,ci)=>`<span class="cardchip" data-rem="${ci}" data-i="${i}">${c}</span>`).join("")}
+        <div class="cardFade" id="fade_${i}">
+          <div class="card-container" id="chips_${i}">
+            ${p.cards.map((c,ci)=>`<span class="cardchip" data-rem="${ci}" data-i="${i}">${c}</span>`).join("")}
+          </div>
         </div>
       `:""}
     `;
     wrap.appendChild(div);
   });
+
+  wireChipFades();
 }
 
 /* ---------- Stats ---------- */
@@ -1049,7 +1400,6 @@ function updateLocks(){
   $("emptyState").style.display = players.length? "none" : "block";
   $("endRoundBtn").disabled = players.length===0;
 
-  // player management only pre-start (before first round ends)
   const canManage = (!gameLocked && roundNumber===0);
   $("sheetAddBtn").disabled = !canManage;
 
@@ -1060,7 +1410,6 @@ function updateLocks(){
   $("undoBtn").disabled = undoStack.length===0;
   $("undoRoundBtn").disabled = undoRoundStack.length===0;
 
-  // disable manage button in menu? (still open sheet to show message)
   $("manageBtn").disabled = false;
 }
 
@@ -1132,43 +1481,199 @@ $("rankBtn").addEventListener("click",(e)=>{
   closeToolsMenu();
 }, false);
 
-/* ---------- Bottom sheet (player management + settings) ---------- */
+/* ---------- Bottom sheet (snap points + interactive drag) ---------- */
 const sheetOverlay=$("sheetOverlay");
 const sheet=$("sheet");
+const sheetBody=$("sheetBody");
+const sheetTitle=$("sheetTitle");
+let sheetOpen=false;
+let sheetSnap="half"; // "half" | "full"
+let sheetDrag=false;
+let sheetStartY=0;
+let sheetStartTranslate=0;
+let sheetLastY=0;
+let sheetStartT=0;
 
+function computeSnapTranslate(which){
+  // sheet height is 90vh. Half shows 55vh -> translate by (90-55)=35vh.
+  const vh = window.innerHeight;
+  const fullH = Math.round(vh * 0.90);
+  const halfVisible = Math.round(vh * 0.55);
+  const halfTranslate = Math.max(0, fullH - halfVisible); // px down
+  return (which==="full") ? 0 : halfTranslate;
+}
+function applySheetTranslate(px, withTransition){
+  if(withTransition) sheet.style.transition = "transform .22s ease";
+  else sheet.style.transition = "none";
+  sheet.style.setProperty("--sheetTranslate", px+"px");
+}
+function setSheetTitleBySnap(which){
+  // minimal “crossfade”
+  sheetTitle.classList.add("crossfade");
+  sheetTitle.textContent = (which==="full") ? "Spieler & Einstellungen" : "Spieler";
+  setTimeout(()=>sheetTitle.classList.remove("crossfade"), 160);
+}
+function snapSheet(which, reason){
+  sheetSnap = which;
+  const px = computeSnapTranslate(which);
+  applySheetTranslate(px, true);
+  setSheetTitleBySnap(which);
+  if(!reduceMotion() && reason==="user") vib(HAPT.sheetSnap);
+  // allow scroll in body always; iOS feel comes from snap points + drag
+}
 function openSheet(){
   closeToolsMenu();
   sheetOverlay.style.display="block";
   requestAnimationFrame(()=>sheetOverlay.classList.add("open"));
   sheet.classList.add("open");
+  sheetOverlay.classList.add("open");
+  sheet.setAttribute("aria-hidden","false");
   lockScroll(true);
+  sheetOpen=true;
   renderSheetPlayers();
+  vib(HAPT.sheetOpen);
+  snapSheet("half", "program");
 }
 function closeSheet(){
+  sheetOpen=false;
   sheet.classList.remove("open");
   sheetOverlay.classList.remove("open");
+  sheet.setAttribute("aria-hidden","true");
   setTimeout(()=>{ sheetOverlay.style.display="none"; }, 180);
   lockScroll(false);
   save();
 }
+function rubberBand(dy){
+  // simple rubber band effect
+  const sign = dy < 0 ? -1 : 1;
+  const abs = Math.abs(dy);
+  const damp = abs / (abs + 260);
+  return sign * abs * (1 - damp);
+}
+
+function beginSheetDrag(clientY){
+  sheetDrag=true;
+  sheetStartY=clientY;
+  sheetLastY=clientY;
+  sheetStartT=performance.now();
+  sheetStartTranslate = computeSnapTranslate(sheetSnap);
+  applySheetTranslate(sheetStartTranslate, false);
+}
+function moveSheetDrag(clientY){
+  if(!sheetDrag) return;
+  sheetLastY=clientY;
+  const dy = sheetLastY - sheetStartY;
+  let next = sheetStartTranslate + dy;
+
+  // rubber band beyond bounds
+  if(next < 0) next = rubberBand(next);
+  const half = computeSnapTranslate("half");
+  if(next > half) next = half + rubberBand(next - half);
+
+  applySheetTranslate(next, false);
+}
+function endSheetDrag(){
+  if(!sheetDrag) return;
+  sheetDrag=false;
+
+  const dy = sheetLastY - sheetStartY;
+  const dt = Math.max(1, performance.now() - sheetStartT);
+  const v = dy / dt;
+
+  const half = computeSnapTranslate("half");
+  const current = sheetStartTranslate + dy;
+
+  // thresholds: close if strong downward from half, else snap half/full
+  if(sheetSnap==="half"){
+    const closeThresh = half + 110;
+    const shouldClose = (current > closeThresh) || (v > 0.85);
+    if(shouldClose){ applySheetTranslate(half+300, true); setTimeout(()=>closeSheet(), 180); return; }
+  }
+
+  // decide snap
+  // If drag up enough or flick up => full
+  const toFull = (current < (half * 0.55)) || (v < -0.65);
+  const toHalf = !toFull;
+
+  if(toFull) snapSheet("full", "user");
+  else snapSheet("half", "user");
+
+  sheet.style.transition = "";
+}
+
+/* Drag handle: only on header/grabber */
+$("sheetGrabArea").addEventListener("pointerdown",(e)=>{
+  if(!sheetOpen) return;
+  // if body scrolled, allow drag only when at top to avoid fighting scroll
+  if(sheetBody.scrollTop > 0) return;
+  beginSheetDrag(e.clientY);
+  sheet.setPointerCapture?.(e.pointerId);
+},{passive:true});
+
+sheet.addEventListener("pointermove",(e)=>{
+  if(!sheetDrag) return;
+  moveSheetDrag(e.clientY);
+},{passive:true});
+
+sheet.addEventListener("pointerup",()=>{
+  if(!sheetDrag) return;
+  endSheetDrag();
+},{passive:true});
+
+/* Optional: quick snap to full when user pulls list up at top (like iOS) */
+sheetBody.addEventListener("scroll",()=>{
+  if(!sheetOpen) return;
+  if(sheetBody.scrollTop === 0 && sheetSnap==="half"){
+    // user likely wants more space; do nothing automatically to avoid surprise
+  }
+},{passive:true});
+
+window.addEventListener("resize",()=>{
+  if(!sheetOpen) return;
+  snapSheet(sheetSnap, "program");
+}, {passive:true});
+
+/* ---------- Sheet players (inline rename) ---------- */
+let editingIdx = null;
 
 function renderSheetPlayers(){
   const list=$("sheetPlayersList");
   const canManage = (!gameLocked && roundNumber===0);
   $("sheetAddBtn").disabled = !canManage;
 
-  list.innerHTML = players.length ? players.map((p,idx)=>`
-    <div class="listItem">
-      <div class="liDot" style="background:${p.color}"></div>
-      <div class="liName">${p.name}</div>
-      <div class="liBtns">
-        <button type="button" data-ren="${idx}" ${canManage?"":"disabled"} title="Umbenennen">✎</button>
-        <button type="button" class="del" data-del="${idx}" ${canManage?"":"disabled"} title="Entfernen">✕</button>
-      </div>
-    </div>
-  `).join("") : `<div style="font-weight:900;color:var(--sub);">Noch keine Spieler.</div>`;
+  if(!players.length){
+    list.innerHTML = `<div style="font-weight:900;color:var(--sub);">Noch keine Spieler.</div>`;
+    return;
+  }
 
-  // footer note already visible
+  list.innerHTML = players.map((p,idx)=>{
+    const isEdit = (editingIdx === idx);
+    const nameCell = isEdit
+      ? `
+        <div class="renameRow">
+          <input data-ren-inp="${idx}" value="${escapeHtml(p.name)}" />
+          <button type="button" data-ren-done="${idx}">Done</button>
+        </div>`
+      : `<div class="liName">${escapeHtml(p.name)}</div>`;
+
+    return `
+      <div class="listItem" data-li="${idx}">
+        <div class="liDot" style="background:${p.color}"></div>
+        ${nameCell}
+        <div class="liBtns">
+          <button type="button" data-ren="${idx}" ${canManage?"":"disabled"} title="Umbenennen">✎</button>
+          <button type="button" class="del" data-del="${idx}" ${canManage?"":"disabled"} title="Entfernen">Löschen</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  if(editingIdx !== null){
+    const inp = list.querySelector(`[data-ren-inp="${editingIdx}"]`);
+    if(inp){
+      setTimeout(()=>{ inp.focus(); inp.select(); }, 60);
+    }
+  }
 }
 
 function addPlayerFromSheet(){
@@ -1184,20 +1689,28 @@ function addPlayerFromSheet(){
 
   players.push({name, color:free, cards:[], total:0, rounds:[], busts:0, override:null});
   $("sheetAddName").value="";
+  editingIdx = null;
   renderAll();
   renderSheetPlayers();
   save();
 }
 
-function renamePlayer(idx){
+function startRename(idx){
   const canManage = (!gameLocked && roundNumber===0);
   if(!canManage) return;
-
-  const current = players[idx].name;
-  const next = prompt("Neuer Name:", current);
-  if(!next) return;
+  editingIdx = idx;
+  renderSheetPlayers();
+}
+function commitRename(idx){
+  const canManage = (!gameLocked && roundNumber===0);
+  if(!canManage) return;
+  const inp = $("sheetPlayersList").querySelector(`[data-ren-inp="${idx}"]`);
+  if(!inp) return;
+  const next = inp.value.trim();
+  if(!next){ editingIdx = null; renderSheetPlayers(); return; }
   pushUndo();
-  players[idx].name = next.trim();
+  players[idx].name = next;
+  editingIdx = null;
   renderAll();
   renderSheetPlayers();
   save();
@@ -1209,8 +1722,11 @@ function deletePlayer(idx){
 
   const ok = confirm(`Spieler "${players[idx].name}" entfernen?`);
   if(!ok) return;
+  vib(HAPT.delete);
+
   pushUndo();
   players.splice(idx,1);
+  editingIdx = null;
   renderAll();
   renderSheetPlayers();
   save();
@@ -1249,8 +1765,18 @@ $("sheetAddName").addEventListener("keydown",(e)=>{ if(e.key==="Enter") addPlaye
 $("sheetPlayersList").addEventListener("click",(e)=>{
   const ren = e.target.closest("[data-ren]");
   const del = e.target.closest("[data-del]");
-  if(ren) renamePlayer(Number(ren.dataset.ren));
+  const done = e.target.closest("[data-ren-done]");
+  if(done) commitRename(Number(done.dataset.renDone));
+  if(ren) startRename(Number(ren.dataset.ren));
   if(del) deletePlayer(Number(del.dataset.del));
+});
+
+$("sheetPlayersList").addEventListener("keydown",(e)=>{
+  const inp = e.target.closest("[data-ren-inp]");
+  if(!inp) return;
+  const idx = Number(inp.dataset.renInp);
+  if(e.key === "Enter") commitRename(idx);
+  if(e.key === "Escape"){ editingIdx=null; renderSheetPlayers(); }
 });
 
 $("toggleCompact").addEventListener("click",()=>toggleClassSwitch("compact"));
@@ -1297,10 +1823,8 @@ function popupAdd(x){
   popupOverride=null;
   $("freeScoreInput").value="";
   renderPopupSelection();
-  // no vibration here (preview only)
 }
 function popupRemoveAt(idx, el){
-  // remove animation (120ms), then update state
   if(el){
     el.classList.add("removing");
     setTimeout(()=>{
@@ -1380,7 +1904,7 @@ function setTab(t){
     setTimeout(()=>{
       const inp=$("freeScoreInput");
       inp.focus();
-      inp.select(); // iPhone: schneller überschreiben
+      inp.select();
     }, 60);
   }else{
     $("lastDirectChip").style.display="none";
@@ -1400,7 +1924,6 @@ function openPopup(i, direct){
   requestAnimationFrame(()=>{ popupEl.classList.add("open"); overlayEl.classList.add("open"); });
   lockScroll(true);
 
-  // Back button handling
   if(!popupStatePushed){
     history.pushState({popup:true}, "");
     popupStatePushed=true;
@@ -1429,19 +1952,15 @@ function internalClosePopup(cancel){
 }
 
 function closePopup(cancel){
-  // if we pushed state, go back; popstate will call internalClosePopup
   if(popupStatePushed){
-    // set a flag that we are closing intentionally
     popupStatePushed=false;
     internalClosePopup(cancel);
-    // clean history entry (go back once, but avoid double-close)
     try{ history.back(); }catch(e){}
     return;
   }
   internalClosePopup(cancel);
 }
 
-// Back button closes popup
 window.addEventListener("popstate",(e)=>{
   if(popupEl.style.display==="block"){
     popupStatePushed=false;
@@ -1495,7 +2014,6 @@ function buildPopupGrids(){
 
   const mg=$("modGrid");
   mg.innerHTML="";
-  // x2 direkt neben +10
   ["+2","+4","+6","+8","+10","x2"].forEach(m=>{
     const b=document.createElement("button");
     b.type="button"; b.className="cardBtn modBtn"+(m==="x2"?" x2":"");
@@ -1523,7 +2041,7 @@ function crossed(prevPct, nextPct, tick){
   return prevPct < tick && nextPct >= tick;
 }
 
-/* Winner confetti (kept minimal) */
+/* Winner confetti */
 function spawnConfetti(color){
   if(reduceMotion()) return;
   const card=$("winnerCard");
@@ -1600,7 +2118,7 @@ function endRound(){
       vib(HAPT.tick);
     }
 
-    // Count-up for total (already used in leader; keep per card subtle)
+    // Count-up for totals
     const totalEl=$("total_"+i);
     const leftEl=$("left_"+i);
     if(totalEl && leftEl){
@@ -1699,8 +2217,10 @@ function newGame(){
   $("winnerScreen").style.display="none";
   $("rankingPanel").classList.remove("open");
   $("rankBtn").setAttribute("aria-expanded","false");
+  editingIdx = null;
   save();
   renderAll();
+  if(sheetOpen) renderSheetPlayers();
 }
 
 /* ---------- Wiring ---------- */
@@ -1715,6 +2235,8 @@ $("colorsBtn").addEventListener("click",(e)=>{ e.preventDefault(); redistributeC
 $("undoBtn").addEventListener("click",(e)=>{ e.preventDefault(); undoAction(); });
 $("undoRoundBtn").addEventListener("click",(e)=>{ e.preventDefault(); undoRound(); });
 $("newGameBtn").addEventListener("click",(e)=>{ e.preventDefault(); newGame(); });
+
+$("sheetNewGameBtn").addEventListener("click",(e)=>{ e.preventDefault(); newGame(); });
 
 $("toastUndoBtn").addEventListener("click",(e)=>{ e.preventDefault(); undoRound(); });
 $("endRoundBtn").addEventListener("click",(e)=>{ e.preventDefault(); endRound(); });
@@ -1748,7 +2270,7 @@ $("winnerNewGame").addEventListener("click",(e)=>{
 
 overlayEl.addEventListener("pointerdown",()=>closePopup(true),{passive:true});
 
-/* Delegation: chip remove (with remove animation), open popup (+), tap Runde for Direktpunkte */
+/* Delegation: chip remove, open popup (+), tap Runde for Direktpunkte */
 let pressTimer=null;
 let longPressFired=false;
 
@@ -1758,14 +2280,12 @@ $("playersContainer").addEventListener("pointerdown",(e)=>{
     const i=Number(rem.dataset.i);
     const ci=Number(rem.dataset.rem);
 
-    // animate chip out then commit removal + save
     rem.style.animation = "chipOut .12s ease forwards";
     setTimeout(()=>{
       pushUndo();
       players[i].cards.splice(ci,1);
       players[i].override=null;
       renderAll(); save();
-      // no vibration here (still preview-ish edit)
     }, 120);
 
     return;
@@ -1803,8 +2323,21 @@ $("playersContainer").addEventListener("pointerup",(e)=>{
   }
 },{passive:false});
 
+/* ---------- Utils ---------- */
+function escapeHtml(str){
+  return String(str)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
 /* ---------- Init ---------- */
-buildPopupGrids();
+function buildPopup(){
+  buildPopupGrids();
+}
+buildPopup();
 load();
 syncTogglesUI();
 renderAll();
