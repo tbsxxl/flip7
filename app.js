@@ -368,7 +368,7 @@ function updateLocks(){
 
   const colors = players.map(p=>p.color);
   const hasDup = new Set(colors).size !== colors.length;
-  $("colorsBtn").disabled = !(players.length>palette.length || hasDup);
+$("colorsBtn").disabled = (players.length < 2);
 
   $("undoBtn").disabled = undoStack.length===0;
   $("undoRoundBtn").disabled = undoRoundStack.length===0;
