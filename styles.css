@@ -532,11 +532,11 @@ body.compact .sub, body.compact .dim{ font-size: 13px; }
 }
 .cardFade::before{
   left:0;
-  background:linear-gradient(to right, rgba(246,247,249,1), rgba(246,247,249,0));
+  background:linear-gradient(to right, rgba(246,247,249,.01), rgba(246,247,249,0));
 }
 .cardFade::after{
   right:0;
-  background:linear-gradient(to left, rgba(246,247,249,1), rgba(246,247,249,0));
+  background:linear-gradient(to left, rgba(246,247,249,.01), rgba(246,247,249,0));
 }
 .cardFade.showLeft::before{opacity:1}
 .cardFade.showRight::after{opacity:1}
@@ -593,16 +593,12 @@ body.highContrast #statsWrap{ box-shadow:none; border:1px solid var(--hcBorder);
 #statsHead strong{font-weight: var(--wBody)}
 #stats{display:none;margin-top:10px;font-weight: var(--wBody);line-height:1.55}
 
-.overlay{
-  display:none; position:fixed; inset:0; background:rgba(0,0,0,.35);
+.overlay{display:none; position:fixed; inset:0; background:rgba(0,0,0,.35);
   z-index:500; opacity:0; transition:opacity .18s ease;
   pointer-events:none;
 }
-.overlay.open{
-  opacity:1;
-  pointer-events:auto;
+.overlay.open{opacity:1  pointer-events:auto;
 }
-
 
 /* Popup (iOS bottom sheet; content scrolls, footer fixed) */
 .popup{
@@ -831,8 +827,7 @@ body.highContrast #winnerCard{ box-shadow:none; border:1px solid var(--hcBorder)
 #roundToast .tBtn:active{transform:scale(.98)}
 
 /* Bottom sheet */
-#sheetOverlay{
-  display:none;
+#sheetOverlay{display:none;
   position:fixed; inset:0;
   background:rgba(0,0,0,.35);
   backdrop-filter: blur(8px);
@@ -841,9 +836,7 @@ body.highContrast #winnerCard{ box-shadow:none; border:1px solid var(--hcBorder)
   transition:opacity .18s ease;
   pointer-events:none;
 }
-#sheetOverlay.open{
-  opacity:1;
-  pointer-events:auto;
+#sheetOverlay.open{opacity:1  pointer-events:auto;
 }
 
 #sheet{
