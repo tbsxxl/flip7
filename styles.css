@@ -644,39 +644,43 @@ body.highContrast #statsWrap{ box-shadow:none; border:1px solid var(--hcBorder);
 .overlay.open{opacity:1}
 
 /* Popup -> iOS Bottom Sheet */
-/* Popup = iOS Bottom Sheet (fits screen + safe areas) */
 .popup{
   display:none;
   position:fixed;
   left:0; right:0; bottom:0;
-  top:auto;
 
   width:100%;
   max-width:none;
 
-  background: var(--card);
+  background: rgba(255,255,255,.82);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+
   border-top-left-radius: 22px;
   border-top-right-radius: 22px;
 
-  /* wichtig: echte Viewport-Höhe + Safe Areas */
+  height: calc(100dvh - env(safe-area-inset-top));
   max-height: calc(100dvh - env(safe-area-inset-top));
-  overflow:auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
 
-  padding: 14px 14px calc(14px + env(safe-area-inset-bottom)) 14px;
+  display:flex;
+  flex-direction: column;
+
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom)) 14px;
 
   z-index:1000;
   opacity:0;
-  transform: translateY(24px);
+  transform: translateY(22px);
   transition:opacity .18s ease, transform .18s cubic-bezier(.2,.8,.2,1);
-  will-change: transform;
 
   border: 1px solid rgba(15,23,42,.10);
   border-bottom:none;
   box-shadow: 0 18px 60px rgba(0,0,0,.16);
 }
-.popup.open{ opacity:1; transform: translateY(0); }
+
+.popup.open{
+  opacity:1;
+  transform: translateY(0);
+}
 
 
 @media (orientation:landscape){
@@ -688,15 +692,13 @@ body.highContrast #statsWrap{ box-shadow:none; border:1px solid var(--hcBorder);
 .grabBar{width:54px; height:5px; border-radius:999px; background:rgba(15,23,42,.18);}
 
 .popupHeader{
-  position: sticky;
-  top: 0;
-  z-index: 6;
-  background: rgba(255,255,255,.85);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  padding: 0 0 10px 0;
-  border-bottom: 1px solid rgba(15,23,42,.08);
+  position: relative;
+  flex: 0 0 auto;
+  background: transparent;
+  border-bottom: 1px solid rgba(15,23,42,.10);
+  padding-bottom: 10px;
 }
+
 
 .headerRow{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .tabs{display:flex;gap:8px;margin:10px 0 0 0}
@@ -709,6 +711,14 @@ body.highContrast .tab{ box-shadow:inset 0 0 0 1px rgba(15,23,42,.12); }
 body.highContrast .tab:active{ box-shadow:inset 0 0 0 2px var(--hcInset); }
 
 .selectedWrap{background:var(--bg);border-radius: var(--rBtn);padding:10px;margin:10px 0}
+#popupCardsView,
+#popupDirectView{
+  flex: 1 1 auto;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-bottom: 14px;
+}
 
 /* Popup preview glow */
 .hint{
@@ -775,15 +785,13 @@ body.highContrast .cardBtn:active{ box-shadow:inset 0 0 0 2px var(--hcInset); tr
 .lastDirectChip:active{transform:scale(.98)}
 
 .popupFooter{
-  position:sticky;
-  bottom:-16px;
-  background: rgba(255,255,255,.35);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  padding:10px 0 calc(10px + env(safe-area-inset-bottom)) 0;
-  margin-top:12px;
-  border-top:1px solid rgba(255,255,255,.35);
+  flex: 0 0 auto;
+  position: relative;
+  background: transparent;
+  border-top: 1px solid rgba(15,23,42,.10);
+  padding-top: 10px;
 }
+
 .popupFooterRow{display:flex;gap:8px;flex-wrap:wrap}
 .popupFooterRow button{
   border:none;border-radius: var(--rBtn);padding:14px 12px;font-weight: var(--wTitle);
