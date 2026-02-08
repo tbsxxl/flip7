@@ -27,7 +27,7 @@
   --barAlpha:.92;
   --vh: 1vh;
 }
-
+ 
 
 /* Layout safety (prevents right-edge clipping on iPhone) */
 *, *::before, *::after{ box-sizing:border-box; }
