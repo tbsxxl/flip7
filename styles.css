@@ -596,8 +596,13 @@ body.highContrast #statsWrap{ box-shadow:none; border:1px solid var(--hcBorder);
 .overlay{
   display:none; position:fixed; inset:0; background:rgba(0,0,0,.35);
   z-index:500; opacity:0; transition:opacity .18s ease;
+  pointer-events:none;
 }
-.overlay.open{opacity:1}
+.overlay.open{
+  opacity:1;
+  pointer-events:auto;
+}
+
 
 /* Popup (iOS bottom sheet; content scrolls, footer fixed) */
 .popup{
@@ -834,8 +839,12 @@ body.highContrast #winnerCard{ box-shadow:none; border:1px solid var(--hcBorder)
   z-index:3000;
   opacity:0;
   transition:opacity .18s ease;
+  pointer-events:none;
 }
-#sheetOverlay.open{opacity:1}
+#sheetOverlay.open{
+  opacity:1;
+  pointer-events:auto;
+}
 
 #sheet{
   position:fixed; left:0; right:0; bottom:0;
