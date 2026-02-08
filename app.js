@@ -368,7 +368,7 @@ function updateLocks(){
 
   const colors = players.map(p=>p.color);
   const hasDup = new Set(colors).size !== colors.length;
-$("colorsBtn").disabled = (players.length < 2);
+  $("colorsBtn").disabled = (players.length < 2);
 
   $("undoBtn").disabled = undoStack.length===0;
   $("undoRoundBtn").disabled = undoRoundStack.length===0;
@@ -948,10 +948,7 @@ function closePopup(cancel){
 
 /* swipe-to-close (grabHit) */
 let dragActive=false, dragStartY=0, dragLastY=0, dragStartT=0;
-function setPopupDragTranslate(y){
-  popupEl.style.transform = `translateY(${y}px)`;
-}
-
+function setPopupDragTranslate(y){ popupEl.style.transform = `translateY(${y}px)`; }
 function endPopupDrag(shouldClose){
   dragActive=false;
   popupEl.style.transition = "opacity .18s ease, transform .18s cubic-bezier(.2,.8,.2,1)";
@@ -961,7 +958,8 @@ function endPopupDrag(shouldClose){
 }
 
 $("popupGrabHit").addEventListener("pointerdown",(e)=>{
-  if(popupEl.scrollTop > 0) return;
+  const activeView = (directView.style.display !== "none") ? directView : cardsView;
+  if(activeView && activeView.scrollTop > 0) return;
   dragActive=true; dragStartY=e.clientY; dragLastY=e.clientY; dragStartT=performance.now();
   popupEl.setPointerCapture?.(e.pointerId);
   popupEl.style.transition="none";
