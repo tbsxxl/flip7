@@ -333,14 +333,14 @@ body.highContrast #emptyState{ box-shadow:none; border:1px solid var(--hcBorder)
   border-radius: var(--rCard);
   padding:12px;
   margin-bottom:10px;
-  border-left:6px solid #ccc;
+  border-left:4px solid #ccc;
   box-shadow: var(--sh1), 0 10px 25px rgba(0,0,0,.06);
   position:relative;
 }
 body.highContrast .player-box{
   box-shadow:none;
   border:1px solid var(--hcBorder);
-  border-left-width:6px;
+  border-left-width:4px;
 }
 .player-box.leader{box-shadow: var(--sh1), var(--sh2); transform:scale(1.01)}
 body.highContrast .player-box.leader{ box-shadow:none; }
@@ -362,24 +362,54 @@ body.highContrast .player-box.leader{ box-shadow:none; }
 }
 .miniBadge.action{background:var(--action);color:#fff}
 
-/* Plus button */
+/* Plus button (pro: solid accent + subtle gradient border) */
 .plusBtn{
-  width:44px;height:44px;border-radius:14px;border:none;background:transparent;
-  color:#fff;font-weight: var(--wTitle);font-size:22px;cursor:pointer;position:relative;
+  width:44px; height:44px;
+  border-radius:14px;
+  border:none;
+  background: var(--accent);
+  color:#fff;
+  font-weight: var(--wTitle);
+  font-size:22px;
+  cursor:pointer;
+  position:relative;
+  box-shadow: 0 10px 22px rgba(15,23,42,.10);
 }
+
+/* gradient border ring */
 .plusBtn::before{
   content:"";
-  position:absolute; inset:1px;
-  border-radius:13px;
-  background: linear-gradient(135deg, var(--brandA), var(--brandC));
+  position:absolute;
+  inset:0;
+  border-radius:14px;
+  padding:1px;
+  background: var(--brandGradient);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events:none;
+  opacity:.75;
 }
-.plusBtn > span{ position:relative; z-index:1; display:inline-block; transform:translateY(-1px); }
-.plusBtn:active{transform:scale(.98)}
-body.highContrast .plusBtn::before{
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08), inset 0 0 0 1px rgba(15,23,42,.16);
+
+.plusBtn > span{
+  position:relative;
+  z-index:1;
+  display:inline-block;
+  transform:translateY(-1px);
 }
-body.highContrast .plusBtn:active{transform:scale(.99)}
-body.highContrast .plusBtn:active::before{box-shadow:inset 0 0 0 2px var(--hcInset);}
+
+.plusBtn:active{ transform:scale(.98); }
+
+body.highContrast .plusBtn{ box-shadow:none; }
+body.highContrast .plusBtn::before{ opacity:.9; }
+body.highContrast .plusBtn:active{ transform:scale(.99); }
+body.highContrast .plusBtn:active::before{
+  -webkit-mask: none;
+  mask: none;
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--hcInset);
+  padding:0;
+}
 
 /* Progress */
 .progress-container{
@@ -581,13 +611,36 @@ body.compact .sub, body.compact .dim{ font-size: 13px; }
   font-weight: var(--wTitle);
   cursor:pointer;
   min-height:54px;
-  background: var(--brandGradient);
+  background: var(--accent);
   color:#fff;
-  box-shadow:0 12px 28px rgba(124,77,255,.14);
+  box-shadow: 0 14px 30px rgba(15,23,42,.10);
   position:relative;
 }
-#endRoundBtn:disabled{background:#cbd5e1;color:#475569;box-shadow:none;cursor:not-allowed}
-#endRoundBtn.press{transform:scale(.99)}
+
+/* subtle brand ring instead of full gradient fill */
+#endRoundBtn::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius: var(--rCard);
+  padding:1.5px;
+  background: var(--brandGradient);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events:none;
+  opacity:.65;
+}
+
+#endRoundBtn:disabled{
+  background:#cbd5e1;
+  color:#475569;
+  box-shadow:none;
+  cursor:not-allowed
+}
+#endRoundBtn:disabled::before{ display:none; }
+
+#endRoundBtn.press{ transform:scale(.99); }
 #endRoundBtn.saved::after{
   content:"✓";
   position:absolute; right:16px; top:50%;
