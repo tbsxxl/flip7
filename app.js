@@ -277,7 +277,8 @@ function renderPlayers(){
 
     const div=document.createElement("div");
     div.className="player-box"+(leaderName===p.name?" leader":"");
-    div.style.borderLeftColor=p.color;
+    div.style.setProperty('--accent', p.color);
+    div.style.setProperty('--accent-tint', tintHex(p.color, 0.88));
 
     /* FIX: base + live segment (instead of live being total width) */
     const pctBase  = target ? Math.min((p.total/target)*100,100) : 0;
@@ -1303,6 +1304,31 @@ function escapeHtml(str){
     .replaceAll('"',"&quot;")
     .replaceAll("'","&#039;");
 }
+
+
+function hexToRgb(hex){
+  const h = String(hex||"").trim().replace("#","");
+  if(h.length===3){
+    const r=parseInt(h[0]+h[0],16), g=parseInt(h[1]+h[1],16), b=parseInt(h[2]+h[2],16);
+    return {r,g,b};
+  }
+  if(h.length===6){
+    const r=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16);
+    return {r,g,b};
+  }
+  return {r:0,g:0,b:0};
+}
+function rgbToHex(r,g,b){
+  const to=(n)=>Math.max(0,Math.min(255,Math.round(n))).toString(16).padStart(2,"0");
+  return `#${to(r)}${to(g)}${to(b)}`;
+}
+/** Mix hex color with white by amount (0..1). 0 = original, 1 = white */
+function tintHex(hex, amount){
+  const {r,g,b}=hexToRgb(hex);
+  const a=Math.max(0,Math.min(1,Number(amount)));
+  return rgbToHex(r+(255-r)*a, g+(255-g)*a, b+(255-b)*a);
+}
+
 
 /* ---------- Init ---------- */
 // Safety: ensure overlays start hidden
