@@ -71,10 +71,11 @@ let lastLeaderScore=0;
 let popupStatePushed=false;
 let sheetStatePushed=false;
 
+// UI-adjacent palette (player dots / confetti). Keep vivid but aligned with Flip7 gradient identity.
 const palette=[
-  "#2563eb","#16a34a","#ea580c","#9333ea",
-  "#0ea5e9","#dc2626","#14b8a6","#eab308",
-  "#111827","#f97316","#22c55e","#3b82f6"
+  "#6e44ff","#c84bff","#ff8a00","#ffd000",
+  "#3b82f6","#22c55e","#f97316","#ef4444",
+  "#14b8a6","#9333ea","#111827","#0ea5e9"
 ];
 const numbers=[...Array(13).keys()];
 
