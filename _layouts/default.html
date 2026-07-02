@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>{% if page.title %}{{ page.title }} · {% endif %}{{ site.title }}</title>
+  <meta name="theme-color" content="#f6f1e8">
+<link rel="icon" type="image/png" href="{{ '/assets/favicon-512-removebg-preview.png' | relative_url }}">
+  <link rel="apple-touch-icon" sizes="1024x1024" href="{{ '/assets/favicon-512.png' | relative_url }}">
+  <!-- Wichtig: relative_url sorgt dafür, dass es mit baseurl funktioniert -->
+  <link rel="manifest" href="{{ '/manifest.json' | relative_url }}">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Kochbuch">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ '/assets/styles.css' | relative_url }}?v={{ site.time | date: '%s' }}">
+  <script defer src="{{ '/assets/utils.js' | relative_url }}?v={{ site.time | date: '%s' }}"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register("{{ '/sw.js' | relative_url }}").catch(()=>{});
+      });
+    }
+  </script>
+</head>
+<body class="{% if page.layout %}layout-{{ page.layout }}{% endif %}">
+  <!-- iPhone-friendly Topbar: Back + Title only -->
+  <header class="iosTopbar" id="iosTopbar">
+    <div class="container iosTopbarInner">
+      <button class="navIconBtn pressable" id="backBtn" aria-label="Zurück" type="button">‹</button>
+
+      <div class="iosTopBrand">
+        <span class="brandMark iosTopLogo" aria-hidden="true">
+          <img src="{{ '/assets/favicon-512-removebg-preview.png' | relative_url }}" alt="">
+        </span>
+        <div class="iosTopTitleWrap">
+          <div class="iosTopTitle">{% if page.title %}{{ page.title }}{% else %}{{ site.title }}{% endif %}</div>
+        </div>
+      </div>
+
+      <!-- spacer to keep title centered on iOS-style bars -->
+      <span aria-hidden="true" style="width:44px;height:44px;display:inline-block"></span>
+    </div>
+  </header>
+
+  <main class="container appMain" role="main">
+    {{ content }}
+  </main>
+
+  <!-- Bottom Tabbar -->
+  {% unless page.layout == "recipe" %}
+<nav class="tabbar bottomRail" aria-label="Navigation">
+    <div class="tabbarInner container">
+      <a class="tabItem" data-tab href="{{ '/' | relative_url }}">
+        <span class="tabIcon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></span><span class="tabLabel">Start</span>
+      </a>
+
+      <a class="tabItem tabItemBrand" data-tab href="{{ '/rezeptindex/' | relative_url }}">
+        <span class="tabIcon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="13" y2="11"/></svg></span><span class="tabLabel">Rezepte</span>
+      </a>
+
+      <a class="tabItem" data-tab href="{{ '/shopping/' | relative_url }}">
+        <span class="tabIcon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg></span><span class="tabLabel">Liste</span>
+      </a>
+
+      <button class="tabItem tabMore" id="moreBtn" aria-label="Mehr" type="button">
+        <span class="tabIcon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="19" cy="12" r="1.4" fill="currentColor"/></svg></span><span class="tabLabel">Mehr</span>
+      </button>
+    </div>
+  </nav>
+{% endunless %}
+
+  <!-- Bottom Sheet: Mehr -->
+  <div class="sheetOverlay" id="sheetOverlay"></div>
+  <section class="sheet" id="sheet" aria-label="Mehr-Menü" aria-hidden="true">
+    <div class="sheetGrab"></div>
+    <div class="sheetHead">
+      <div class="sheetTitle">Mehr</div>
+      <button class="navIconBtn pressable" id="sheetClose" aria-label="Schließen" type="button">✕</button>
+    </div>
+
+    <div class="sheetBody">
+      <a class="sheetRow" href="{{ '/kuehltruhe/' | relative_url }}"><span class="rowGlyph" aria-hidden="true">❄︎</span><span>Kühltruhe</span></a>
+      <a class="sheetRow" href="{{ '/kategorien/' | relative_url }}"><span class="rowGlyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span>Kategorien</span></a>
+      <a class="sheetRow" href="{{ '/admin/' | relative_url }}"><span class="rowGlyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span><span>Admin</span></a>
+      <a class="sheetRow" href="{{ '/backup/' | relative_url }}"><span class="rowGlyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0018 9h-1.26A8 8 0 103 16.29"/></svg></span><span>Backup / Import</span></a>
+      <div class="sheetSep"></div>
+      <button class="sheetRow" id="toggleCompact" type="button"><span class="rowGlyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg></span><span>Compact Mode</span></button>
+      <button class="sheetRow" id="toggleContrast" type="button"><span class="rowGlyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 010 18" fill="currentColor" stroke="none" opacity=".3"/></svg></span><span>High Contrast</span></button>
+    </div>
+  </section>
+
+  <script>
+  (function(){
+    // Back Button
+    const backBtn = document.getElementById('backBtn');
+    if (history.length > 1) backBtn.addEventListener('click', ()=>history.back());
+    else backBtn.style.visibility = 'hidden';
+
+    // Topbar density on scroll (iOS-like)
+    const topbar = document.getElementById('iosTopbar');
+    const onScroll = ()=>{ topbar?.classList.toggle('scrolled', (window.scrollY||0) > 4); };
+    window.addEventListener('scroll', onScroll, { passive:true });
+    onScroll();
+
+    // Active Tab Highlight
+    const path = location.pathname.replace(/\/+$/,'') || "/";
+    const recipeBase = "{{ '/rezepte/' | relative_url }}".replace(/\/+$/,'');
+    const recipeIndex = "{{ '/rezeptindex/' | relative_url }}".replace(/\/+$/,'');
+
+    document.querySelectorAll('[data-tab]').forEach(a=>{
+      const href = new URL(a.getAttribute('href'), location.origin).pathname.replace(/\/+$/,'') || "/";
+      if (href === path) a.classList.add('active');
+      if (recipeBase && path.startsWith(recipeBase) && href === recipeIndex) a.classList.add('active');
+    });
+
+    // Mark "Mehr" as active for secondary pages
+    const more = document.getElementById('moreBtn');
+    const morePaths = [
+      "{{ '/kuehltruhe/' | relative_url }}",
+      "{{ '/kategorien/' | relative_url }}",
+      "{{ '/admin/' | relative_url }}",
+      "{{ '/backup/' | relative_url }}"
+    ].map(p=>p.replace(/\/+$/,''));
+    if (more && morePaths.some(p=>p && path.startsWith(p))) more.classList.add('active');
+
+    // Sheet open/close
+    const moreBtn = document.getElementById('moreBtn');
+    const overlay = document.getElementById('sheetOverlay');
+    const sheet = document.getElementById('sheet');
+    const closeBtn = document.getElementById('sheetClose');
+
+    // iOS-like detents: half + full
+    function setDetent(mode){
+      sheet.classList.toggle('half', mode === 'half');
+      sheet.classList.toggle('full', mode === 'full');
+    }
+    function openSheet(){
+      overlay.classList.add('open'); sheet.classList.add('open');
+      setDetent('half'); sheet.setAttribute('aria-hidden','false');
+      document.body.classList.add('noScroll');
+    }
+    function closeSheet(){
+      overlay.classList.remove('open'); sheet.classList.remove('open');
+      sheet.setAttribute('aria-hidden','true');
+      if(!document.querySelector('.sheet.open')) document.body.classList.remove('noScroll');
+    }
+
+    // Grabber toggles detents
+    const grab = sheet?.querySelector('.sheetGrab');
+    grab?.addEventListener('click', ()=>{
+      if(!sheet.classList.contains('open')) return;
+      setDetent(sheet.classList.contains('full') ? 'half' : 'full');
+    });
+
+    moreBtn?.addEventListener('click', openSheet);
+    overlay?.addEventListener('click', closeSheet);
+    closeBtn?.addEventListener('click', closeSheet);
+
+    // Persisted toggles
+    const get = (k,fb)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):fb; }catch{return fb;} };
+    const set = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch{} };
+
+    const compactKey="kochbuch.ui.compact";
+    const contrastKey="kochbuch.ui.contrast";
+
+    function apply(){
+      document.body.classList.toggle('compact', !!get(compactKey,false));
+      document.body.classList.toggle('highContrast', !!get(contrastKey,false));
+    }
+    apply();
+
+    document.getElementById('toggleCompact')?.addEventListener('click', ()=>{ set(compactKey,!get(compactKey,false)); apply(); });
+    document.getElementById('toggleContrast')?.addEventListener('click', ()=>{ set(contrastKey,!get(contrastKey,false)); apply(); });
+  })();
+  </script>
+</body>
+</html>

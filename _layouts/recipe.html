@@ -1,0 +1,225 @@
+---
+layout: default
+---
+
+<script>
+  window.RECIPE_DATA = {
+    id: "{{ page.url | relative_url }}",
+    title: {{ page.title | jsonify }},
+    baseServings: {{ page.servings | default: 1 | jsonify }},
+    ingredients: {{ page.ingredients | jsonify }}
+  };
+</script>
+
+<div class="section">
+  <div class="card recipePageCard">
+
+    {% if page.image %}
+      <div class="rcImg recipePageHero">
+        <img
+          class="recipeHeroImg"
+          src="{{ page.image | relative_url }}"
+          alt="{{ page.title | escape }}"
+          loading="eager"
+          decoding="async"
+        >
+        {% if page.category %}<div class="heroOverlayCat">{{ page.category }}</div>{% endif %}
+      </div>
+    {% endif %}
+
+    <div class="recipePageBody">
+      <h1 class="h1" style="margin:0 0 12px 0">{{ page.title }}</h1>
+
+      <div class="kvRow" style="margin-bottom:0">
+        {% if page.time %}<span class="kv"><span class="kvIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg></span><span>{{ page.time }}</span></span>{% endif %}
+        {% if page.servings %}<span class="kv"><span class="kvIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><span>{{ page.servings }}</span></span>{% endif %}
+        <span class="kv kvFav" id="favPill" hidden>★ Favorit</span>
+      </div>
+
+      {% if page.tags %}
+      <div class="chips" style="margin-top:10px">
+        {% for t in page.tags %}
+          <span class="chip">{{ t }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="dim" id="statsLine" style="padding:0 16px"></div>
+
+    <div class="hr" style="margin:12px 16px 0 16px"></div>
+
+    <div class="card cardPad recipeInnerCard" style="margin:12px 16px">
+      <div class="recipePortionCard">
+        <div class="recipePortionHead">
+          <div class="recipePortionTitle">Portionen</div>
+          <div class="recipePortionBase">Basis: <span id="baseServings"></span></div>
+        </div>
+        <div class="recipePortionControls" aria-label="Portionen ändern">
+          <button class="recipePortionStep" id="servingsMinus" type="button" aria-label="Portionen verringern">−</button>
+          <div class="recipePortionValueWrap">
+            <input id="servingsInput" class="recipePortionInput" inputmode="numeric" />
+          </div>
+          <button class="recipePortionStep" id="servingsPlus" type="button" aria-label="Portionen erhöhen">+</button>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="h2" style="margin:0 0 8px 0">Zutaten</div>
+      <div class="listGroup" id="ingredientsGroup">
+        <div id="ingredientsList"></div>
+      </div>
+    </div>
+
+    <div class="recipeBody" style="padding:0 16px 16px 16px">
+      {{ content }}
+    </div>
+  </div>
+</div>
+
+<!-- Sticky Bottom Action Bar -->
+<nav class="tabbar bottomRail recipeTabbar" aria-label="Rezept Aktionen">
+  <div class="tabbarInner container">
+    <button class="tabItem pressable" id="cookingModeQuick" type="button">
+      <span class="tabIcon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg></span><span class="tabLabel">Kochmodus</span>
+    </button>
+
+    <button class="tabItem pressable active" id="addToShopping" type="button">
+      <span class="tabIcon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg></span><span class="tabLabel">Zur Liste</span>
+    </button>
+
+    <button class="tabItem pressable" id="freezerQuick" type="button">
+      <span class="tabIcon"><span class="tabGlyph" aria-hidden="true">❄︎</span></span><span class="tabLabel">Kühltruhe</span>
+    </button>
+
+    <button class="tabItem pressable" id="recipeMoreBtn" type="button">
+      <span class="tabIcon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="19" cy="12" r="1.4" fill="currentColor"/></svg></span><span class="tabLabel">Mehr</span>
+    </button>
+  </div>
+</nav>
+
+<!-- Recipe More Sheet -->
+<div class="sheetOverlay" id="recipeSheetOverlay"></div>
+<section class="sheet" id="recipeSheet" aria-label="Rezept-Menü" aria-hidden="true">
+  <div class="sheetGrab"></div>
+  <div class="sheetHead">
+    <div class="sheetTitle">Rezept</div>
+    <button class="navIconBtn pressable" id="recipeSheetClose" aria-label="Schließen" type="button">✕</button>
+  </div>
+
+  <div class="sheetBody">
+    <div class="sheetSectionLabel">Schnellzugriff</div>
+    <a class="sheetRow" href="{{ '/' | relative_url }}"><span class="rowGlyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></span><span>Start</span></a>
+    <a class="sheetRow" href="{{ '/rezeptindex/' | relative_url }}"><span class="rowGlyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span><span>Rezepte</span></a>
+    <a class="sheetRow" href="{{ '/shopping/' | relative_url }}"><span class="rowGlyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg></span><span>Shopping List</span></a>
+
+    <div class="sheetSectionLabel">Aktionen</div>
+    <button class="sheetRow" id="cookingModeBtn" type="button"><span class="rowGlyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg></span><span>Kochmodus</span></button>
+    <button class="sheetRow" id="sheetFavoriteBtn" type="button"><span class="rowGlyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span><span>Favorit</span></button>
+    <button class="sheetRow" id="sheetCookedBtn" type="button"><span class="rowGlyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><polyline points="20 6 9 17 4 12"/></svg></span><span>Gekocht</span></button>
+    <button class="sheetRow" id="sheetFreezerBtn" type="button"><span class="rowGlyph" aria-hidden="true">❄︎</span><span>Kühltruhe</span></button>
+    <button class="sheetRow" id="undoCookedBtn" type="button"><span class="rowGlyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg></span><span>Undo „Gekocht“</span></button>
+    <button class="sheetRow" id="printBtn" type="button"><span class="rowGlyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></span><span>Drucken</span></button>
+  </div>
+</section>
+
+<!-- Freezer Sheet (Kühltruhe) -->
+<div class="sheetOverlay" id="freezerSheetOverlay"></div>
+<section class="sheet" id="freezerSheet" aria-label="Kühltruhe" aria-hidden="true">
+  <div class="sheetGrab"></div>
+  <div class="sheetHead">
+    <div class="sheetTitle">Kühltruhe</div>
+    <button class="navIconBtn pressable" id="freezerSheetClose" aria-label="Schließen" type="button">✕</button>
+  </div>
+  <div class="sheetBody">
+    <div class="sheetRow" style="display:flex;gap:10px;align-items:center;justify-content:space-between">
+      <div>
+        <div class="sub" style="margin:0">Portionen</div>
+        <div class="dim" style="margin-top:4px" id="freezerHint">Nicht in Kühltruhe</div>
+      </div>
+      <div class="qtyStepper" aria-label="Portionen ändern">
+        <button class="stepBtn" id="freezerMinus" type="button" aria-label="Minus">−</button>
+        <div class="stepVal" id="freezerCount">0</div>
+        <button class="stepBtn" id="freezerPlus" type="button" aria-label="Plus">+</button>
+      </div>
+    </div>
+    <div class="sheetSep"></div>
+    <button class="sheetRow" id="freezerRemove" type="button">🗑 Entfernen</button>
+  </div>
+</section>
+
+<!-- Cooking Mode Overlay -->
+<div class="cookOverlay" id="cookOverlay" aria-hidden="true">
+  <div class="cookTop">
+    <button class="navIconBtn pressable" id="cookClose" type="button" aria-label="Kochmodus schließen">✕</button>
+    <div class="cookTitle" id="cookTitle">Kochmodus</div>
+    <div class="cookPill" id="cookStepPill">1/1</div>
+  </div>
+
+  <div class="cookTabs" role="tablist" aria-label="Kochmodus Tabs">
+    <button class="cookTab active" id="cookTabSteps" type="button" role="tab" aria-selected="true">Schritte</button>
+    <button class="cookTab" id="cookTabIngs" type="button" role="tab" aria-selected="false">Zutaten</button>
+  </div>
+
+  <div class="cookBody" id="cookBody">
+    <div class="cookPanel" id="cookPanelSteps" role="tabpanel">
+      <div class="cookStep" id="cookStepText"></div>
+      <div class="cookNav">
+        <button class="cookNavBtn" id="cookPrev" type="button">‹ Zurück</button>
+        <button class="cookNavBtn primary" id="cookNext" type="button">Weiter ›</button>
+      </div>
+    </div>
+    <div class="cookPanel" id="cookPanelIngs" role="tabpanel" hidden>
+      <div class="cookIngs" id="cookIngredients"></div>
+    </div>
+  </div>
+</div>
+
+<script defer src="{{ '/assets/recipe.js' | relative_url }}?v={{ site.time | date: '%s' }}"></script>
+
+<script>
+(function(){
+  // Recipe sheet
+  const moreBtn = document.getElementById('recipeMoreBtn');
+  const overlay = document.getElementById('recipeSheetOverlay');
+  const sheet = document.getElementById('recipeSheet');
+  const closeBtn = document.getElementById('recipeSheetClose');
+  const printBtn = document.getElementById('printBtn');
+
+  function openSheet(){
+    overlay.classList.add('open'); sheet.classList.add('open');
+    sheet.setAttribute('aria-hidden','false');
+    document.body.classList.add('noScroll');
+  }
+  function closeSheet(){
+    overlay.classList.remove('open'); sheet.classList.remove('open');
+    sheet.setAttribute('aria-hidden','true');
+    if(!document.querySelector('.sheet.open')) document.body.classList.remove('noScroll');
+  }
+
+  // iOS-like detents: half + full
+  function setDetent(mode){
+    sheet.classList.toggle('half', mode === 'half');
+    sheet.classList.toggle('full', mode === 'full');
+  }
+
+  moreBtn?.addEventListener('click', ()=>{ openSheet(); setDetent('half'); });
+  overlay?.addEventListener('click', closeSheet);
+  closeBtn?.addEventListener('click', closeSheet);
+  printBtn?.addEventListener('click', ()=>{
+    closeSheet();
+    setTimeout(()=>window.print(), 50);
+  });
+
+  // Grabber toggles detents
+  const grab = sheet?.querySelector('.sheetGrab');
+  grab?.addEventListener('click', ()=>{
+    if(!sheet.classList.contains('open')) return;
+    setDetent(sheet.classList.contains('full') ? 'half' : 'full');
+  });
+
+  // Hide recipe bar on non-recipe pages (safety, if layout reused)
+  // (On this layout it always exists, so no-op)
+})();
+</script>
