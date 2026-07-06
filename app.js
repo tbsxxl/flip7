@@ -1,4 +1,8 @@
-/* app.js */
+/* app.js — Flip 7 Score Tracker */
+/* Gekapselt (IIFE + strict mode): kein Verschmutzen des globalen Scopes. */
+(function () {
+"use strict";
+
 /* ---------- Helpers ---------- */
 const $ = (id)=>document.getElementById(id);
 function vib(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
@@ -21,7 +25,12 @@ function updateBarAlpha(){
   document.documentElement.style.setProperty("--barAlpha", a.toFixed(3));
 }
 updateBarAlpha();
-window.addEventListener("scroll", updateBarAlpha, {passive:true});
+let barAlphaTicking = false;
+window.addEventListener("scroll", ()=>{
+  if(barAlphaTicking) return;
+  barAlphaTicking = true;
+  requestAnimationFrame(()=>{ updateBarAlpha(); barAlphaTicking = false; });
+}, {passive:true});
 
 /* Haptik */
 const HAPT = {
@@ -78,11 +87,17 @@ const palette=[
 ];
 const numbers=[...Array(13).keys()];
 
+/* Ziel-Punktzahl robust lesen: ganzzahlig, mindestens 1, sonst Default 200. */
+function getTarget(){
+  const v = Math.floor(Number($("targetPoints").value));
+  return (Number.isFinite(v) && v >= 1) ? v : 200;
+}
+
 /* ---------- Persistenz ---------- */
 function snapshot(){
   return JSON.parse(JSON.stringify({
     players, roundNumber, gameLocked,
-    target:Number($("targetPoints").value)||200,
+    target:getTarget(),
     statsOpen, lastLeaderName, lastLeaderScore, lastDirectScore,
     compact:document.body.classList.contains("compact"),
     contrast:document.body.classList.contains("highContrast"),
@@ -114,7 +129,7 @@ function pushUndoRound(){
   undoRoundStack.push(snapshot());
   if(undoRoundStack.length>30) undoRoundStack.shift();
 }
-function save(){ localStorage.setItem("flip7_state_v10", JSON.stringify(snapshot())); }
+function save(){ try{ localStorage.setItem("flip7_state_v10", JSON.stringify(snapshot())); }catch(e){} }
 function load(){
   const raw=localStorage.getItem("flip7_state_v10");
   if(!raw) return;
@@ -167,7 +182,7 @@ function animateCountUpText(el, from, to, ms){
 
 /* ---------- Top render ---------- */
 function renderTop(){
-  const target=Number($("targetPoints").value)||200;
+  const target=getTarget();
 
   const compact = document.body.classList.contains("compact");
   $("roundBadge").textContent = compact ? String(roundNumber) : ("Runde: "+roundNumber);
@@ -256,7 +271,7 @@ function wireChipFades(){
 
 /* ---------- Players render ---------- */
 function renderPlayers(){
-  const target=Number($("targetPoints").value)||200;
+  const target=getTarget();
   const rank=getRanking();
   const leaderName = rank.length ? rank[0].name : null;
   const compact = document.body.classList.contains("compact");
@@ -367,8 +382,6 @@ function updateLocks(){
   const canManage = (!gameLocked && roundNumber===0);
   $("sheetAddBtn").disabled = !canManage;
 
-  const colors = players.map(p=>p.color);
-  const hasDup = new Set(colors).size !== colors.length;
   $("colorsBtn").disabled = (players.length < 2);
 
   $("undoBtn").disabled = undoStack.length===0;
@@ -907,6 +920,7 @@ function openPopup(i, direct){
 
   popupEl.style.display="block";
   overlayEl.style.display="block";
+  popupEl.setAttribute("aria-hidden","false");
   requestAnimationFrame(()=>{ popupEl.classList.add("open"); overlayEl.classList.add("open"); });
   lockScroll(true);
 
@@ -922,6 +936,7 @@ function openPopup(i, direct){
 function internalClosePopup(cancel){
   popupEl.classList.remove("open");
   overlayEl.classList.remove("open");
+  popupEl.setAttribute("aria-hidden","true");
   setTimeout(()=>{ popupEl.style.display="none"; overlayEl.style.display="none"; }, 180);
   lockScroll(false);
 
@@ -1041,13 +1056,30 @@ function spawnConfetti(color){
 /* ---------- End Round ---------- */
 function crossed(prevPct, nextPct, tick){ return prevPct < tick && nextPct >= tick; }
 
+/* Screenreader-Ansage (aria-live) */
+function announce(msg){
+  const el = $("srLive");
+  if(!el) return;
+  el.textContent = "";
+  setTimeout(()=>{ el.textContent = msg; }, 30);
+}
+
 function endRound(){
   if(!players.length) return;
+
+  /* Fehltipp-Schutz: komplett leere Runde (niemand hat etwas eingegeben)
+     ist fast sicher ein Versehen — einzelne leere Spieler bleiben ohne
+     Nachfrage möglich (bewusst eingetragene Busts). */
+  const allEmpty = players.every(p => p.cards.length===0 && p.override===null);
+  if(allEmpty){
+    const ok = confirm("Noch keine Eingaben in dieser Runde – alle Spieler würden 0 Punkte (Bust) erhalten. Trotzdem beenden?");
+    if(!ok) return;
+  }
 
   pushUndoRound();
   if(!gameLocked) gameLocked=true;
 
-  const target=Number($("targetPoints").value)||200;
+  const target=getTarget();
 
   const prevTotals = players.map(p => p.total);
   const prevPct = players.map((p,i)=> Math.min((prevTotals[i]/target)*100, 100));
@@ -1074,6 +1106,7 @@ function endRound(){
 
   renderAll();
   showRoundToast();
+  announce("Runde " + roundNumber + " gespeichert");
 
   players.forEach((p,i)=>{
     const nextTotal=p.total;
@@ -1154,9 +1187,23 @@ function endRound(){
   const win = players.find(p=>p.total>=target);
   if(win){
     $("winnerText").textContent = win.name+" gewinnt!";
+
+    /* Endtabelle: nach endRound sind alle Karten geleert, getRanking() = Endstand */
+    const list = getRanking();
+    $("winnerRanking").innerHTML = list.map((p,i)=>`
+      <div class="wRankItem">
+        <span class="wRankNo">${i+1}.</span>
+        <span class="wRankDot" style="background:${p.color}"></span>
+        <span class="wRankName">${escapeHtml(p.name)}</span>
+        <span class="wRankScore">${p.score}</span>
+      </div>
+    `).join("");
+
+    $("winnerScreen").setAttribute("aria-hidden","false");
     $("winnerScreen").style.display="flex";
     spawnConfetti(players.find(x=>x.name===win.name)?.color || "#22c55e");
     vib(HAPT.win);
+    announce(win.name + " gewinnt mit " + win.total + " Punkten!");
   }
 }
 
@@ -1186,6 +1233,7 @@ function newGame(){
   const ok=confirm("Neues Spiel starten? (Alle Spieler werden entfernt)");
   if(!ok) return;
   players=[]; roundNumber=0; gameLocked=false;
+  $("winnerScreen").setAttribute("aria-hidden","true");
   $("winnerScreen").style.display="none";
   $("rankingPanel").classList.remove("open");
   $("rankBtn").setAttribute("aria-expanded","false");
@@ -1214,6 +1262,7 @@ $("endRoundBtn").addEventListener("click",(e)=>{ e.preventDefault(); endRound();
 
 $("targetPoints").addEventListener("change",()=>{
   if(gameLocked) return;
+  $("targetPoints").value = getTarget();   // 0/negativ/leer -> gültiger Wert
   save(); renderAll();
 });
 
@@ -1237,6 +1286,7 @@ $("lastDirectChip").addEventListener("click",(e)=>{
 
 $("winnerNewGame").addEventListener("click",(e)=>{
   e.preventDefault();
+  $("winnerScreen").setAttribute("aria-hidden","true");
   $("winnerScreen").style.display="none";
   newGame();
 });
@@ -1330,6 +1380,70 @@ function tintHex(hex, amount){
 }
 
 
+/* ---------- Weiterspielen nach Sieg ---------- */
+/* Blendet den Gewinner-Screen aus, ohne den Spielstand zu verwerfen.
+   Beim nächsten Rundenende erscheint der aktualisierte Endstand erneut. */
+$("winnerContinue").addEventListener("click",(e)=>{
+  e.preventDefault();
+  $("winnerScreen").setAttribute("aria-hidden","true");
+  $("winnerScreen").style.display="none";
+});
+
+/* ---------- Tastatur-UX: Escape + Fokus-Trap + Fokus-Rückgabe ---------- */
+let lastFocusedEl = null;
+
+function focusablesIn(root){
+  return [...root.querySelectorAll('button, input, [tabindex="0"]')]
+    .filter(el => !el.disabled && el.offsetParent !== null);
+}
+
+/* Fokus beim Öffnen merken, beim Schließen zurückgeben */
+const _openPopupOrig = openPopup;
+openPopup = function(i, direct){
+  lastFocusedEl = document.activeElement || null;
+  _openPopupOrig(i, direct);
+};
+const _internalClosePopupOrig = internalClosePopup;
+internalClosePopup = function(cancel){
+  _internalClosePopupOrig(cancel);
+  lastFocusedEl?.focus?.();
+  lastFocusedEl = null;
+};
+const _openSheetOrig = openSheet;
+openSheet = function(){
+  lastFocusedEl = document.activeElement || null;
+  _openSheetOrig();
+};
+const _closeSheetOrig = closeSheet;
+closeSheet = function(){
+  _closeSheetOrig();
+  lastFocusedEl?.focus?.();
+  lastFocusedEl = null;
+};
+
+document.addEventListener("keydown",(e)=>{
+  /* Escape schließt das oberste Overlay */
+  if(e.key === "Escape"){
+    if(popupEl.classList.contains("open")){ e.preventDefault(); closePopup(true); return; }
+    if(sheetOpen){ e.preventDefault(); closeSheet(); return; }
+    if(toolsMenuOpen){ closeToolsMenu(); return; }
+    return;
+  }
+
+  /* Tab bleibt im offenen Dialog (Fokus-Trap) */
+  if(e.key === "Tab"){
+    const root = popupEl.classList.contains("open") ? popupEl : (sheetOpen ? sheet : null);
+    if(!root) return;
+    const els = focusablesIn(root);
+    if(!els.length) return;
+    const first = els[0], last = els[els.length-1];
+    const active = document.activeElement;
+    if(!root.contains(active)){ e.preventDefault(); first.focus(); return; }
+    if(e.shiftKey && active === first){ e.preventDefault(); last.focus(); }
+    else if(!e.shiftKey && active === last){ e.preventDefault(); first.focus(); }
+  }
+});
+
 /* ---------- Init ---------- */
 // Safety: ensure overlays start hidden
 try{ $('overlay').style.display='none'; $('popup').style.display='none'; $('sheetOverlay').style.display='none'; $('sheet').classList.remove('open'); }catch(e){}
@@ -1339,3 +1453,5 @@ load();
 syncTogglesUI();
 renderAll();
 renderSheetPlayers();
+
+})();

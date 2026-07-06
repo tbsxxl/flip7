@@ -1,19 +1,29 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Flip 7 – Score Tracker</title>
+  <meta name="description" content="Schneller, offline-fähiger Punktezähler für das Kartenspiel Flip 7 – mit Runden, Bust-Erkennung, +15-Bonus und Live-Ranking." />
+  <meta name="color-scheme" content="light" />
 
-<link rel="icon" type="image/png" href="./favicon-12.png">
-<link rel="apple-touch-icon" sizes="1024x1024" href="./favicon-12.png">
-  
-  <meta name="theme-color" content="#f6f7f9">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <!-- PWA / Install -->
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#f7f8fa" />
+
+  <!-- Icons -->
+  <link rel="icon" type="image/png" sizes="48x48" href="./icons/favicon-48.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+
+  <!-- Standalone-Verhalten (modern + iOS-Fallback) -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Flip 7" />
 
   <link rel="stylesheet" href="./styles.css" />
+  <script src="./app.js" defer></script>
 </head>
 
 <body>
@@ -48,7 +58,7 @@
 
   <div id="targetRow">
     <strong>Ziel</strong>
-    <input type="number" id="targetPoints" value="200" inputmode="numeric" pattern="[0-9]*" />
+    <input type="number" id="targetPoints" value="200" min="1" step="1" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" />
   </div>
 
   <div id="emptyState">Keine Spieler. Öffne ⋯ → <b>Spieler verwalten</b>.</div>
@@ -85,8 +95,8 @@
   </div>
 
   <!-- Bottom sheet -->
-  <div id="sheetOverlay"></div>
-  <div id="sheet" aria-hidden="true">
+  <div id="sheetOverlay" aria-hidden="true"></div>
+  <div id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" aria-hidden="true">
     <div class="sheetHeader" id="sheetHeader">
       <div class="sheetGrabWrap" id="sheetGrabArea" style="position:relative;">
         <div class="grabHit" id="sheetGrabHit"></div>
@@ -111,7 +121,7 @@
 
         <div id="sheetAddSticky">
           <div class="row" id="sheetAddRow" style="margin:0;">
-            <input id="sheetAddName" type="text" placeholder="Spielername" autocomplete="off" />
+            <input id="sheetAddName" type="text" placeholder="Spielername" autocomplete="off" autocapitalize="words" enterkeyhint="done" />
             <button id="sheetAddBtn" type="button">Hinzufügen</button>
           </div>
         </div>
@@ -139,8 +149,8 @@
   </div>
 
   <!-- Popup -->
-  <div class="overlay" id="overlay"></div>
-  <div class="popup" id="popup">
+  <div class="overlay" id="overlay" aria-hidden="true"></div>
+  <div class="popup" id="popup" role="dialog" aria-modal="true" aria-labelledby="popupTitle" aria-hidden="true">
     <div class="popupHeader" id="popupHeader">
       <div class="grabBarWrap" id="grabArea" style="position:relative;">
         <div class="grabHit" id="popupGrabHit"></div>
@@ -178,7 +188,7 @@
         <div class="hint">Direktpunkte überschreiben die Karten dieser Runde (kein Bust/Bonus).</div>
       </div>
       <div class="directRow">
-        <input id="freeScoreInput" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="Punkte eingeben (z.B. 37)" />
+        <input id="freeScoreInput" type="number" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" placeholder="Punkte eingeben (z.B. 37)" />
         <button id="applyFreeBtn" type="button">Übernehmen</button>
       </div>
       <div class="lastDirectRow">
@@ -197,13 +207,25 @@
   </div>
 
   <!-- Winner -->
-  <div id="winnerScreen">
+  <div id="winnerScreen" role="alertdialog" aria-modal="true" aria-labelledby="winnerText" aria-hidden="true">
     <div id="winnerCard">
-      <h2 id="winnerText" style="margin:0 0 16px 0;font-weight:var(--wTitle);"></h2>
+      <h2 id="winnerText" style="margin:0 0 12px 0;font-weight:var(--wTitle);"></h2>
+      <div id="winnerRanking"></div>
       <button class="iconBtn" id="winnerNewGame" type="button" style="background:#22c55e;color:#fff;width:100%;">Neues Spiel</button>
+      <button id="winnerContinue" type="button">Weiterspielen</button>
     </div>
   </div>
 
-  <script src="./app.js"></script>
+  <!-- Screenreader-Ansagen (Runde gespeichert, Sieg) -->
+  <div id="srLive" class="visuallyHidden" aria-live="polite"></div>
+
+  <!-- Service Worker: macht die App offline-fähig und installierbar -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
+  </script>
 </body>
 </html>

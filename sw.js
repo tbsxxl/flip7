@@ -1,55 +1,71 @@
-/* Tobis Kochbuch — Service Worker */
-const VERSION = 'kochbuch-v1';
-const ASSET_CACHE = `${VERSION}-assets`;
-const PAGE_CACHE = `${VERSION}-pages`;
+/* Flip 7 – Score Tracker · Service Worker
+   Relativer Scope (funktioniert in jedem Unterverzeichnis).
+   Strategie: App-Shell "cache-first", Navigationen "network-first" mit Offline-Fallback. */
 
-const PRECACHE = [
-  '/Kochen/',
-  '/Kochen/assets/styles.css',
-  '/Kochen/assets/utils.js',
-  '/Kochen/assets/favicon-512.png'
+const VERSION = "flip7-v1";
+const CACHE = `${VERSION}-shell`;
+
+/* Relative Pfade, damit die App auch unter /irgendwas/flip7/ läuft. */
+const SHELL = [
+  "./",
+  "./index.html",
+  "./styles.css",
+  "./app.js",
+  "./manifest.json",
+  "./icons/favicon-48.png",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png",
+  "./icons/icon-maskable-512.png",
+  "./icons/apple-touch-icon.png"
 ];
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(ASSET_CACHE).then(c => c.addAll(PRECACHE)).then(() => self.skipWaiting())
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE)
+      // einzeln hinzufügen, damit ein fehlendes optionales Asset die Installation nicht killt
+      .then((cache) => Promise.allSettled(SHELL.map((url) => cache.add(url))))
+      .then(() => self.skipWaiting())
   );
 });
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => !k.startsWith(VERSION)).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
-self.addEventListener('fetch', (e) => {
-  const req = e.request;
-  if (req.method !== 'GET') return;
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  if (req.method !== "GET") return;
+
   const url = new URL(req.url);
-  if (url.origin !== location.origin) return;
+  if (url.origin !== self.location.origin) return;
 
-  // Assets (css/js/images): cache-first, then network
-  if (/\.(css|js|png|jpg|jpeg|webp|svg|ico|woff2?)$/.test(url.pathname)) {
-    e.respondWith(
-      caches.match(req).then(hit => hit || fetch(req).then(res => {
-        const clone = res.clone();
-        caches.open(ASSET_CACHE).then(c => c.put(req, clone));
-        return res;
-      }))
+  /* Navigationen: erst Netzwerk (frische Version), sonst gecachte Shell (offline). */
+  if (req.mode === "navigate") {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          const clone = res.clone();
+          caches.open(CACHE).then((c) => c.put(req, clone));
+          return res;
+        })
+        .catch(() => caches.match(req).then((hit) => hit || caches.match("./index.html")))
     );
     return;
   }
 
-  // Pages: network-first, fall back to cache when offline
-  e.respondWith(
-    fetch(req).then(res => {
-      const clone = res.clone();
-      caches.open(PAGE_CACHE).then(c => c.put(req, clone));
-      return res;
-    }).catch(() =>
-      caches.match(req).then(hit => hit || caches.match('/Kochen/'))
+  /* Statische Assets: erst Cache, dann Netzwerk (und nachcachen). */
+  event.respondWith(
+    caches.match(req).then((hit) =>
+      hit ||
+      fetch(req).then((res) => {
+        const clone = res.clone();
+        caches.open(CACHE).then((c) => c.put(req, clone));
+        return res;
+      }).catch(() => hit)
     )
   );
 });

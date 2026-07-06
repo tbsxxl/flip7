@@ -1,22 +1,32 @@
 {
-  "name": "Tobis Kochbuch",
-  "short_name": "Kochbuch",
-  "description": "Persönliches Online-Kochbuch",
-  "start_url": "/Kochen/",
-  "scope": "/Kochen/",
+  "name": "Flip 7 – Score Tracker",
+  "short_name": "Flip 7",
+  "description": "Offline-fähiger Punktezähler für das Kartenspiel Flip 7 – Runden, Bust-Erkennung, +15-Bonus und Live-Ranking.",
+  "lang": "de",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "id": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f6f3ef",
-  "theme_color": "#f6f3ef",
+  "background_color": "#f7f8fa",
+  "theme_color": "#f7f8fa",
+  "categories": ["games", "utilities"],
   "icons": [
     {
-      "src": "/Kochen/assets/favicon-512.png",
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/Kochen/assets/favicon-512.png",
+      "src": "./icons/icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
