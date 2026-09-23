@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4a23c9"/>
+      <stop offset="1" stop-color="#1f0f5c"/>
+    </linearGradient>
+    <radialGradient id="glow" cx=".3" cy=".22" r=".75">
+      <stop offset="0" stop-color="#8f6bff" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#8f6bff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="seven" x1="0" y1="0" x2=".35" y2="1">
+      <stop offset="0" stop-color="#6a3cf0"/>
+      <stop offset=".4" stop-color="#d0458f"/>
+      <stop offset=".75" stop-color="#fd8803"/>
+      <stop offset="1" stop-color="#f2c200"/>
+    </linearGradient>
+    <filter id="sh" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#0b0425" flood-opacity=".45"/>
+    </filter>
+  </defs>
+  <rect id="plate" width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="112" fill="url(#glow)"/>
+  <!-- hintere Karten -->
+  <g filter="url(#sh)">
+    <rect x="118" y="128" width="200" height="276" rx="30" fill="#0cb5be" transform="rotate(-17 218 266)"/>
+    <rect x="152" y="118" width="200" height="276" rx="30" fill="#fd8803" transform="rotate(-6 252 256)"/>
+  </g>
+  <!-- vordere Karte -->
+  <g transform="rotate(9 290 262)" filter="url(#sh)">
+    <rect x="186" y="110" width="212" height="296" rx="32" fill="#fbf5e8"/>
+    <rect x="202" y="126" width="180" height="264" rx="22" fill="none" stroke="#e2c98f" stroke-width="5"/>
+    <path d="M232 170 H352 V206 L296 350 H250 L302 208 H232 Z" fill="url(#seven)" stroke="url(#seven)" stroke-width="14" stroke-linejoin="round"/>
+  </g>
+</svg>

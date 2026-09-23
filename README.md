@@ -7,8 +7,15 @@ Läuft als statische Seite auf **Cloudflare Workers** (Static Assets, kein Serve
 
 ## Funktionen
 
-- Spieler & Ziel (150 / 200 / 300 / eigenes) direkt auf der Startseite festlegen
-- Karten-Eingabe mit echten Kartenfarben, Live-Vorschau, Bust-Button, Direktpunkte
+- Spieler & Ziel (150 / 200 / 300 / eigenes) direkt auf der Startseite festlegen, Sitzreihenfolge per Ziehen,
+  Namen aus früheren Spielen als Vorschläge
+- Eintragen der Reihe nach: „Weiter" springt zur nächsten Person, bei der letzten heißt der Knopf „Runde beenden";
+  nach Bust / Flip 7 geht es automatisch weiter (abschaltbar)
+- Bust mit einem Tipp direkt auf der Spielerkarte
+- Geber-Anzeige, wandert jede Runde weiter
+- Karten-Eingabe mit echten Kartenfarben, Live-Vorschau, Direktpunkte
+- Vergangene Runden im Verlauf antippen und korrigieren
+- Zwei- bzw. dreispaltiges Layout auf Tablet und im Querformat
 - Live-Ranking, Führungsanzeige, Fortschrittsbalken
 - Verlauf je Runde + Statistik (Ø, beste Runde, Bust-Quote, Flip 7s)
 - Rückgängig für jede Aktion (bleibt auch nach Neuladen erhalten)

@@ -37,11 +37,11 @@ function storageGet(key) { try { return JSON.parse(localStorage.getItem(key) || 
 function storageSet(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) {} }
 
 /* ---------- Zustand ---------- */
-const newGame = (players = []) => ({ players, round: 0, target: 200, locked: false });
+const newGame = (players = []) => ({ players, round: 0, target: 200, locked: false, dealer: null });
 
 let game = newGame();
 let undoStack = []; // [{ label, snap }]
-let prefs = { theme: "light", compact: false, contrast: false, wake: false, haptics: true };
+let prefs = { theme: "light", compact: false, contrast: false, wake: false, haptics: true, auto: true, recent: [] };
 let lastDeltas = null; // { [playerId]: {s,b,f,m} } – Ergebnis der zuletzt beendeten Runde
 
 function save() { storageSet(STORE_KEY, { game, undo: undoStack, lastDeltas }); }
@@ -115,6 +115,25 @@ function ranking() {
     .sort((a, b) => b.score - a.score);
 }
 
+/* Geber & Reihenfolge: Es beginnt die Person links vom Geber (= nächste in der Liste). */
+function dealerIdx() {
+  const i = game.players.findIndex((p) => p.id === game.dealer);
+  return i >= 0 ? i : 0;
+}
+/* Nächste Person ohne Eingabe, ab fromId im Uhrzeigersinn (fromId selbst ausgenommen).
+   Ohne fromId: ab der Startperson dieser Runde. */
+function nextPending(fromId) {
+  const n = game.players.length;
+  if (!n) return null;
+  const from = game.players.findIndex((p) => p.id === fromId);
+  const start = from >= 0 ? from + 1 : dealerIdx() + 1;
+  for (let k = 0; k < n; k++) {
+    const p = game.players[(start + k) % n];
+    if (p.id !== fromId && !hasInput(p)) return p;
+  }
+  return null;
+}
+
 /* ---------- Haptik ---------- */
 function vib(ms) { if (prefs.haptics && navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) {} } }
 
@@ -126,7 +145,17 @@ function render() {
   renderPlayers();
   renderHistory();
   $("endRoundBtn").disabled = game.players.length === 0;
-  $("endRoundBtn").textContent = `Runde ${game.round + 1} beenden`;
+  // Solange jemand ohne Eingabe ist, ist „Eintragen“ die Hauptaktion (geht der Reihe nach durch).
+  const pend = nextPending(null);
+  $("enterBtn").hidden = !pend;
+  $("enterBtn").classList.toggle("btn--primary", !!pend);
+  $("endRoundBtn").classList.toggle("btn--primary", !pend);
+  $("endRoundBtn").textContent = pend ? "Beenden" : `Runde ${game.round + 1} beenden`;
+  $("endRoundBtn").setAttribute("aria-label", `Runde ${game.round + 1} beenden`);
+  if (pend) {
+    $("enterBtn").firstChild.textContent = pend.name + " ";
+    $("enterBtn").setAttribute("aria-label", `Karten für ${pend.name} eintragen`);
+  }
   const u = undoStack[undoStack.length - 1];
   $("undoBtn").disabled = !u;
   $("undoBtn").setAttribute("aria-label", u ? "Rückgängig: " + u.label : "Rückgängig");
@@ -146,11 +175,21 @@ function renderSetup() {
   $("setup").hidden = !show;
   if (!show) return;
 
-  $("setupPlayers").innerHTML = game.players.map((p) => `
-    <li class="chip" style="--c:${p.color}">
-      <span class="dot"></span><span class="chip__name">${esc(p.name)}</span>
-      <button type="button" class="chip__x" data-remove="${p.id}" aria-label="${esc(p.name)} entfernen"><svg class="ico"><use href="#i-close"/></svg></button>
+  $("setupPlayers").innerHTML = game.players.map((p, i) => `
+    <li class="seat" style="--c:${p.color}" data-id="${p.id}">
+      <button type="button" class="seat__grip" data-grip="${p.id}" aria-label="${esc(p.name)} verschieben (Pfeiltasten)"><svg class="ico"><use href="#i-grip"/></svg></button>
+      <span class="seat__no">${i + 1}</span>
+      <span class="dot"></span>
+      <span class="seat__name">${esc(p.name)}</span>
+      ${p.id === game.players[dealerIdx()].id ? `<span class="dealerTag" title="Geber"><svg class="ico"><use href="#i-deal"/></svg>Geber</span>` : ""}
+      <button type="button" class="seat__x" data-remove="${p.id}" aria-label="${esc(p.name)} entfernen"><svg class="ico"><use href="#i-close"/></svg></button>
     </li>`).join("");
+
+  const inGame = new Set(game.players.map((p) => p.name.toLowerCase()));
+  const recent = (prefs.recent || []).filter((n) => !inGame.has(n.toLowerCase())).slice(0, 10);
+  $("recentWrap").hidden = !recent.length || game.players.length >= MAX_PLAYERS;
+  $("recentNames").innerHTML = recent.map((n) =>
+    `<button type="button" class="recentChip" data-recent="${esc(n)}"><svg class="ico"><use href="#i-plus"/></svg>${esc(n)}</button>`).join("");
 
   const full = game.players.length >= MAX_PLAYERS;
   $("addName").disabled = full;
@@ -206,8 +245,10 @@ function renderPlayers() {
     const input = hasInput(p);
     const d = lastDeltas && lastDeltas[p.id];
 
+    const isDealer = game.players.length > 1 && p.id === game.players[dealerIdx()].id;
+    const quickBust = !input || (p.cur.bust && !p.cur.cards.length && p.cur.override == null);
     let state = "";
-    if (res.bust) state = `<span class="badge badge--bust">Bust</span>`;
+    if (res.bust && !quickBust) state = `<span class="badge badge--bust">Bust</span>`;
     else if (res.flip7) state = `<span class="badge badge--f7">Flip 7 +15</span>`;
     else if (res.manual) state = `<span class="badge">Direkt</span>`;
 
@@ -219,7 +260,7 @@ function renderPlayers() {
       roundLine = `<span class="player__round player__round--last">Letzte Runde <b>${d.b ? "Bust" : "+" + d.s}</b></span>
         <span class="player__tap"></span>`;
     } else {
-      roundLine = `<span class="player__tap">Tippen, um Karten einzutragen</span>`;
+      roundLine = `<span class="player__tap">Tippen für Karten</span>`;
     }
 
     return `
@@ -228,18 +269,19 @@ function renderPlayers() {
           <span class="player__head">
             <span class="player__rank">${rankOf.get(p.id)}</span>
             <span class="player__name">${esc(p.name)}</span>
+            ${isDealer ? `<span class="dealerTag dealerTag--card" title="Gibt diese Runde"><svg class="ico"><use href="#i-deal"/></svg>Geber</span>` : ""}
             ${state}
-            <span class="player__total"><b data-total="${p.id}">${total}</b><small>/${game.target}</small></span>
+            <span class="player__total"><b data-total="${p.id}">${total}</b><small>${left ? "noch " + left : "Ziel ✓"}</small></span>
           </span>
           <span class="bar" aria-hidden="true">
             <span class="bar__base" style="width:${pctBase}%"></span>
             <span class="bar__live" style="left:${pctBase}%;width:${Math.max(0, pctLive)}%"></span>
           </span>
-          <span class="player__foot">
+          <span class="player__foot${quickBust ? " has-quick" : ""}">
             ${roundLine}
-            <span class="player__left">${left ? "noch " + left : "Ziel ✓"}</span>
           </span>
         </button>
+        ${quickBust ? `<button type="button" class="quickBust" data-bust="${p.id}" aria-pressed="${!!p.cur.bust}" aria-label="${esc(p.name)} Bust${p.cur.bust ? " aufheben" : ""}">Bust</button>` : ""}
       </li>`;
   }).join("");
 }
@@ -259,7 +301,7 @@ function renderHistory() {
       const e = p.rounds[i];
       if (!e) return "<td>–</td>";
       const tag = e.b ? `<span class="tag tag--bust">B</span>` : e.f ? `<span class="tag tag--f7">7</span>` : e.m ? `<span class="tag tag--man">M</span>` : "";
-      return `<td class="${e.b ? "is-bust" : ""}">${e.b ? 0 : e.s}${tag}</td>`;
+      return `<td class="${e.b ? "is-bust" : ""}"><button type="button" class="cellBtn" data-edit="${p.id}:${i}" aria-label="Runde ${i + 1}, ${esc(p.name)}: ${e.b ? "Bust" : e.s} – bearbeiten">${e.b ? 0 : e.s}${tag}</button></td>`;
     }).join("");
     body += `<tr><th scope="row">${i + 1}</th>${cells}</tr>`;
   }
@@ -405,16 +447,77 @@ function nextColor() {
   return PALETTE.find((c) => !used.has(c)) || PALETTE[game.players.length % PALETTE.length];
 }
 
+function addPlayer(raw) {
+  const name = String(raw).trim().replace(/\s+/g, " ");
+  if (!name || game.locked || game.players.length >= MAX_PLAYERS) return false;
+  prefs.recent = [name, ...(prefs.recent || []).filter((n) => n.toLowerCase() !== name.toLowerCase())].slice(0, 16);
+  savePrefs();
+  commit(name + " hinzugefügt", () => {
+    const p = { id: uid(), name, color: nextColor(), total: 0, rounds: [], cur: emptyEntry() };
+    game.players.push(p);
+    if (!game.dealer) game.dealer = p.id;
+  });
+  return true;
+}
 $("addForm").addEventListener("submit", (e) => {
   e.preventDefault();
-  const name = $("addName").value.trim().replace(/\s+/g, " ");
-  if (!name || game.locked || game.players.length >= MAX_PLAYERS) return;
-  commit(name + " hinzugefügt", () => {
-    game.players.push({ id: uid(), name, color: nextColor(), total: 0, rounds: [], cur: emptyEntry() });
-  });
-  $("addName").value = "";
+  if (addPlayer($("addName").value)) $("addName").value = "";
   $("addName").focus();
 });
+$("recentNames").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-recent]");
+  if (b) { addPlayer(b.dataset.recent); vib(8); }
+});
+
+/* Sitzreihenfolge: am Griff ziehen (Maus/Touch) oder Pfeiltasten */
+function reorder(ids, label = "Reihenfolge geändert") {
+  const cur = game.players.map((p) => p.id).join();
+  if (ids.join() === cur) return;
+  commit(label, () => {
+    const byId = new Map(game.players.map((p) => [p.id, p]));
+    game.players = ids.map((id) => byId.get(id)).filter(Boolean);
+  });
+}
+(() => {
+  const list = $("setupPlayers");
+  let drag = null;
+  list.addEventListener("pointerdown", (e) => {
+    const g = e.target.closest("[data-grip]");
+    if (!g || game.locked) return;
+    e.preventDefault();
+    const li = g.closest("li");
+    drag = { li, pid: e.pointerId, y0: e.clientY };
+    li.classList.add("is-dragging");
+    g.setPointerCapture?.(e.pointerId);
+  });
+  list.addEventListener("pointermove", (e) => {
+    if (!drag || e.pointerId !== drag.pid) return;
+    const rows = [...list.children].filter((x) => x !== drag.li);
+    const before = rows.find((r) => { const b = r.getBoundingClientRect(); return e.clientY < b.top + b.height / 2; });
+    if (before) { if (drag.li.nextElementSibling !== before) list.insertBefore(drag.li, before); }
+    else if (list.lastElementChild !== drag.li) list.appendChild(drag.li);
+  });
+  const end = (e) => {
+    if (!drag || e.pointerId !== drag.pid) return;
+    drag.li.classList.remove("is-dragging");
+    drag = null;
+    reorder([...list.children].map((li) => li.dataset.id));
+    vib(10);
+  };
+  list.addEventListener("pointerup", end);
+  list.addEventListener("pointercancel", end);
+  list.addEventListener("keydown", (e) => {
+    const g = e.target.closest("[data-grip]");
+    if (!g || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return;
+    e.preventDefault();
+    const ids = game.players.map((p) => p.id);
+    const i = ids.indexOf(g.dataset.grip), j = i + (e.key === "ArrowUp" ? -1 : 1);
+    if (j < 0 || j >= ids.length) return;
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+    reorder(ids);
+    list.querySelector(`[data-grip="${g.dataset.grip}"]`)?.focus();
+  });
+})();
 
 $("setupPlayers").addEventListener("click", (e) => {
   const b = e.target.closest("[data-remove]");
@@ -517,13 +620,41 @@ function renderDraft() {
   pv.classList.toggle("is-bust", res.bust);
   pv.classList.toggle("is-f7", res.flip7);
 
+  // „Weiter“: nächste Person ohne Eingabe, sonst Runde beenden
+  const nxt = entryPlayer ? nextPending(entryPlayer.id) : null;
+  $("entryNext").value = nxt ? "next" : "end";
+  $("entryNextLabel").textContent = nxt ? nxt.name : "Runde beenden";
+  $("entryNext").setAttribute("aria-label", nxt ? `Übernehmen, weiter zu ${nxt.name}` : "Übernehmen und Runde beenden");
+
+  cancelAuto();
   const fx = res.bust ? "bust" : res.flip7 ? "f7" : "";
   if (fx && fx !== prevFx) {
     pv.classList.remove("pop"); void pv.offsetWidth; pv.classList.add("pop");
     vib(fx === "bust" ? [30, 40, 30] : 25);
+    if (prefs.auto && nxt) startAuto();
   }
   prevFx = fx;
 }
+
+/* Nach Bust / Flip 7 ist die Runde für diese Person vorbei → automatisch weiter.
+   Jede Berührung im Dialog (außer „Weiter“) bricht das ab. */
+const AUTO_MS = 1400;
+let autoTimer = null;
+function startAuto() {
+  const b = $("entryNext");
+  b.classList.remove("is-auto"); void b.offsetWidth;
+  b.style.setProperty("--auto-ms", AUTO_MS + "ms");
+  b.classList.add("is-auto");
+  autoTimer = setTimeout(() => { autoTimer = null; if ($("entryDlg").open) $("entryDlg").close("next"); }, AUTO_MS);
+}
+function cancelAuto() {
+  clearTimeout(autoTimer);
+  autoTimer = null;
+  $("entryNext").classList.remove("is-auto");
+}
+$("entryDlg").addEventListener("pointerdown", (e) => {
+  if (autoTimer && !e.target.closest("#entryNext, [data-num], [data-mod], #bustBtn, #entryUndoBtn, #clearBtn, [data-idx]")) cancelAuto();
+});
 
 $("numGrid").addEventListener("click", (e) => {
   const b = e.target.closest("[data-num]");
@@ -597,21 +728,82 @@ $("tabDirect").addEventListener("click", () => setTab("direct"));
 
 $("entryDlg").addEventListener("close", () => {
   const p = entryPlayer;
+  const v = $("entryDlg").returnValue;
   entryPlayer = null;
   prevFx = "";
-  if (!p || $("entryDlg").returnValue !== "ok") return;
-  if (JSON.stringify(p.cur) === JSON.stringify(draft)) return;
-  const next = clone(draft);
-  commit("Eingabe " + p.name, () => {
-    const target = game.players.find((x) => x.id === p.id);
-    if (target) target.cur = next;
-  });
-  vib(15);
+  cancelAuto();
+  if (!p || !["ok", "next", "end"].includes(v)) return;
+  if (JSON.stringify(p.cur) !== JSON.stringify(draft)) {
+    const next = clone(draft);
+    commit("Eingabe " + p.name, () => {
+      const target = game.players.find((x) => x.id === p.id);
+      if (target) target.cur = next;
+    });
+    vib(15);
+  }
+  if (v === "next") {
+    const n = nextPending(p.id);
+    if (n) openEntry(n.id); else endRound();
+  } else if (v === "end") {
+    endRound();
+  }
 });
 
 $("players").addEventListener("click", (e) => {
+  const q = e.target.closest("[data-bust]");
+  if (q) {
+    const p = game.players.find((x) => x.id === q.dataset.bust);
+    if (!p) return;
+    const on = !p.cur.bust;
+    commit(`${p.name} ${on ? "Bust" : "Bust aufgehoben"}`, () => { p.cur = on ? { cards: [], override: null, bust: true } : emptyEntry(); });
+    vib(on ? [30, 40, 30] : 10);
+    return;
+  }
   const b = e.target.closest("[data-open]");
   if (b) openEntry(b.dataset.open);
+});
+$("enterBtn").addEventListener("click", () => {
+  const p = nextPending(null);
+  if (p) openEntry(p.id);
+});
+
+/* ---------- Vergangene Runde korrigieren ---------- */
+let editRef = null;
+$("historyTable").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-edit]");
+  if (!b) return;
+  const [pid, idx] = b.dataset.edit.split(":");
+  const p = game.players.find((x) => x.id === pid);
+  const r = p && p.rounds[Number(idx)];
+  if (!r) return;
+  editRef = { pid, i: Number(idx) };
+  $("editKicker").textContent = `Runde ${Number(idx) + 1} korrigieren`;
+  $("editTitle").textContent = p.name;
+  $("editInput").value = r.b ? "" : r.s;
+  $("editBust").checked = !!r.b;
+  openDlg($("editDlg"));
+  setTimeout(() => { if (!r.b) { $("editInput").focus(); $("editInput").select(); } }, 60);
+});
+$("editBust").addEventListener("change", () => { if ($("editBust").checked) $("editInput").value = ""; });
+$("editInput").addEventListener("input", () => { if ($("editInput").value !== "") $("editBust").checked = false; });
+$("editInput").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); $("editDlg").close("yes"); } });
+$("editDlg").addEventListener("close", () => {
+  const ref = editRef;
+  editRef = null;
+  if (!ref || $("editDlg").returnValue !== "yes") return;
+  const p = game.players.find((x) => x.id === ref.pid);
+  const old = p && p.rounds[ref.i];
+  if (!old) return;
+  const bust = $("editBust").checked;
+  const v = Math.min(999, Math.max(0, Math.floor(Number($("editInput").value) || 0)));
+  const s = bust ? 0 : v;
+  if (bust === !!old.b && s === old.s) return;
+  commit(`Runde ${ref.i + 1} ${p.name} korrigiert`, () => {
+    const e = { s, b: bust, f: !bust && s === old.s && old.f, m: !bust && (s !== old.s || old.m) };
+    p.rounds[ref.i] = e;
+    p.total = p.rounds.reduce((a, r) => a + r.s, 0);
+    if (ref.i === game.round - 1 && lastDeltas) lastDeltas[p.id] = e;
+  });
 });
 
 /* ---------- Runde beenden ---------- */
@@ -639,6 +831,8 @@ async function endRound() {
     });
     game.round = roundNo;
     game.locked = true;
+    const n = game.players.length;
+    game.dealer = game.players[(dealerIdx() + 1) % n].id; // Geber wandert weiter
   });
 
   // Animationen
@@ -717,6 +911,7 @@ function renderMenu() {
     <li style="--c:${p.color}">
       <button type="button" class="colorBtn" data-color="${p.id}" aria-label="Farbe von ${esc(p.name)} ändern"><span class="dot"></span></button>
       <input type="text" maxlength="20" value="${esc(p.name)}" data-rename="${p.id}" aria-label="Name" enterkeyhint="done" />
+      <button type="button" class="iconBtn iconBtn--ghost iconBtn--sm dealerBtn" data-dealer="${p.id}" aria-pressed="${p.id === game.players[dealerIdx()].id}" aria-label="${esc(p.name)} ist Geber"><svg class="ico"><use href="#i-deal"/></svg></button>
       ${canEdit ? `<button type="button" class="iconBtn iconBtn--ghost iconBtn--sm" data-del="${p.id}" aria-label="${esc(p.name)} entfernen"><svg class="ico"><use href="#i-trash"/></svg></button>` : ""}
     </li>`).join("") : `<li class="menuPlayers__empty">Noch keine Spieler – auf der Startseite hinzufügen.</li>`;
   $("recolorBtn").disabled = game.players.length < 2;
@@ -727,6 +922,7 @@ function renderMenu() {
   $("optContrast").checked = prefs.contrast;
   $("optWake").checked = prefs.wake;
   $("optHaptics").checked = prefs.haptics;
+  $("optAuto").checked = prefs.auto;
 }
 
 $("menuBtn").addEventListener("click", () => { renderMenu(); openDlg($("menuDlg")); });
@@ -748,6 +944,12 @@ $("menuPlayers").addEventListener("keydown", (e) => {
 $("menuPlayers").addEventListener("click", async (e) => {
   const del = e.target.closest("[data-del]");
   const col = e.target.closest("[data-color]");
+  const deal = e.target.closest("[data-dealer]");
+  if (deal && deal.dataset.dealer !== game.players[dealerIdx()]?.id) {
+    const p = game.players.find((x) => x.id === deal.dataset.dealer);
+    if (p) commit(`Geber: ${p.name}`, () => { game.dealer = p.id; });
+    return;
+  }
   if (del && !game.locked) {
     const p = game.players.find((x) => x.id === del.dataset.del);
     if (p && await confirmAsk(`${p.name} entfernen?`, "Entfernen", true)) {
@@ -796,7 +998,7 @@ $("themeSeg").addEventListener("click", (e) => {
   prefs.theme = b.dataset.theme;
   savePrefs(); applyPrefs(); renderMenu();
 });
-[["optCompact", "compact"], ["optContrast", "contrast"], ["optWake", "wake"], ["optHaptics", "haptics"]].forEach(([id, key]) => {
+[["optCompact", "compact"], ["optContrast", "contrast"], ["optWake", "wake"], ["optHaptics", "haptics"], ["optAuto", "auto"]].forEach(([id, key]) => {
   $(id).addEventListener("change", () => {
     prefs[key] = $(id).checked;
     savePrefs(); applyPrefs();

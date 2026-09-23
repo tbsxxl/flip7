@@ -22,6 +22,7 @@
   <meta property="og:description" content="Karten antippen, fertig: Punkte, Bust und Flip-7-Bonus für das Kartenspiel Flip 7." />
   <meta property="og:image" content="/icons/icon-512.png" />
 
+  <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
   <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png" />
   <link rel="manifest" href="/manifest.webmanifest" />
@@ -39,12 +40,15 @@
     <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></symbol>
     <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 13h12l1-13M9 7V4h6v3" /></symbol>
     <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></symbol>
+    <symbol id="i-deal" viewBox="0 0 24 24"><rect x="8" y="3" width="11" height="15" rx="2" /><path d="M5 7.5v11a2 2 0 0 0 2 2h8" /></symbol>
+    <symbol id="i-grip" viewBox="0 0 24 24"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" stroke-width="3.2" /></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6" /></symbol>
     <symbol id="i-crown" viewBox="0 0 24 24"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z" /></symbol>
   </svg>
 
   <header class="topbar">
     <div class="brand">
-      <img src="/icons/icon-192.png" alt="" width="40" height="40" class="brand__logo" />
+      <img src="/icons/icon.svg" alt="" width="40" height="40" class="brand__logo" />
       <div class="brand__text">
         <h1>Flip 7</h1>
         <p id="subline" class="brand__sub">Punktezähler</p>
@@ -69,7 +73,11 @@
         <input id="addName" type="text" maxlength="20" placeholder="Name eingeben" autocapitalize="words" enterkeyhint="done" />
         <button id="addBtn" class="btn btn--primary" type="submit">Hinzufügen</button>
       </form>
-      <ul id="setupPlayers" class="setupPlayers" aria-label="Spieler"></ul>
+      <div id="recentWrap" class="recent" hidden>
+        <span class="recent__label">Zuletzt dabei</span>
+        <div id="recentNames" class="recent__list"></div>
+      </div>
+      <ol id="setupPlayers" class="setupPlayers" aria-label="Spieler in Sitzreihenfolge – zum Sortieren am Griff ziehen"></ol>
 
       <div class="targetRow">
         <span class="targetRow__label" id="targetLabel">Ziel</span>
@@ -81,7 +89,7 @@
         <label class="visuallyHidden" for="targetInput">Eigenes Ziel</label>
         <input id="targetInput" class="targetInput" type="number" min="1" max="9999" step="1" inputmode="numeric" enterkeyhint="done" />
       </div>
-      <p class="hint">Nach Runde 1 sind Spieler und Ziel fest. Namen lassen sich im Menü jederzeit ändern.</p>
+      <p class="hint">Reihenfolge = Sitzreihenfolge (am Griff ziehen). Nach Runde 1 sind Spieler und Ziel fest, Namen und Geber lassen sich im Menü jederzeit ändern.</p>
     </section>
 
     <!-- Führung -->
@@ -108,12 +116,15 @@
       <div class="tableScroll">
         <table id="historyTable" class="historyTable"></table>
       </div>
-      <p class="hint legend"><span class="tag tag--bust">B</span> Bust <span class="tag tag--f7">7</span> Flip 7 <span class="tag tag--man">M</span> Direktpunkte</p>
+      <p class="hint legend">Wert antippen zum Korrigieren · <span class="tag tag--bust">B</span> Bust <span class="tag tag--f7">7</span> Flip 7 <span class="tag tag--man">M</span> Direktpunkte</p>
     </details>
   </main>
 
   <footer class="bottombar">
-    <button id="endRoundBtn" class="btn btn--primary btn--xl" type="button" disabled>Runde beenden</button>
+    <div class="bottombar__row">
+      <button id="enterBtn" class="btn btn--xl btn--enter" type="button" hidden>Eintragen <svg class="ico"><use href="#i-next" /></svg></button>
+      <button id="endRoundBtn" class="btn btn--primary btn--xl" type="button" disabled>Runde beenden</button>
+    </div>
   </footer>
 
   <div id="toast" class="toast" role="status" aria-live="polite">
@@ -169,8 +180,11 @@
       </div>
 
       <footer class="sheet__foot">
-        <button class="btn" value="cancel" type="submit">Abbrechen</button>
-        <button class="btn btn--primary" value="ok" type="submit" id="entryOk">Übernehmen</button>
+        <button class="btn" value="ok" type="submit" id="entryOk">Übernehmen</button>
+        <button class="btn btn--primary btn--next" value="next" type="submit" id="entryNext">
+          <span id="entryNextLabel">Weiter</span><svg class="ico"><use href="#i-next" /></svg>
+          <i class="autoBar" aria-hidden="true"></i>
+        </button>
       </footer>
     </form>
   </dialog>
@@ -188,6 +202,7 @@
 
       <section class="menuSec" id="menuPlayersSec">
         <h3>Spieler</h3>
+        <p class="hint menuHint">Farbe antippen zum Wechseln, Karten-Symbol = Geber.</p>
         <ul id="menuPlayers" class="menuPlayers"></ul>
         <button type="button" id="recolorBtn" class="btn btn--block">Farben neu verteilen</button>
       </section>
@@ -202,6 +217,7 @@
             <button type="button" role="radio" data-theme="system">Auto</button>
           </div>
         </div>
+        <label class="setRow"><span>Nach Bust / Flip 7 automatisch weiter</span><input type="checkbox" class="switch" id="optAuto" /></label>
         <label class="setRow"><span>Kompakte Ansicht</span><input type="checkbox" class="switch" id="optCompact" /></label>
         <label class="setRow"><span>Hoher Kontrast</span><input type="checkbox" class="switch" id="optContrast" /></label>
         <label class="setRow" id="wakeRow"><span>Bildschirm anlassen</span><input type="checkbox" class="switch" id="optWake" /></label>
@@ -233,6 +249,21 @@
         <button type="submit" value="rematch" class="btn btn--primary btn--block">Revanche</button>
         <button type="submit" value="continue" class="btn btn--block">Weiterspielen</button>
         <button type="submit" value="new" class="btn btn--block btn--dangerText">Neues Spiel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Vergangene Runde bearbeiten -->
+  <dialog id="editDlg" class="modal" aria-labelledby="editTitle">
+    <form method="dialog" class="modal__inner">
+      <p class="modal__kicker" id="editKicker"></p>
+      <h2 id="editTitle" class="modal__title modal__title--plain"></h2>
+      <label class="visuallyHidden" for="editInput">Punkte</label>
+      <input id="editInput" class="directInput" type="number" min="0" max="999" step="1" inputmode="numeric" enterkeyhint="done" />
+      <label class="setRow"><span>Bust</span><input type="checkbox" class="switch" id="editBust" /></label>
+      <div class="modal__actions modal__actions--row">
+        <button type="submit" value="no" class="btn">Abbrechen</button>
+        <button type="submit" value="yes" class="btn btn--primary">Speichern</button>
       </div>
     </form>
   </dialog>
