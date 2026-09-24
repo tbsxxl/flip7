@@ -1,0 +1,9 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "flip7",
+  "compatibility_date": "2026-09-01",
+  // Reine statische Seite: kein Worker-Code, alles kommt direkt vom Cloudflare-CDN.
+  "assets": {
+    "directory": "./public"
+  }
+}

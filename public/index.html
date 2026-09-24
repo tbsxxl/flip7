@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Flip 7 – Punktezähler</title>
+  <meta name="description" content="Schneller, offline-fähiger Punktezähler für das Kartenspiel Flip 7: Karten antippen, Bust und +15-Bonus werden automatisch erkannt, mit Live-Ranking und Rundenverlauf." />
+  <meta name="theme-color" content="#f6f1e7" />
+  <script>
+    // Theme vor dem ersten Rendern setzen (kein Aufblitzen). Standard: hell.
+    try {
+      var t = (JSON.parse(localStorage.getItem("flip7_prefs_v1") || "{}") || {}).theme;
+      if (t === "dark" || (t === "system" && matchMedia("(prefers-color-scheme: dark)").matches)) document.documentElement.dataset.theme = "dark";
+    } catch (e) {}
+  </script>
+
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Flip 7" />
+  <meta property="og:title" content="Flip 7 – Punktezähler" />
+  <meta property="og:description" content="Karten antippen, fertig: Punkte, Bust und Flip-7-Bonus für das Kartenspiel Flip 7." />
+  <meta property="og:image" content="/icons/icon-512.png" />
+
+  <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+
+  <link rel="stylesheet" href="/styles.css" />
+  <script src="/rules.js" defer></script>
+  <script src="/app.js" defer></script>
+</head>
+
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" /></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 13h12l1-13M9 7V4h6v3" /></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></symbol>
+    <symbol id="i-deal" viewBox="0 0 24 24"><rect x="8" y="3" width="11" height="15" rx="2" /><path d="M5 7.5v11a2 2 0 0 0 2 2h8" /></symbol>
+    <symbol id="i-grip" viewBox="0 0 24 24"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" stroke-width="3.2" /></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6" /></symbol>
+    <symbol id="i-crown" viewBox="0 0 24 24"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z" /></symbol>
+  </svg>
+
+  <header class="topbar">
+    <div class="brand">
+      <img src="/icons/icon.svg" alt="" width="40" height="40" class="brand__logo" />
+      <div class="brand__text">
+        <h1>Flip 7</h1>
+        <p id="subline" class="brand__sub">Punktezähler</p>
+      </div>
+    </div>
+    <div class="topbar__actions">
+      <button id="undoBtn" class="iconBtn" type="button" aria-label="Rückgängig" disabled>
+        <svg class="ico"><use href="#i-undo" /></svg>
+      </button>
+      <button id="menuBtn" class="iconBtn" type="button" aria-label="Menü &amp; Einstellungen" aria-haspopup="dialog">
+        <svg class="ico"><use href="#i-menu" /></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- Setup: nur vor der ersten Runde sichtbar -->
+    <section id="setup" class="panel setup" aria-labelledby="setupTitle">
+      <h2 id="setupTitle" class="panel__title">Wer spielt mit?</h2>
+      <form id="addForm" class="addRow" autocomplete="off">
+        <label class="visuallyHidden" for="addName">Spielername</label>
+        <input id="addName" type="text" maxlength="20" placeholder="Name eingeben" autocapitalize="words" enterkeyhint="done" />
+        <button id="addBtn" class="btn btn--primary" type="submit">Hinzufügen</button>
+      </form>
+      <div id="recentWrap" class="recent" hidden>
+        <span class="recent__label">Zuletzt dabei</span>
+        <div id="recentNames" class="recent__list"></div>
+      </div>
+      <ol id="setupPlayers" class="setupPlayers" aria-label="Spieler in Sitzreihenfolge – zum Sortieren am Griff ziehen"></ol>
+
+      <div class="targetRow">
+        <span class="targetRow__label" id="targetLabel">Ziel</span>
+        <div class="seg" role="radiogroup" aria-labelledby="targetLabel" id="targetSeg">
+          <button type="button" role="radio" data-target="150">150</button>
+          <button type="button" role="radio" data-target="200">200</button>
+          <button type="button" role="radio" data-target="300">300</button>
+        </div>
+        <label class="visuallyHidden" for="targetInput">Eigenes Ziel</label>
+        <input id="targetInput" class="targetInput" type="number" min="1" max="9999" step="1" inputmode="numeric" enterkeyhint="done" />
+      </div>
+      <p class="hint">Reihenfolge = Sitzreihenfolge (am Griff ziehen). Nach Runde 1 sind Spieler und Ziel fest, Namen und Geber lassen sich im Menü jederzeit ändern.</p>
+    </section>
+
+    <!-- Führung -->
+    <section id="leader" class="leader" hidden>
+      <svg class="ico leader__crown" aria-hidden="true"><use href="#i-crown" /></svg>
+      <div class="leader__main">
+        <span class="leader__label">Führung</span>
+        <span id="leaderName" class="leader__name"></span>
+      </div>
+      <div class="leader__side">
+        <span id="leaderScore" class="leader__score"></span>
+        <span id="leaderGap" class="leader__gap"></span>
+      </div>
+    </section>
+
+    <ol id="players" class="players" aria-label="Spielstand"></ol>
+
+    <!-- Verlauf & Statistik -->
+    <details id="historyWrap" class="panel history" hidden>
+      <summary>
+        <span>Verlauf &amp; Statistik</span>
+        <svg class="ico chev" aria-hidden="true"><use href="#i-chevron" /></svg>
+      </summary>
+      <div class="tableScroll">
+        <table id="historyTable" class="historyTable"></table>
+      </div>
+      <p class="hint legend">Wert antippen zum Korrigieren · <span class="tag tag--bust">B</span> Bust <span class="tag tag--f7">7</span> Flip 7 <span class="tag tag--man">M</span> Direktpunkte</p>
+    </details>
+  </main>
+
+  <footer class="bottombar">
+    <div class="bottombar__row">
+      <button id="enterBtn" class="btn btn--xl btn--enter" type="button" hidden>Eintragen <svg class="ico"><use href="#i-next" /></svg></button>
+      <button id="endRoundBtn" class="btn btn--primary btn--xl" type="button" disabled>Runde beenden</button>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite">
+    <span id="toastText"></span>
+    <button id="toastUndo" type="button" class="toast__btn">Rückgängig</button>
+  </div>
+
+  <!-- Karten-Eingabe -->
+  <dialog id="entryDlg" class="sheet" aria-labelledby="entryName">
+    <form method="dialog" class="sheet__inner" id="entryForm">
+      <div class="sheet__grab" aria-hidden="true"></div>
+      <header class="sheet__head">
+        <span id="entryDot" class="dot"></span>
+        <h2 id="entryName" class="sheet__title"></h2>
+        <button class="iconBtn iconBtn--ghost" value="cancel" type="submit" aria-label="Schließen">
+          <svg class="ico"><use href="#i-close" /></svg>
+        </button>
+      </header>
+
+      <div id="preview" class="preview">
+        <div class="preview__score"><span id="previewScore">0</span><small>Punkte</small></div>
+        <div class="preview__info">
+          <span id="previewState" class="preview__state"></span>
+          <span id="previewTotal" class="preview__total"></span>
+        </div>
+      </div>
+
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" id="tabCards" aria-controls="viewCards" aria-selected="true">Karten</button>
+        <button type="button" role="tab" id="tabDirect" aria-controls="viewDirect" aria-selected="false">Direktpunkte</button>
+      </div>
+
+      <div id="viewCards" role="tabpanel" aria-labelledby="tabCards">
+        <div id="picked" class="picked" aria-label="Gewählte Karten (antippen zum Entfernen)"></div>
+        <div class="gridLabel">Zahlen <span class="hint">– gleiche Zahl zweimal = Bust</span></div>
+        <div id="numGrid" class="numGrid"></div>
+        <div class="gridLabel">Modifier</div>
+        <div id="modGrid" class="modGrid"></div>
+        <div class="quickRow">
+          <button type="button" id="bustBtn" class="btn btn--danger" aria-pressed="false">Bust</button>
+          <button type="button" id="clearBtn" class="btn">Leeren</button>
+          <button type="button" id="entryUndoBtn" class="btn" aria-label="Letzte Eingabe zurücknehmen"><svg class="ico"><use href="#i-undo" /></svg></button>
+        </div>
+      </div>
+
+      <div id="viewDirect" role="tabpanel" aria-labelledby="tabDirect" hidden>
+        <p class="hint">Direktpunkte ersetzen die Karten dieser Runde – praktisch, wenn am Tisch schon zusammengezählt wurde.</p>
+        <label class="visuallyHidden" for="directInput">Punkte</label>
+        <input id="directInput" class="directInput" type="number" min="0" max="999" step="1" inputmode="numeric" enterkeyhint="done" placeholder="z. B. 37" />
+        <div class="quickRow">
+          <button type="button" id="directClear" class="btn">Direktpunkte entfernen</button>
+        </div>
+      </div>
+
+      <footer class="sheet__foot">
+        <button class="btn" value="ok" type="submit" id="entryOk">Übernehmen</button>
+        <button class="btn btn--primary btn--next" value="next" type="submit" id="entryNext">
+          <span id="entryNextLabel">Weiter</span><svg class="ico"><use href="#i-next" /></svg>
+          <i class="autoBar" aria-hidden="true"></i>
+        </button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- Menü -->
+  <dialog id="menuDlg" class="sheet" aria-labelledby="menuTitle">
+    <form method="dialog" class="sheet__inner">
+      <div class="sheet__grab" aria-hidden="true"></div>
+      <header class="sheet__head">
+        <h2 id="menuTitle" class="sheet__title">Menü</h2>
+        <button class="iconBtn iconBtn--ghost" value="cancel" type="submit" aria-label="Schließen">
+          <svg class="ico"><use href="#i-close" /></svg>
+        </button>
+      </header>
+
+      <section class="menuSec" id="menuPlayersSec">
+        <h3>Spieler</h3>
+        <p class="hint menuHint">Farbe antippen zum Wechseln, Karten-Symbol = Geber.</p>
+        <ul id="menuPlayers" class="menuPlayers"></ul>
+        <button type="button" id="recolorBtn" class="btn btn--block">Farben neu verteilen</button>
+      </section>
+
+      <section class="menuSec">
+        <h3>Darstellung</h3>
+        <div class="setRow">
+          <span id="themeLabel">Design</span>
+          <div class="seg" role="radiogroup" aria-labelledby="themeLabel" id="themeSeg">
+            <button type="button" role="radio" data-theme="light">Hell</button>
+            <button type="button" role="radio" data-theme="dark">Dunkel</button>
+            <button type="button" role="radio" data-theme="system">Auto</button>
+          </div>
+        </div>
+        <label class="setRow"><span>Nach Bust / Flip 7 automatisch weiter</span><input type="checkbox" class="switch" id="optAuto" /></label>
+        <label class="setRow"><span>Kompakte Ansicht</span><input type="checkbox" class="switch" id="optCompact" /></label>
+        <label class="setRow"><span>Hoher Kontrast</span><input type="checkbox" class="switch" id="optContrast" /></label>
+        <label class="setRow" id="wakeRow"><span>Bildschirm anlassen</span><input type="checkbox" class="switch" id="optWake" /></label>
+        <label class="setRow" id="hapticsRow"><span>Vibration</span><input type="checkbox" class="switch" id="optHaptics" /></label>
+      </section>
+
+      <section class="menuSec">
+        <h3>Spiel</h3>
+        <button type="button" id="rematchBtn" class="btn btn--block">Revanche (gleiche Spieler)</button>
+        <button type="button" id="newGameBtn" class="btn btn--block btn--dangerText">Neues Spiel</button>
+      </section>
+
+      <section class="menuSec rules">
+        <h3>Regeln kurz</h3>
+        <p>Summe der Zahlenkarten, <b>x2</b> verdoppelt nur die Zahlen, danach kommen <b>+2 … +10</b> dazu. Sieben verschiedene Zahlen = <b>Flip 7</b> (+15). Eine Zahl doppelt = <b>Bust</b> (0 Punkte) – wer beim Rundenende nichts eingetragen hat, zählt ebenfalls als Bust. Erreicht nach einer Runde jemand das Ziel, endet das Spiel – die höchste Punktzahl gewinnt.</p>
+      </section>
+    </form>
+  </dialog>
+
+  <!-- Sieg -->
+  <dialog id="winDlg" class="modal" aria-labelledby="winTitle">
+    <form method="dialog" class="modal__inner">
+      <div id="confetti" class="confetti" aria-hidden="true"></div>
+      <p class="modal__kicker" id="winKicker">Spielende</p>
+      <h2 id="winTitle" class="modal__title"></h2>
+      <p id="winText" class="modal__text"></p>
+      <ol id="winRanking" class="winRanking"></ol>
+      <div class="modal__actions">
+        <button type="submit" value="rematch" class="btn btn--primary btn--block">Revanche</button>
+        <button type="submit" value="continue" class="btn btn--block">Weiterspielen</button>
+        <button type="submit" value="new" class="btn btn--block btn--dangerText">Neues Spiel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Vergangene Runde bearbeiten -->
+  <dialog id="editDlg" class="modal" aria-labelledby="editTitle">
+    <form method="dialog" class="modal__inner">
+      <p class="modal__kicker" id="editKicker"></p>
+      <h2 id="editTitle" class="modal__title modal__title--plain"></h2>
+      <label class="visuallyHidden" for="editInput">Punkte</label>
+      <input id="editInput" class="directInput" type="number" min="0" max="999" step="1" inputmode="numeric" enterkeyhint="done" />
+      <label class="setRow"><span>Bust</span><input type="checkbox" class="switch" id="editBust" /></label>
+      <div class="modal__actions modal__actions--row">
+        <button type="submit" value="no" class="btn">Abbrechen</button>
+        <button type="submit" value="yes" class="btn btn--primary">Speichern</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Bestätigung -->
+  <dialog id="confirmDlg" class="modal" aria-labelledby="confirmText">
+    <form method="dialog" class="modal__inner">
+      <p id="confirmText" class="modal__text modal__text--lg"></p>
+      <div class="modal__actions modal__actions--row">
+        <button type="submit" value="no" class="btn">Abbrechen</button>
+        <button type="submit" value="yes" id="confirmYes" class="btn btn--primary">OK</button>
+      </div>
+    </form>
+  </dialog>
+
+  <noscript><p class="panel">Bitte JavaScript aktivieren, um den Punktezähler zu nutzen.</p></noscript>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js").catch(function () {}); });
+    }
+  </script>
+</body>
+</html>

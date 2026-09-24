@@ -1,0 +1,14 @@
+{
+  "name": "flip7",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Flip 7 – Punktezähler für das Kartenspiel, gehostet auf Cloudflare Workers",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "check": "node --check public/app.js && node --check public/sw.js && node test/rules.test.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.137.0"
+  }
+}
