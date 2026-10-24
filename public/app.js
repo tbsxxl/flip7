@@ -11,7 +11,13 @@ const LEGACY_KEY = "flip7_state_v10";
 const MAX_PLAYERS = 18;
 const MAX_UNDO = 40;
 
+// Apple-Systemfarben (iOS), kräftig genug für vollflächige Kacheln
 const PALETTE = [
+  "#0a84ff", "#30b94d", "#ff9500", "#af52de", "#ff3b30", "#30b0c7",
+  "#5856d6", "#ff2d55", "#00b8a9", "#ffcc00", "#a2845e", "#8e8e93"
+];
+// Farben der Vorversion → gleiche Position in der neuen Palette
+const OLD_PALETTE = [
   "#2f6fed", "#16a34a", "#ea580c", "#9333ea", "#0891b2", "#dc2626",
   "#0d9488", "#ca8a04", "#db2777", "#4f46e5", "#65a30d", "#64748b"
 ];
@@ -32,6 +38,16 @@ const clone = (o) => JSON.parse(JSON.stringify(o));
 const uid = () => Math.random().toString(36).slice(2, 9);
 const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 const emptyEntry = () => ({ cards: [], override: null, bust: false });
+
+/* Schriftfarbe auf einer Spielerfarbe: dunkel auf hellen Farben (Gelb, Mint), sonst weiß */
+function onColor(hex) {
+  const n = parseInt(String(hex).slice(1), 16);
+  if (!Number.isFinite(n)) return "#fff";
+  const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  const L = 0.2126 * lin(n >> 16) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
+  return L > 0.5 ? "#1c1c1e" : "#fff";
+}
+const tint = (c) => `--c:${c};--on:${onColor(c)}`;
 
 function storageGet(key) { try { return JSON.parse(localStorage.getItem(key) || "null"); } catch (e) { return null; } }
 function storageSet(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) {} }
@@ -54,6 +70,7 @@ function load() {
   const s = storageGet(STORE_KEY);
   if (s && s.game && Array.isArray(s.game.players)) {
     game = { ...newGame(), ...s.game };
+    game.players.forEach((p) => { const k = OLD_PALETTE.indexOf(p.color); if (k >= 0) p.color = PALETTE[k]; });
     undoStack = Array.isArray(s.undo) ? s.undo.slice(-MAX_UNDO) : [];
     lastDeltas = s.lastDeltas || null;
     return;
@@ -65,7 +82,7 @@ function load() {
 function migrateLegacy() {
   const old = storageGet(LEGACY_KEY);
   if (!old || !Array.isArray(old.players)) return;
-  game = newGame(old.players.map((op) => {
+  game = newGame(old.players.map((op, i) => {
     let bustsLeft = op.busts || 0;
     const rounds = (op.rounds || []).map((s) => {
       const b = s === 0 && bustsLeft > 0;
@@ -73,7 +90,7 @@ function migrateLegacy() {
       return { s, b, f: false, m: false };
     });
     return {
-      id: uid(), name: String(op.name || "Spieler"), color: op.color || PALETTE[0],
+      id: uid(), name: String(op.name || "Spieler"), color: PALETTE[i % PALETTE.length],
       total: op.total || 0, rounds,
       cur: { cards: op.cards || [], override: typeof op.override === "number" ? op.override : null, bust: false }
     };
@@ -176,7 +193,7 @@ function renderSetup() {
   if (!show) return;
 
   $("setupPlayers").innerHTML = game.players.map((p, i) => `
-    <li class="seat" style="--c:${p.color}" data-id="${p.id}">
+    <li class="seat" style="${tint(p.color)}" data-id="${p.id}">
       <button type="button" class="seat__grip" data-grip="${p.id}" aria-label="${esc(p.name)} verschieben (Pfeiltasten)"><svg class="ico"><use href="#i-grip"/></svg></button>
       <span class="seat__no">${i + 1}</span>
       <span class="dot"></span>
@@ -264,7 +281,7 @@ function renderPlayers() {
     }
 
     return `
-      <li class="player${isLeader ? " is-leader" : ""}${res.bust ? " is-bust" : ""}${res.flip7 ? " is-f7" : ""}" style="--c:${p.color}" data-id="${p.id}">
+      <li class="player${isLeader ? " is-leader" : ""}${res.bust ? " is-bust" : ""}${res.flip7 ? " is-f7" : ""}" style="${tint(p.color)}" data-id="${p.id}">
         <button type="button" class="player__btn" data-open="${p.id}" aria-label="${esc(p.name)}: ${total} Punkte, Platz ${rankOf.get(p.id)}. Karten eintragen">
           <span class="player__head">
             <span class="player__rank">${rankOf.get(p.id)}</span>
@@ -570,6 +587,7 @@ function openEntry(id, tab = "cards") {
   draftStack = [];
   $("entryName").textContent = p.name;
   $("entryDlg").style.setProperty("--c", p.color);
+  $("entryDlg").style.setProperty("--on", onColor(p.color));
   $("directInput").value = draft.override != null ? draft.override : "";
   setTab(draft.override != null ? "direct" : tab);
   renderDraft();
@@ -985,7 +1003,7 @@ function applyPrefs() {
   const dark = prefs.theme === "dark" || (prefs.theme === "system" && darkMq.matches);
   if (dark) document.documentElement.dataset.theme = "dark";
   else delete document.documentElement.dataset.theme;
-  document.querySelector('meta[name="theme-color"]').setAttribute("content", dark ? "#15121f" : "#f6f1e7");
+  document.querySelector('meta[name="theme-color"]').setAttribute("content", dark ? "#000000" : "#f2f2f7");
   document.documentElement.classList.toggle("hc", prefs.contrast);
   document.body.classList.toggle("compact", prefs.compact);
   updateWakeLock();
@@ -1035,6 +1053,11 @@ document.addEventListener("keydown", (e) => {
     $("modGrid").querySelector('[data-mod="x2"]').click();
   }
 });
+
+/* Kopfzeile wird beim Scrollen zu Glas (wie die iOS-Navigationsleiste) */
+const onScroll = () => document.body.classList.toggle("scrolled", window.scrollY > 8);
+window.addEventListener("scroll", onScroll, { passive: true });
+onScroll();
 
 /* ---------- Start ---------- */
 if (!("wakeLock" in navigator)) $("wakeRow").hidden = true;
