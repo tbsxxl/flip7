@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Flip 7 – Punktezähler</title>
   <meta name="description" content="Schneller, offline-fähiger Punktezähler für das Kartenspiel Flip 7: Karten antippen, Bust und +15-Bonus werden automatisch erkannt, mit Live-Ranking und Rundenverlauf." />
-  <meta name="theme-color" content="#f6f1e7" />
+  <meta name="theme-color" content="#f2f2f7" />
   <script>
     // Theme vor dem ersten Rendern setzen (kein Aufblitzen). Standard: hell.
     try {
@@ -48,7 +48,6 @@
 
   <header class="topbar">
     <div class="brand">
-      <img src="/icons/icon.svg" alt="" width="40" height="40" class="brand__logo" />
       <div class="brand__text">
         <h1>Flip 7</h1>
         <p id="subline" class="brand__sub">Punktezähler</p>
@@ -217,7 +216,7 @@
             <button type="button" role="radio" data-theme="system">Auto</button>
           </div>
         </div>
-        <label class="setRow"><span>Nach Bust / Flip 7 automatisch weiter</span><input type="checkbox" class="switch" id="optAuto" /></label>
+        <label class="setRow"><span>Automatisch weiter <small class="hint">nach Bust / Flip 7</small></span><input type="checkbox" class="switch" id="optAuto" /></label>
         <label class="setRow"><span>Kompakte Ansicht</span><input type="checkbox" class="switch" id="optCompact" /></label>
         <label class="setRow"><span>Hoher Kontrast</span><input type="checkbox" class="switch" id="optContrast" /></label>
         <label class="setRow" id="wakeRow"><span>Bildschirm anlassen</span><input type="checkbox" class="switch" id="optWake" /></label>
