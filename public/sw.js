@@ -2,7 +2,7 @@
    Offline-fähig: App-Dateien "network-first" (Deploys kommen sofort an, Cloudflare antwortet mit günstigen 304),
    ohne Netz aus dem Cache. Icons "cache-first". VERSION bei Änderungen an SHELL erhöhen. */
 
-const VERSION = "flip7-v4";
+const VERSION = "flip7-v5";
 const SHELL = [
   "/",
   "/styles.css",

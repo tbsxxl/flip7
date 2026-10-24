@@ -92,16 +92,19 @@
     </section>
 
     <!-- Führung -->
-    <section id="leader" class="leader" hidden>
-      <svg class="ico leader__crown" aria-hidden="true"><use href="#i-crown" /></svg>
-      <div class="leader__main">
-        <span class="leader__label">Führung</span>
-        <span id="leaderName" class="leader__name"></span>
-      </div>
-      <div class="leader__side">
-        <span id="leaderScore" class="leader__score"></span>
-        <span id="leaderGap" class="leader__gap"></span>
-      </div>
+    <section id="leader" class="board" hidden>
+      <button type="button" id="boardToggle" class="board__head" aria-expanded="false" aria-controls="boardList">
+        <svg class="ico board__crown" aria-hidden="true"><use href="#i-crown" /></svg>
+        <span class="board__main">
+          <span class="board__label" id="leaderLabel">Führung</span>
+          <span id="leaderName" class="board__name"></span>
+        </span>
+        <span id="leaderScore" class="board__score"></span>
+        <svg class="ico board__chev" aria-hidden="true"><use href="#i-chevron" /></svg>
+        <span class="board__meta"><span id="leaderGap" class="board__gap"></span><span id="leaderLeft" class="board__left"></span></span>
+      </button>
+      <div id="boardPeek" class="board__peek" aria-hidden="true"></div>
+      <ol id="boardList" class="board__list" aria-label="Gesamtranking" hidden></ol>
     </section>
 
     <ol id="players" class="players" aria-label="Spielstand"></ol>

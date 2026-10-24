@@ -219,6 +219,7 @@ function renderSetup() {
   if (document.activeElement !== $("targetInput")) $("targetInput").value = game.target;
 }
 
+/* Scoreboard: Führung groß in der Farbe des Führenden, aufklappbar zum Gesamtranking */
 function renderLeader() {
   const r = ranking();
   const anyPoints = r.some((x) => x.score > 0);
@@ -227,17 +228,63 @@ function renderLeader() {
   if (el.hidden) return;
 
   const top = r[0], second = r[1];
-  const tie = top.score === second.score;
-  const names = r.filter((x) => x.score === top.score).map((x) => x.p.name);
-  el.style.setProperty("--c", tie ? "var(--ink-2)" : top.p.color);
-  $("leaderName").textContent = tie ? names.join(" & ") : top.p.name;
-  el.querySelector(".leader__label").textContent = tie ? "Gleichstand" : "Führung";
+  const leaders = r.filter((x) => x.score === top.score);
+  const tie = leaders.length > 1;
+  el.style.cssText = tie ? "--c:#3a3a3c;--on:#fff" : tint(top.p.color);
+  el.classList.toggle("is-tie", tie);
+  $("leaderLabel").textContent = tie ? "Gleichstand" : "Führung";
+  $("leaderName").textContent = leaders.map((x) => x.p.name).join(" & ");
   $("leaderScore").textContent = top.score;
   const left = Math.max(0, game.target - top.score);
-  $("leaderGap").textContent = tie
-    ? (left ? `noch ${left} bis ${game.target}` : "Ziel erreicht")
-    : `+${top.score - second.score} vor ${second.p.name}`;
+  $("leaderLeft").textContent = left ? `noch ${left} bis ${game.target}` : "Ziel erreicht";
+  $("leaderGap").hidden = tie;
+  $("leaderGap").textContent = tie ? "" : `+${top.score - second.score} vor ${second.p.name}`;
+
+  const open = !!prefs.boardOpen;
+  $("boardToggle").setAttribute("aria-expanded", String(open));
+  $("boardToggle").setAttribute("aria-label", `${$("leaderLabel").textContent}: ${$("leaderName").textContent}, ${top.score} Punkte. Gesamtranking ${open ? "zuklappen" : "aufklappen"}`);
+  el.classList.toggle("is-open", open);
+
+  // Platz für Platz (gleiche Punkte = gleicher Platz)
+  let place = 0, prev = null;
+  const rows = r.map((x, i) => {
+    if (x.score !== prev) { place = i + 1; prev = x.score; }
+    return { ...x, place, live: liveOf(x.p), input: hasInput(x.p) };
+  });
+
+  // Zugeklappt: die Verfolger als kompakte Chips
+  $("boardPeek").hidden = open;
+  $("boardPeek").innerHTML = rows.slice(tie ? leaders.length : 1, 6).map((x) =>
+    `<span class="peek" style="${tint(x.p.color)}"><b>${x.place}</b>${esc(x.p.name)}<i>${x.score}</i></span>`).join("")
+    + (rows.length > 6 ? `<span class="peek peek--more">+${rows.length - 6}</span>` : "");
+
+  // Aufgeklappt: komplettes Ranking
+  $("boardList").hidden = !open;
+  if (!open) return;
+  $("boardList").innerHTML = rows.map((x) => {
+    const pct = Math.min(100, (x.score / game.target) * 100);
+    const behind = top.score - x.score;
+    const liveTxt = x.input ? (x.live.bust ? "Bust" : `+${x.live.score}`) : "";
+    return `<li class="rank${x.place <= 3 ? " rank--" + x.place : ""}" style="${tint(x.p.color)}">
+      <span class="rank__place">${x.place}</span>
+      <span class="rank__body">
+        <span class="rank__top">
+          <span class="rank__name">${esc(x.p.name)}</span>
+          ${liveTxt ? `<span class="rank__live${x.live.bust ? " is-bust" : ""}">diese Runde ${liveTxt}</span>` : ""}
+        </span>
+        <span class="rank__bar"><span style="width:${pct}%"></span></span>
+      </span>
+      <span class="rank__side"><b>${x.score}</b><small>${behind ? "−" + behind : (game.round || anyPoints ? "Spitze" : "")}</small></span>
+    </li>`;
+  }).join("");
 }
+
+$("boardToggle").addEventListener("click", () => {
+  prefs.boardOpen = !prefs.boardOpen;
+  savePrefs();
+  renderLeader();
+  vib(8);
+});
 
 function miniCard(c) {
   if (typeof c === "number") {
@@ -249,7 +296,9 @@ function miniCard(c) {
 
 function renderPlayers() {
   const r = ranking();
-  const rankOf = new Map(r.map((x, i) => [x.p.id, i + 1]));
+  // Gleiche Punkte = gleicher Platz (wie im Scoreboard)
+  const rankOf = new Map();
+  r.forEach((x, i) => rankOf.set(x.p.id, i > 0 && x.score === r[i - 1].score ? rankOf.get(r[i - 1].p.id) : i + 1));
   const leaderScore = r.length ? r[0].score : 0;
 
   $("players").innerHTML = game.players.map((p) => {
