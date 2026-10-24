@@ -315,7 +315,7 @@ function renderPlayers() {
     const quickBust = !input || (p.cur.bust && !p.cur.cards.length && p.cur.override == null);
     let state = "";
     if (res.bust && !quickBust) state = `<span class="badge badge--bust">Bust</span>`;
-    else if (res.flip7) state = `<span class="badge badge--f7">Flip 7 +15</span>`;
+    else if (res.flip7) state = `<span class="badge badge--f7" title="Flip 7: +15 Bonus">Flip 7</span>`;
     else if (res.manual) state = `<span class="badge">Direkt</span>`;
 
     let roundLine;
@@ -335,7 +335,7 @@ function renderPlayers() {
           <span class="player__head">
             <span class="player__rank">${rankOf.get(p.id)}</span>
             <span class="player__name">${esc(p.name)}</span>
-            ${isDealer ? `<span class="dealerTag dealerTag--card" title="Gibt diese Runde"><svg class="ico"><use href="#i-deal"/></svg>Geber</span>` : ""}
+            ${isDealer ? `<span class="dealerTag dealerTag--card" title="Gibt diese Runde" aria-label="Geber"><svg class="ico"><use href="#i-deal"/></svg></span>` : ""}
             ${state}
             <span class="player__total"><b data-total="${p.id}">${total}</b><small>${left ? "noch " + left : "Ziel ✓"}</small></span>
           </span>
