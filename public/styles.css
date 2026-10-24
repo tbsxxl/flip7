@@ -405,7 +405,8 @@ main {
 @keyframes listIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
 
 /* ---------- Spieler-Kacheln: komplett in Spielerfarbe ---------- */
-.players { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr; gap: 12px; }
+.players { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.player { min-width: 0; }
 .players:empty { display: none; }
 .player { position: relative; color: var(--on); }
 
@@ -465,7 +466,7 @@ main {
   opacity: .7; border-radius: 0 99px 99px 0;
 }
 
-.player__foot { display: flex; align-items: center; gap: 8px; min-height: 34px; font-size: 15px; }
+.player__foot { display: flex; align-items: flex-start; gap: 8px; min-height: 34px; font-size: 15px; }
 .player__foot.has-quick { padding-right: 80px; }
 .quickBust {
   position: absolute; right: 14px; bottom: 13px; z-index: 1;
@@ -479,14 +480,17 @@ main {
 .quickBust:active { transform: scale(.92); }
 .quickBust[aria-pressed="true"] { background: var(--on); color: var(--danger); border-color: transparent; }
 
-.player__round { font-weight: 500; white-space: nowrap; opacity: .9; }
+.player__round { font-weight: 500; white-space: nowrap; opacity: .9; line-height: 30px; }
 .player__round b { font-weight: 750; }
 .player__round--last { opacity: .8; }
-.player__cards { display: flex; gap: 4px; overflow: hidden; min-width: 0; flex: 1; }
-.player__tap { font-size: 14px; opacity: .7; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Viele Karten brechen in eine zweite Reihe um */
+.player__cards { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; flex: 1; }
+.player__tap { font-size: 14px; line-height: 30px; opacity: .7; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .player__left { margin-left: auto; font-size: 13px; opacity: .75; white-space: nowrap; }
 .dealerIco { width: 18px; height: 18px; opacity: .8; flex: none; }
-.dealerTag--card { padding: 2px 8px; font-size: 11px; }
+.dealerTag--card { width: 26px; height: 26px; padding: 0; justify-content: center; }
+.dealerTag--card .ico { width: 14px; height: 14px; }
+.player__name { flex: 0 1 auto; min-width: 3.5em; }
 
 .player.is-bust .player__btn { filter: saturate(.45) brightness(.92); }
 .player.is-f7 .player__btn {
