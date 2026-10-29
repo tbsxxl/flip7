@@ -45,9 +45,35 @@ function onColor(hex) {
   if (!Number.isFinite(n)) return "#fff";
   const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
   const L = 0.2126 * lin(n >> 16) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
-  return L > 0.5 ? "#1c1c1e" : "#fff";
+  return L > 0.3 ? "#1c1c1e" : "#fff"; // helle Farben (Orange, Grün, Mint, Gelb …) mit dunkler Schrift
 }
-const tint = (c) => `--c:${c};--on:${onColor(c)}`;
+/* Kachelflächen: kräftig, aber dunkel genug für weiße Schrift (Kontrast ≥ 4,5:1 nach WCAG / Apple HIG) */
+function luminance(hex) {
+  const n = parseInt(String(hex).slice(1), 16);
+  const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  return 0.2126 * lin(n >> 16) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
+}
+function shade(hex, k) { // k = Anteil der Farbe, Rest Schwarz
+  const n = parseInt(String(hex).slice(1), 16);
+  return "#" + [n >> 16, (n >> 8) & 255, n & 255].map((v) => Math.round(v * k).toString(16).padStart(2, "0")).join("");
+}
+function darkenTo(hex, maxL) {
+  if (luminance(hex) <= maxL) return hex;
+  let lo = 0, hi = 1;
+  for (let i = 0; i < 18; i++) { const m = (lo + hi) / 2; if (luminance(shade(hex, m)) > maxL) hi = m; else lo = m; }
+  return shade(hex, lo);
+}
+const surfaceCache = new Map();
+function surface(c) {
+  if (!surfaceCache.has(c)) {
+    surfaceCache.set(c, onColor(c) === "#fff" ? [darkenTo(c, 0.11), darkenTo(c, 0.06)] : [c, darkenTo(c, 0.26)]);
+  }
+  return surfaceCache.get(c);
+}
+const tint = (c) => {
+  const [a, b] = surface(c), dark = onColor(c) !== "#fff";
+  return `--c:${c};--on:${onColor(c)};--t1:${a};--t2:${b};--qb:rgba(255,255,255,${dark ? .42 : .1});--qbt:${dark ? "#ff3b30" : "#c00017"}`;
+};
 
 function storageGet(key) { try { return JSON.parse(localStorage.getItem(key) || "null"); } catch (e) { return null; } }
 function storageSet(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) {} }
@@ -242,7 +268,6 @@ function renderLeader() {
 
   const open = !!prefs.boardOpen;
   $("boardToggle").setAttribute("aria-expanded", String(open));
-  $("boardToggle").setAttribute("aria-label", `${$("leaderLabel").textContent}: ${$("leaderName").textContent}, ${top.score} Punkte. Gesamtranking ${open ? "zuklappen" : "aufklappen"}`);
   el.classList.toggle("is-open", open);
 
   // Platz für Platz (gleiche Punkte = gleicher Platz)
@@ -255,7 +280,7 @@ function renderLeader() {
   // Zugeklappt: die Verfolger als kompakte Chips
   $("boardPeek").hidden = open;
   $("boardPeek").innerHTML = rows.slice(tie ? leaders.length : 1, 6).map((x) =>
-    `<span class="peek" style="${tint(x.p.color)}"><b>${x.place}</b>${esc(x.p.name)}<i>${x.score}</i></span>`).join("")
+    `<span class="peek" style="${tint(x.p.color)}"><b>${x.place}</b><span class="peek__name">${esc(x.p.name)}</span><i>${x.score}</i></span>`).join("")
     + (rows.length > 6 ? `<span class="peek peek--more">+${rows.length - 6}</span>` : "");
 
   // Aufgeklappt: komplettes Ranking
@@ -331,9 +356,9 @@ function renderPlayers() {
 
     return `
       <li class="player${isLeader ? " is-leader" : ""}${res.bust ? " is-bust" : ""}${res.flip7 ? " is-f7" : ""}" style="${tint(p.color)}" data-id="${p.id}">
-        <button type="button" class="player__btn" data-open="${p.id}" aria-label="${esc(p.name)}: ${total} Punkte, Platz ${rankOf.get(p.id)}. Karten eintragen">
+        <button type="button" class="player__btn" data-open="${p.id}">
           <span class="player__head">
-            <span class="player__rank">${rankOf.get(p.id)}</span>
+            <span class="player__rank"><span class="visuallyHidden">Platz </span>${rankOf.get(p.id)}</span>
             <span class="player__name">${esc(p.name)}</span>
             ${isDealer ? `<span class="dealerTag dealerTag--card" title="Gibt diese Runde" aria-label="Geber"><svg class="ico"><use href="#i-deal"/></svg></span>` : ""}
             ${state}
@@ -366,8 +391,10 @@ function renderHistory() {
     const cells = ps.map((p) => {
       const e = p.rounds[i];
       if (!e) return "<td>–</td>";
-      const tag = e.b ? `<span class="tag tag--bust">B</span>` : e.f ? `<span class="tag tag--f7">7</span>` : e.m ? `<span class="tag tag--man">M</span>` : "";
-      return `<td class="${e.b ? "is-bust" : ""}"><button type="button" class="cellBtn" data-edit="${p.id}:${i}" aria-label="Runde ${i + 1}, ${esc(p.name)}: ${e.b ? "Bust" : e.s} – bearbeiten">${e.b ? 0 : e.s}${tag}</button></td>`;
+      const tag = e.b ? `<span class="tag tag--bust" aria-hidden="true">B</span><span class="visuallyHidden"> Bust</span>`
+        : e.f ? `<span class="tag tag--f7" aria-hidden="true">7</span><span class="visuallyHidden"> Flip 7</span>`
+        : e.m ? `<span class="tag tag--man" aria-hidden="true">M</span><span class="visuallyHidden"> Direktpunkte</span>` : "";
+      return `<td class="${e.b ? "is-bust" : ""}"><button type="button" class="cellBtn" data-edit="${p.id}:${i}"><span class="visuallyHidden">Runde ${i + 1}, ${esc(p.name)}: </span>${e.b ? 0 : e.s}${tag}</button></td>`;
     }).join("");
     body += `<tr><th scope="row">${i + 1}</th>${cells}</tr>`;
   }
@@ -637,6 +664,8 @@ function openEntry(id, tab = "cards") {
   $("entryName").textContent = p.name;
   $("entryDlg").style.setProperty("--c", p.color);
   $("entryDlg").style.setProperty("--on", onColor(p.color));
+  $("entryDlg").style.setProperty("--t1", surface(p.color)[0]);
+  $("entryDlg").style.setProperty("--t2", surface(p.color)[1]);
   $("directInput").value = draft.override != null ? draft.override : "";
   setTab(draft.override != null ? "direct" : tab);
   renderDraft();
@@ -925,7 +954,7 @@ function showWinner(w) {
     ? `${w.map((p) => p.name).join(" & ")} liegen mit ${w[0].total} Punkten gleichauf – spielt eine Entscheidungsrunde.`
     : `mit ${w[0].total} Punkten`;
   $("winRanking").innerHTML = ranking().map(({ p, score }, i) => `
-    <li style="--c:${p.color}"><span class="winRanking__no">${i + 1}</span><span class="dot"></span>
+    <li style="${tint(p.color)}"><span class="winRanking__no">${i + 1}</span><span class="dot"></span>
       <span class="winRanking__name">${esc(p.name)}</span><b>${score}</b></li>`).join("");
   $("winDlg").querySelector('[value="continue"]').textContent = tie ? "Entscheidungsrunde spielen" : "Weiterspielen";
   spawnConfetti(tie ? PALETTE : [w[0].color]);
@@ -1104,7 +1133,12 @@ document.addEventListener("keydown", (e) => {
 });
 
 /* Kopfzeile wird beim Scrollen zu Glas (wie die iOS-Navigationsleiste) */
-const onScroll = () => document.body.classList.toggle("scrolled", window.scrollY > 8);
+// Schwelle mit Abstand (Hysterese), damit an der Grenze nichts flackert
+const onScroll = () => {
+  const on = document.body.classList.contains("scrolled");
+  if (!on && window.scrollY > 24) document.body.classList.add("scrolled");
+  else if (on && window.scrollY < 6) document.body.classList.remove("scrolled");
+};
 window.addEventListener("scroll", onScroll, { passive: true });
 onScroll();
 
